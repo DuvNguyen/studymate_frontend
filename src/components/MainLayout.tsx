@@ -62,33 +62,44 @@ function IconCart() {
     </svg>
   );
 }
+function IconProfile() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  );
+}
 
 // Nav items theo từng role
 const navByRole: Record<string, { href: string; label: string; icon: React.ReactNode }[]> = {
   STUDENT: [
-    { href: '/', label: 'Trang chủ', icon: <IconHome /> },
+    { href: '/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
     { href: '/courses', label: 'Khóa học', icon: <IconCourses /> },
     { href: '/my-learning', label: 'Học của tôi', icon: <IconMyLearning /> },
     { href: '/wishlist', label: 'Yêu thích', icon: <IconWishlist /> },
+    { href: '/dashboard/profile', label: 'Hồ sơ', icon: <IconProfile /> },
   ],
   INSTRUCTOR: [
-    { href: '/', label: 'Trang chủ', icon: <IconHome /> },
-    { href: '/instructor/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
+    { href: '/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
+    { href: '/dashboard/instructor/kyc', label: 'Hồ sơ Giảng viên', icon: <IconProfile /> },
     { href: '/instructor/courses', label: 'Khóa học của tôi', icon: <IconCourses /> },
     { href: '/instructor/revenue', label: 'Doanh thu', icon: <IconDashboard /> },
+    { href: '/dashboard/profile', label: 'Cài đặt Account', icon: <IconProfile /> },
   ],
   STAFF: [
-    { href: '/admin/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
+    { href: '/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
     { href: '/admin/kyc', label: 'Duyệt KYC', icon: <IconUsers /> },
     { href: '/admin/courses', label: 'Duyệt khóa học', icon: <IconCourses /> },
     { href: '/admin/refunds', label: 'Hoàn tiền', icon: <IconDashboard /> },
+    { href: '/dashboard/profile', label: 'Hồ sơ', icon: <IconProfile /> },
   ],
   ADMIN: [
-    { href: '/admin/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
+    { href: '/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
     { href: '/admin/users', label: 'Người dùng', icon: <IconUsers /> },
     { href: '/admin/courses', label: 'Khóa học', icon: <IconCourses /> },
     { href: '/admin/kyc', label: 'Duyệt KYC', icon: <IconUsers /> },
     { href: '/admin/finance', label: 'Tài chính', icon: <IconDashboard /> },
+    { href: '/dashboard/profile', label: 'Hồ sơ', icon: <IconProfile /> },
   ],
 };
 
