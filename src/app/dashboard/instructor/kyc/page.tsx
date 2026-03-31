@@ -18,6 +18,7 @@ export default function KycPage() {
     bankName: '',
     kycStatus: '',
     rejectionReason: '',
+    certificates: [] as string[],
     documents: [] as { documentType: string; title: string; fileUrl: string }[],
   });
 
@@ -44,6 +45,7 @@ export default function KycPage() {
           bankName: data.bankName || '',
           kycStatus: data.kycStatus || 'PENDING',
           rejectionReason: data.rejectionReason || '',
+          certificates: data.certificates || [],
           documents: data.documents || [],
         });
       }
@@ -62,6 +64,26 @@ export default function KycPage() {
     const updatedDocs = [...kycData.documents];
     updatedDocs[index] = { ...updatedDocs[index], [field]: value };
     setKycData({ ...kycData, documents: updatedDocs });
+  };
+
+  const handleCertificateChange = (index: number, value: string) => {
+    const updatedCertificates = [...kycData.certificates];
+    updatedCertificates[index] = value;
+    setKycData({ ...kycData, certificates: updatedCertificates });
+  };
+
+  const addCertificate = () => {
+    setKycData({
+      ...kycData,
+      certificates: [...kycData.certificates, '']
+    });
+  };
+
+  const removeCertificate = (index: number) => {
+    setKycData({
+      ...kycData,
+      certificates: kycData.certificates.filter((_, i) => i !== index)
+    });
   };
 
   const addDocument = () => {
@@ -273,6 +295,52 @@ export default function KycPage() {
                         className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all border-2 border-transparent hover:border-red-200"
                       >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 4. Danh hiệu & Chứng chỉ (Hiển thị công khai) */}
+            <div className="bg-white rounded-3xl p-8 md:p-10 border-2 border-slate-200 shadow-sm">
+              <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xl">4</div>
+                  <h2 className="text-2xl font-black text-slate-900 uppercase">Danh hiệu nổi bật (Công khai)</h2>
+                </div>
+                {!isLocked && (
+                  <button 
+                    type="button" onClick={addCertificate}
+                    className="px-6 py-2.5 bg-blue-600 text-white font-black text-sm rounded-full hover:bg-black transition-all shadow-lg hover:shadow-xl active:scale-95"
+                  >
+                    + THÊM DANH HIỆU
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm font-bold text-slate-500 mb-4">Các danh hiệu, chứng chỉ này sẽ được hiển thị trên hồ sơ công khai của bạn để học viên có thể xem.</p>
+                
+                {kycData.certificates.length === 0 && (
+                  <div className="text-center py-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 font-bold text-slate-400 uppercase tracking-widest">
+                    Chưa có danh hiệu nào.
+                  </div>
+                )}
+
+                {kycData.certificates.map((cert, index) => (
+                  <div key={index} className="flex gap-4 items-center">
+                    <input 
+                      required disabled={isLocked} type="text" placeholder="Ví dụ: IELTS 8.0, 5 năm kinh nghiệm ReactJS..."
+                      value={cert} onChange={(e) => handleCertificateChange(index, e.target.value)}
+                      className="flex-1 px-4 py-3.5 bg-white border-2 border-slate-300 rounded-xl outline-none focus:border-blue-600 font-bold text-slate-900 placeholder:text-slate-400"
+                    />
+                    {!isLocked && (
+                      <button 
+                        type="button" onClick={() => removeCertificate(index)}
+                        className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all border-2 border-transparent hover:border-red-200"
+                      >
+                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                     )}
                   </div>

@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
+import { InstructorSignupButton } from "../components/InstructorSignupButton";
+import Navbar from "../components/Navbar";
 
 const MOCK_COURSES = [
   {
@@ -58,45 +60,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans selection:bg-purple-200">
       {/* Navbar */}
-      <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xl">S</div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-700 hidden sm:block">
-              StudyMate
-            </span>
-          </div>
-
-          <nav className="hidden md:flex gap-8 text-sm font-medium text-slate-600">
-            <Link href="#" className="hover:text-purple-600 transition">Khóa học</Link>
-            <Link href="#" className="hover:text-purple-600 transition">Sự kiện</Link>
-            <Link href="#" className="hover:text-purple-600 transition">Blog</Link>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            {!userId ? (
-              <>
-                <Link href="/sign-in" className="text-sm font-semibold text-slate-700 hover:text-purple-600 transition hidden sm:block">
-                  Đăng nhập
-                </Link>
-                <Link 
-                  href="/sign-up?role=student" 
-                  className="bg-black hover:bg-slate-800 text-white text-sm font-semibold py-2 px-5 rounded-full transition-all hover:shadow-lg hover:-translate-y-0.5"
-                >
-                  Đăng ký
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/dashboard" className="text-sm font-semibold text-purple-600 hover:text-purple-800 transition mr-4">
-                  Vào Dashboard
-                </Link>
-                <UserButton />
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -111,18 +75,26 @@ export default async function HomePage() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              href="/sign-up?role=student"
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all hover:-translate-y-1"
-            >
-              Học với StudyMate
-            </Link>
-            <Link 
-              href="/sign-up?role=instructor"
+            {!userId ? (
+              <Link 
+                href="/sign-up?role=student"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all hover:-translate-y-1"
+              >
+                Học với StudyMate
+              </Link>
+            ) : (
+              <Link 
+                href="/dashboard"
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all hover:-translate-y-1"
+              >
+                Vào Dashboard
+              </Link>
+            )}
+            <InstructorSignupButton 
               className="w-full sm:w-auto px-8 py-4 rounded-full bg-white border-2 border-slate-200 hover:border-indigo-600 text-slate-800 hover:text-indigo-600 font-bold text-lg transition-all hover:-translate-y-1"
             >
               Dạy trên StudyMate
-            </Link>
+            </InstructorSignupButton>
           </div>
           
           <div className="mt-12 flex items-center justify-center gap-8 text-sm font-medium text-slate-500">

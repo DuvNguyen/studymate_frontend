@@ -22,12 +22,17 @@ export default function OnboardingPage() {
     // Tuy nhiên, NextJS Frontend của Clerk Public Metadata thỉnh thoảng sẽ bị cache khoảng 10s.
     // Tốt hơn hết là gọi lên Backend API một phát "/users/me" để lấy role chính xác nhất ở DB NestJS.
 
-    const checkRoleAndRedirect = async () => {
+    const checkRoleAndRedirect = async (retryCount = 0) => {
       try {
+        console.log(`[Onboarding] Bắt đầu đồng bộ hồ sơ (Lần thử: ${retryCount + 1})`);
         const token = await getToken();
-        if (!token) return;
+        if (!token) {
+          console.error('[Onboarding] Không lấy được JWT token từ Clerk');
+          return;
+        }
 
         const intendedRole = window.localStorage.getItem('intended_role') || 'STUDENT';
+        console.log(`[Onboarding] Intended Role from LocalStorage: ${intendedRole}`);
 
         const res = await fetch('http://localhost:3001/api/v1/auth/onboard', {
           method: 'POST',
@@ -38,20 +43,38 @@ export default function OnboardingPage() {
           body: JSON.stringify({ role: intendedRole })
         });
 
+        console.log(`[Onboarding] API Response Status: ${res.status}`);
+
         if (res.ok) {
           const { data } = await res.json();
-          const role = data.role; // Lấy 'INSTRUCTOR' hoặc 'STUDENT'
+          console.log('[Onboarding] Thành công:', data);
+          const role = data.role; 
           
           if (role === 'INSTRUCTOR') {
-             router.replace('/dashboard/instructor/kyc'); // Dashboard riêng
+             router.replace('/dashboard/instructor/kyc'); 
           } else {
-             router.replace('/dashboard'); // Mặc định về Dashboard Học viên
+             router.replace('/dashboard'); 
+          }
+        } else if (res.status === 401 || res.status === 404) {
+          console.warn(`[Onboarding] Chưa tìm thấy User trong DB (Status ${res.status}). Webhook có thể chưa chạy xong.`);
+          if (retryCount < 10) {
+            setTimeout(() => checkRoleAndRedirect(retryCount + 1), 1500);
+          } else {
+            console.error('[Onboarding] Đã thử tối đa 10 lần nhưng vẫn thất bại.');
+            setError('Không thể đồng bộ hồ sơ. Vui lòng thử tải lại trang hoặc liên hệ hỗ trợ.');
           }
         } else {
+          const errorData = await res.json().catch(() => null);
+          console.error('[Onboarding] Lỗi từ Backend:', errorData);
           setError('Không thể đồng bộ hồ sơ, bạn hãy thử tải lại trang nhé.');
         }
-      } catch (err) {
-        setError('Có lỗi khi đồng bộ hồ sơ, đang thử lại...');
+      } catch (err: any) {
+        console.error('[Onboarding] Exception catch:', err.message || err);
+        if (retryCount < 10) {
+          setTimeout(() => checkRoleAndRedirect(retryCount + 1), 1500);
+        } else {
+          setError('Có lỗi khi đồng bộ hồ sơ. Vui lòng tải lại trang.');
+        }
       }
     };
 

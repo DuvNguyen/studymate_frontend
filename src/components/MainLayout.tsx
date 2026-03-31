@@ -84,7 +84,7 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/dashboard/instructor/kyc', label: 'Hồ sơ Giảng viên', icon: <IconProfile /> },
     { href: '/instructor/courses', label: 'Khóa học của tôi', icon: <IconCourses /> },
     { href: '/instructor/revenue', label: 'Doanh thu', icon: <IconDashboard /> },
-    { href: '/dashboard/profile', label: 'Cài đặt Account', icon: <IconProfile /> },
+    { href: '/dashboard/profile', label: 'Hồ sơ', icon: <IconProfile /> },
   ],
   STAFF: [
     { href: '/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
@@ -95,7 +95,7 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
   ],
   ADMIN: [
     { href: '/dashboard', label: 'Tổng quan', icon: <IconDashboard /> },
-    { href: '/admin/users', label: 'Người dùng', icon: <IconUsers /> },
+    { href: '/admin/users', label: 'Người dùng',  icon: <IconUsers /> },
     { href: '/admin/courses', label: 'Khóa học', icon: <IconCourses /> },
     { href: '/admin/kyc', label: 'Duyệt KYC', icon: <IconUsers /> },
     { href: '/admin/finance', label: 'Tài chính', icon: <IconDashboard /> },
@@ -128,13 +128,13 @@ export default function MainLayout({ children, role = 'STUDENT' }: MainLayoutPro
         `}
       >
         {/* Logo */}
-        <div className="flex items-center h-16 px-4 border-b border-gray-700">
+        <Link href="/" className="flex items-center h-16 px-4 border-b border-gray-700 transition hover:bg-gray-800">
           {sidebarOpen ? (
             <span className="text-xl font-bold text-white">StudyMate</span>
           ) : (
             <span className="text-xl font-bold text-white">S</span>
           )}
-        </div>
+        </Link>
 
         {/* Nav items */}
         <nav className="flex-1 py-4 overflow-y-auto">
