@@ -22,6 +22,7 @@ export function InstructorSignupButton({ className, children }: Props) {
     if (loading) return;
 
     if (!user) {
+      window.localStorage.setItem('intended_role', 'INSTRUCTOR');
       router.push('/sign-up?role=instructor');
       return;
     }
@@ -37,6 +38,7 @@ export function InstructorSignupButton({ className, children }: Props) {
 
     if (confirmNewAccount) {
       await signOut();
+      window.localStorage.setItem('intended_role', 'INSTRUCTOR');
       router.push('/sign-up?role=instructor');
     }
   };

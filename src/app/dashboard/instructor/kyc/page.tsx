@@ -118,10 +118,18 @@ export default function KycPage() {
         toast.success('Nộp hồ sơ thành công! Đang chờ duyệt.');
         fetchKycData();
       } else {
-        toast.error('Nộp hồ sơ thất bại.');
+        const errorData = await res.json().catch(() => null);
+        console.error('[KYC Submit Error]:', errorData);
+        
+        let errorMsg = 'Nộp hồ sơ thất bại.';
+        if (errorData && errorData.message) {
+           errorMsg = Array.isArray(errorData.message) ? errorData.message.join(', ') : errorData.message;
+        }
+        toast.error(errorMsg);
       }
-    } catch (error) {
-      toast.error('Có lỗi xảy ra.');
+    } catch (error: any) {
+      console.error('[KYC Submit Exception]:', error);
+      toast.error(error.message || 'Có lỗi xảy ra.');
     } finally {
       setIsSubmitting(false);
     }

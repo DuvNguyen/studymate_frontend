@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useUser, useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
@@ -9,19 +9,14 @@ export default function OnboardingPage() {
   const { getToken, isLoaded: isAuthLoaded } = useAuth();
   const router = useRouter();
   const [error, setError] = useState('');
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
     // Chỉ chạy khi đã lấy được thông tin user từ Clerk
     if (!isLoaded || !user) return;
-
-    // Xem thử trong lúc đăng ký, chúng ta có đính metadata gì vào Webhook không?
-    // Do webhooks đã xử lý, `user.publicMetadata.role` có thể đã được gán bởi Webhook (nếu Clerk có cơ chế đồng thuận nhanh).
-    // Phân luồng đơn giản:
-    // Vì lúc Webhook chạy, metadata `role` đã được lưu. Giờ ta chỉ cần đọc xem user này là INSTRUCTOR hay STUDENT để Redirect mượt mà.
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     
-    // Tuy nhiên, NextJS Frontend của Clerk Public Metadata thỉnh thoảng sẽ bị cache khoảng 10s.
-    // Tốt hơn hết là gọi lên Backend API một phát "/users/me" để lấy role chính xác nhất ở DB NestJS.
-
     const checkRoleAndRedirect = async (retryCount = 0) => {
       try {
         console.log(`[Onboarding] Bắt đầu đồng bộ hồ sơ (Lần thử: ${retryCount + 1})`);
@@ -62,11 +57,13 @@ export default function OnboardingPage() {
           } else {
             console.error('[Onboarding] Đã thử tối đa 10 lần nhưng vẫn thất bại.');
             setError('Không thể đồng bộ hồ sơ. Vui lòng thử tải lại trang hoặc liên hệ hỗ trợ.');
+            isFetchingRef.current = false;
           }
         } else {
           const errorData = await res.json().catch(() => null);
           console.error('[Onboarding] Lỗi từ Backend:', errorData);
           setError('Không thể đồng bộ hồ sơ, bạn hãy thử tải lại trang nhé.');
+          isFetchingRef.current = false;
         }
       } catch (err: any) {
         console.error('[Onboarding] Exception catch:', err.message || err);
@@ -74,6 +71,7 @@ export default function OnboardingPage() {
           setTimeout(() => checkRoleAndRedirect(retryCount + 1), 1500);
         } else {
           setError('Có lỗi khi đồng bộ hồ sơ. Vui lòng tải lại trang.');
+          isFetchingRef.current = false;
         }
       }
     };
