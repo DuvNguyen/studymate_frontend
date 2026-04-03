@@ -24,15 +24,12 @@ export default function KycPage() {
 
   const isLocked = kycData.kycStatus === 'PENDING' || kycData.kycStatus === 'APPROVED';
 
-  useEffect(() => {
-    fetchKycData();
-  }, []);
+  useEffect(() => { fetchKycData(); }, []);
 
   const fetchKycData = async () => {
     try {
       const token = await getToken();
       if (!token) return;
-
       const res = await fetch('http://localhost:3001/api/v1/users/me/kyc', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -49,56 +46,27 @@ export default function KycPage() {
           documents: data.documents || [],
         });
       }
-    } catch (error) {
-      toast.error('Không thể tải dữ liệu KYC');
-    } finally {
-      setIsLoading(false);
-    }
+    } catch { toast.error('Không thể tải dữ liệu KYC'); }
+    finally { setIsLoading(false); }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKycData({ ...kycData, [e.target.name]: e.target.value });
   };
-
   const handleDocumentChange = (index: number, field: string, value: string) => {
-    const updatedDocs = [...kycData.documents];
-    updatedDocs[index] = { ...updatedDocs[index], [field]: value };
-    setKycData({ ...kycData, documents: updatedDocs });
+    const d = [...kycData.documents];
+    d[index] = { ...d[index], [field]: value };
+    setKycData({ ...kycData, documents: d });
   };
-
   const handleCertificateChange = (index: number, value: string) => {
-    const updatedCertificates = [...kycData.certificates];
-    updatedCertificates[index] = value;
-    setKycData({ ...kycData, certificates: updatedCertificates });
+    const c = [...kycData.certificates];
+    c[index] = value;
+    setKycData({ ...kycData, certificates: c });
   };
-
-  const addCertificate = () => {
-    setKycData({
-      ...kycData,
-      certificates: [...kycData.certificates, '']
-    });
-  };
-
-  const removeCertificate = (index: number) => {
-    setKycData({
-      ...kycData,
-      certificates: kycData.certificates.filter((_, i) => i !== index)
-    });
-  };
-
-  const addDocument = () => {
-    setKycData({
-      ...kycData,
-      documents: [...kycData.documents, { documentType: 'CERTIFICATE', title: '', fileUrl: '' }]
-    });
-  };
-
-  const removeDocument = (index: number) => {
-    setKycData({
-      ...kycData,
-      documents: kycData.documents.filter((_, i) => i !== index)
-    });
-  };
+  const addCertificate = () => setKycData({ ...kycData, certificates: [...kycData.certificates, ''] });
+  const removeCertificate = (i: number) => setKycData({ ...kycData, certificates: kycData.certificates.filter((_, idx) => idx !== i) });
+  const addDocument = () => setKycData({ ...kycData, documents: [...kycData.documents, { documentType: 'CERTIFICATE', title: '', fileUrl: '' }] });
+  const removeDocument = (i: number) => setKycData({ ...kycData, documents: kycData.documents.filter((_, idx) => idx !== i) });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,268 +75,246 @@ export default function KycPage() {
       const token = await getToken();
       const res = await fetch('http://localhost:3001/api/v1/users/me/kyc', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(kycData),
       });
-
       if (res.ok) {
         toast.success('Nộp hồ sơ thành công! Đang chờ duyệt.');
         fetchKycData();
       } else {
-        const errorData = await res.json().catch(() => null);
-        console.error('[KYC Submit Error]:', errorData);
-        
-        let errorMsg = 'Nộp hồ sơ thất bại.';
-        if (errorData && errorData.message) {
-           errorMsg = Array.isArray(errorData.message) ? errorData.message.join(', ') : errorData.message;
-        }
-        toast.error(errorMsg);
+        const err = await res.json().catch(() => null);
+        const msg = err?.message ? (Array.isArray(err.message) ? err.message.join(', ') : err.message) : 'Nộp hồ sơ thất bại.';
+        toast.error(msg);
       }
-    } catch (error: any) {
-      console.error('[KYC Submit Exception]:', error);
-      toast.error(error.message || 'Có lỗi xảy ra.');
+    } catch (e: any) {
+      toast.error(e.message || 'Có lỗi xảy ra.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const TrashIcon = () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+  );
+
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin rounded-none" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Đang tải...</p>
+      </div>
     </div>
   );
 
   return (
     <MainLayout role="INSTRUCTOR">
-      <div className="min-h-screen bg-slate-50/50 py-12 selection:bg-purple-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          {/* Header Section: Đậm và rõ nét */}
-          <div className="relative mb-12 text-center md:text-left">
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-4 uppercase">
-              Hồ sơ Cấp phép Giảng dạy <span className="text-purple-600">(KYC)</span>
-            </h1>
-            <p className="text-lg font-bold text-slate-600 max-w-3xl">
-              Vui lòng cung cấp chính xác thông tin định danh và tài khoản ngân hàng để StudyMate xét duyệt quyền kinh doanh khóa học[cite: 90].
-            </p>
+      <div className="max-w-4xl mx-auto space-y-6 py-4">
+
+        {/* Header */}
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Giảng viên</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">
+            Hồ sơ cấp phép giảng dạy
+            <span className="inline-block ml-2 text-[10px] bg-black text-white px-2 py-0.5 align-middle">KYC</span>
+          </h1>
+          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
+            Cung cấp thông tin định danh và tài khoản ngân hàng để được xét duyệt quyền kinh doanh khóa học.
+          </p>
+        </div>
+
+        {/* Status Banners */}
+        <div className="space-y-3">
+          {kycData.kycStatus === 'PENDING' && (
+            <div className="flex items-center gap-4 p-4 bg-amber-50 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-amber-900">
+              <span className="text-xl">⏳</span>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider">Hồ sơ đang chờ phê duyệt</p>
+                <p className="text-xs font-medium mt-0.5 opacity-80">Mọi chỉnh sửa đã bị khóa. Quản trị viên đang xem xét hồ sơ.</p>
+              </div>
+            </div>
+          )}
+          {kycData.kycStatus === 'APPROVED' && (
+            <div className="flex items-center gap-4 p-4 bg-emerald-50 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-emerald-900">
+              <span className="text-xl">✅</span>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider">Xác minh thành công</p>
+                <p className="text-xs font-medium mt-0.5 opacity-80">Bạn đã có quyền tạo chương trình học và nhận thanh toán.</p>
+              </div>
+            </div>
+          )}
+          {kycData.kycStatus === 'REJECTED' && (
+            <div className="flex items-center gap-4 p-4 bg-red-50 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-red-900">
+              <span className="text-xl">❌</span>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider">Hồ sơ bị từ chối</p>
+                <p className="text-xs font-bold mt-0.5 underline">Lý do: {kycData.rejectionReason}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* 1. Định danh */}
+          <div className="bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-6">
+            <div className="flex items-center gap-3 mb-5 pb-3 border-b-2 border-black">
+              <div className="w-7 h-7 bg-black text-white flex items-center justify-center font-black text-sm">1</div>
+              <h2 className="text-sm font-black uppercase tracking-wider">Định danh cá nhân</h2>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500">
+                Đường dẫn ảnh CMND / CCCD (Cloudinary)
+              </label>
+              <input
+                required disabled={isLocked} type="url" name="idCardUrl"
+                placeholder="Dán link ảnh tại đây..."
+                value={kycData.idCardUrl} onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-black outline-none focus:bg-white transition-colors text-gray-900 font-bold placeholder:text-gray-400 disabled:opacity-60"
+              />
+            </div>
           </div>
 
-          {/* Status Banners: Độ tương phản cực cao */}
-          <div className="space-y-4 mb-10">
-            {kycData.kycStatus === 'PENDING' && (
-              <div className="flex items-center gap-5 p-6 bg-amber-50 border-2 border-amber-500 rounded-2xl text-amber-900 shadow-sm">
-                <div className="w-12 h-12 rounded-full bg-amber-200 flex items-center justify-center text-2xl shadow-inner">⏳</div>
-                <div>
-                  <p className="text-lg font-black uppercase">Hồ sơ đang chờ phê duyệt</p>
-                  <p className="font-bold opacity-90">Mọi chỉnh sửa đã bị khóa. Quản trị viên đang xem xét hồ sơ của bạn.</p>
-                </div>
+          {/* 2. Thông tin thanh toán */}
+          <div className="bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-6">
+            <div className="flex items-center gap-3 mb-5 pb-3 border-b-2 border-black">
+              <div className="w-7 h-7 bg-indigo-600 text-white flex items-center justify-center font-black text-sm">2</div>
+              <h2 className="text-sm font-black uppercase tracking-wider">Thông tin nhận thanh toán</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500">Tên Chủ Tài Khoản</label>
+                <input required disabled={isLocked} type="text" name="bankAccountName"
+                  placeholder="VÍ DỤ: NGUYỄN VĂN A"
+                  value={kycData.bankAccountName} onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-black outline-none focus:bg-white font-black uppercase text-gray-900 placeholder:text-gray-400 disabled:opacity-60"
+                />
               </div>
-            )}
-
-            {kycData.kycStatus === 'APPROVED' && (
-              <div className="flex items-center gap-5 p-6 bg-green-50 border-2 border-green-500 rounded-2xl text-green-900 shadow-sm">
-                <div className="w-12 h-12 rounded-full bg-green-200 flex items-center justify-center text-2xl">✅</div>
-                <div>
-                  <p className="text-lg font-black uppercase">Xác minh thành công</p>
-                  <p className="font-bold opacity-90">Chào mừng Giảng viên! Bạn đã có quyền tạo chương trình học và nhận thanh toán[cite: 24].</p>
-                </div>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500">Số Tài Khoản</label>
+                <input required disabled={isLocked} type="text" name="bankAccountNumber"
+                  placeholder="NHẬP SỐ TÀI KHOẢN..."
+                  value={kycData.bankAccountNumber} onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-black outline-none focus:bg-white font-mono font-black text-xl text-gray-900 placeholder:text-gray-400 disabled:opacity-60"
+                />
               </div>
-            )}
-
-            {kycData.kycStatus === 'REJECTED' && (
-              <div className="flex items-center gap-5 p-6 bg-red-50 border-2 border-red-500 rounded-2xl text-red-900 shadow-sm">
-                <div className="w-12 h-12 rounded-full bg-red-200 flex items-center justify-center text-2xl">❌</div>
-                <div>
-                  <p className="text-lg font-black uppercase">Hồ sơ bị từ chối</p>
-                  <p className="font-bold text-red-700 underline decoration-2">Lý do: {kycData.rejectionReason}[cite: 90].</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-10">
-            
-            {/* 1. Định danh cá nhân */}
-            <div className="bg-white rounded-3xl p-8 md:p-10 border-2 border-slate-200 shadow-sm transition-all hover:border-purple-300">
-              <div className="flex items-center gap-4 mb-8 border-b-2 border-slate-100 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-xl">1</div>
-                <h2 className="text-2xl font-black text-slate-900 uppercase">Định danh cá nhân</h2>
-              </div>
-              
-              <div className="space-y-3">
-                <label className="block text-base font-black text-slate-900 uppercase tracking-wide">
-                  Đường dẫn ảnh CMND / CCCD (Cloudinary) [cite: 90]
-                </label>
-                <input 
-                  required disabled={isLocked} type="url" name="idCardUrl"
-                  placeholder="HÃY DÁN LINK ẢNH TẠI ĐÂY..."
-                  value={kycData.idCardUrl} onChange={handleChange}
-                  className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-300 rounded-2xl outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600 transition-all text-slate-900 font-bold placeholder:text-slate-400"
+              <div className="md:col-span-2 space-y-2">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500">Ngân hàng &amp; Chi nhánh</label>
+                <input required disabled={isLocked} type="text" name="bankName"
+                  placeholder="VÍ DỤ: VIETCOMBANK - CHI NHÁNH SÀI GÒN"
+                  value={kycData.bankName} onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-black outline-none focus:bg-white font-bold text-gray-900 placeholder:text-gray-400 disabled:opacity-60"
                 />
               </div>
             </div>
+          </div>
 
-            {/* 2. Thông tin thanh toán */}
-            <div className="bg-white rounded-3xl p-8 md:p-10 border-2 border-slate-200 shadow-sm">
-              <div className="flex items-center gap-4 mb-8 border-b-2 border-slate-100 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl">2</div>
-                <h2 className="text-2xl font-black text-slate-900 uppercase">Thông tin nhận thanh toán</h2>
+          {/* 3. Văn bằng & Chứng chỉ */}
+          <div className="bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-6">
+            <div className="flex items-center justify-between mb-5 pb-3 border-b-2 border-black">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-emerald-600 text-white flex items-center justify-center font-black text-sm">3</div>
+                <h2 className="text-sm font-black uppercase tracking-wider">Văn bằng &amp; Chứng chỉ</h2>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="block text-sm font-black text-slate-900 uppercase">Tên Chủ Tài Khoản [cite: 90]</label>
-                  <input 
-                    required disabled={isLocked} type="text" name="bankAccountName"
-                    placeholder="VÍ DỤ: NGUYỄN VĂN A"
-                    value={kycData.bankAccountName} onChange={handleChange}
-                    className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-300 rounded-2xl outline-none focus:border-indigo-600 font-black uppercase text-slate-900 placeholder:text-slate-400"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <label className="block text-sm font-black text-slate-900 uppercase">Số Tài Khoản [cite: 154]</label>
-                  <input 
-                    required disabled={isLocked} type="text" name="bankAccountNumber"
-                    placeholder="NHẬP SỐ TÀI KHOẢN..."
-                    value={kycData.bankAccountNumber} onChange={handleChange}
-                    className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-300 rounded-2xl outline-none focus:border-indigo-600 font-mono font-black text-xl text-slate-900 placeholder:text-slate-400"
-                  />
-                </div>
-                <div className="md:col-span-2 space-y-3">
-                  <label className="block text-sm font-black text-slate-900 uppercase">Ngân hàng & Chi nhánh [cite: 90]</label>
-                  <input 
-                    required disabled={isLocked} type="text" name="bankName"
-                    placeholder="VÍ DỤ: VIETCOMBANK - CHI NHÁNH SÀI GÒN"
-                    value={kycData.bankName} onChange={handleChange}
-                    className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-300 rounded-2xl outline-none focus:border-indigo-600 font-bold text-slate-900 placeholder:text-slate-400"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Văn bằng & Chứng chỉ */}
-            <div className="bg-white rounded-3xl p-8 md:p-10 border-2 border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl">3</div>
-                  <h2 className="text-2xl font-black text-slate-900 uppercase">Văn bằng & Chứng chỉ</h2>
-                </div>
-                {!isLocked && (
-                  <button 
-                    type="button" onClick={addDocument}
-                    className="px-6 py-2.5 bg-purple-600 text-white font-black text-sm rounded-full hover:bg-black transition-all shadow-lg shadow-purple-200 active:scale-95"
-                  >
-                    + THÊM TÀI LIỆU
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-6">
-                {kycData.documents.length === 0 && (
-                  <div className="text-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-300 font-bold text-slate-400 uppercase tracking-widest">
-                    Chưa có bằng cấp nào được đính kèm[cite: 109].
-                  </div>
-                )}
-                
-                {kycData.documents.map((doc, index) => (
-                  <div key={index} className="flex flex-col lg:flex-row gap-5 p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl items-center relative group">
-                    <select 
-                      disabled={isLocked} value={doc.documentType}
-                      onChange={(e) => handleDocumentChange(index, 'documentType', e.target.value)}
-                      className="w-full lg:w-48 px-4 py-3.5 bg-white border-2 border-slate-300 rounded-xl outline-none focus:border-purple-600 font-black text-slate-900 cursor-pointer"
-                    >
-                      <option value="DEGREE">BẰNG CẤP</option>
-                      <option value="CERTIFICATE">CHỨNG CHỈ</option>
-                      <option value="AWARD">GIẢI THƯỞNG</option>
-                    </select>
-                    
-                    <input 
-                      required disabled={isLocked} type="text" placeholder="Tên bằng cấp..."
-                      value={doc.title} onChange={(e) => handleDocumentChange(index, 'title', e.target.value)}
-                      className="flex-1 px-4 py-3.5 bg-white border-2 border-slate-300 rounded-xl outline-none focus:border-purple-600 font-bold text-slate-900 placeholder:text-slate-400"
-                    />
-
-                    <input 
-                      required disabled={isLocked} type="url" placeholder="Link ảnh (Cloudinary)..."
-                      value={doc.fileUrl} onChange={(e) => handleDocumentChange(index, 'fileUrl', e.target.value)}
-                      className="flex-1 px-4 py-3.5 bg-white border-2 border-slate-300 rounded-xl outline-none focus:border-purple-600 font-bold text-slate-900 placeholder:text-slate-400"
-                    />
-
-                    {!isLocked && (
-                      <button 
-                        type="button" onClick={() => removeDocument(index)}
-                        className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all border-2 border-transparent hover:border-red-200"
-                      >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 4. Danh hiệu & Chứng chỉ (Hiển thị công khai) */}
-            <div className="bg-white rounded-3xl p-8 md:p-10 border-2 border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xl">4</div>
-                  <h2 className="text-2xl font-black text-slate-900 uppercase">Danh hiệu nổi bật (Công khai)</h2>
-                </div>
-                {!isLocked && (
-                  <button 
-                    type="button" onClick={addCertificate}
-                    className="px-6 py-2.5 bg-blue-600 text-white font-black text-sm rounded-full hover:bg-black transition-all shadow-lg hover:shadow-xl active:scale-95"
-                  >
-                    + THÊM DANH HIỆU
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <p className="text-sm font-bold text-slate-500 mb-4">Các danh hiệu, chứng chỉ này sẽ được hiển thị trên hồ sơ công khai của bạn để học viên có thể xem.</p>
-                
-                {kycData.certificates.length === 0 && (
-                  <div className="text-center py-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 font-bold text-slate-400 uppercase tracking-widest">
-                    Chưa có danh hiệu nào.
-                  </div>
-                )}
-
-                {kycData.certificates.map((cert, index) => (
-                  <div key={index} className="flex gap-4 items-center">
-                    <input 
-                      required disabled={isLocked} type="text" placeholder="Ví dụ: IELTS 8.0, 5 năm kinh nghiệm ReactJS..."
-                      value={cert} onChange={(e) => handleCertificateChange(index, e.target.value)}
-                      className="flex-1 px-4 py-3.5 bg-white border-2 border-slate-300 rounded-xl outline-none focus:border-blue-600 font-bold text-slate-900 placeholder:text-slate-400"
-                    />
-                    {!isLocked && (
-                      <button 
-                        type="button" onClick={() => removeCertificate(index)}
-                        className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all border-2 border-transparent hover:border-red-200"
-                      >
-                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Nút Submit chính */}
-            {!isLocked && (
-              <div className="pt-6 flex justify-center">
-                <button 
-                  type="submit" disabled={isSubmitting}
-                  className="w-full md:w-auto px-20 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-xl uppercase tracking-tighter rounded-full shadow-2xl shadow-purple-500/30 hover:shadow-purple-500/50 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50"
+              {!isLocked && (
+                <button type="button" onClick={addDocument}
+                  className="px-3 py-1.5 bg-black text-white font-black text-[10px] uppercase tracking-widest border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
                 >
-                  {isSubmitting ? 'ĐANG XỬ LÝ HỒ SƠ...' : 'NỘP HỒ SƠ KIỂM DUYỆT NGAY'}
+                  + Thêm tài liệu
                 </button>
+              )}
+            </div>
+            <div className="space-y-3">
+              {kycData.documents.length === 0 && (
+                <div className="text-center py-10 bg-gray-50 border-2 border-dashed border-gray-300 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Chưa có bằng cấp nào được đính kèm.
+                </div>
+              )}
+              {kycData.documents.map((doc, index) => (
+                <div key={index} className="flex flex-col lg:flex-row gap-3 p-4 bg-gray-50 border-2 border-black items-center">
+                  <select disabled={isLocked} value={doc.documentType}
+                    onChange={(e) => handleDocumentChange(index, 'documentType', e.target.value)}
+                    className="w-full lg:w-36 px-3 py-2.5 bg-white border-2 border-black outline-none font-black text-xs text-gray-900 cursor-pointer"
+                  >
+                    <option value="DEGREE">BẰNG CẤP</option>
+                    <option value="CERTIFICATE">CHỨNG CHỈ</option>
+                    <option value="AWARD">GIẢI THƯỞNG</option>
+                  </select>
+                  <input required disabled={isLocked} type="text" placeholder="Tên bằng cấp..."
+                    value={doc.title} onChange={(e) => handleDocumentChange(index, 'title', e.target.value)}
+                    className="flex-1 px-3 py-2.5 bg-white border-2 border-black outline-none font-bold text-sm text-gray-900 placeholder:text-gray-400"
+                  />
+                  <input required disabled={isLocked} type="url" placeholder="Link ảnh (Cloudinary)..."
+                    value={doc.fileUrl} onChange={(e) => handleDocumentChange(index, 'fileUrl', e.target.value)}
+                    className="flex-1 px-3 py-2.5 bg-white border-2 border-black outline-none font-bold text-sm text-gray-900 placeholder:text-gray-400"
+                  />
+                  {!isLocked && (
+                    <button type="button" onClick={() => removeDocument(index)}
+                      className="p-2 text-red-700 hover:bg-red-50 border-2 border-black transition-colors flex-shrink-0"
+                    >
+                      <TrashIcon />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 4. Danh hiệu công khai */}
+          <div className="bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-6">
+            <div className="flex items-center justify-between mb-5 pb-3 border-b-2 border-black">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-indigo-600 text-white flex items-center justify-center font-black text-sm">4</div>
+                <h2 className="text-sm font-black uppercase tracking-wider">Danh hiệu nổi bật (Công khai)</h2>
               </div>
-            )}
-          </form>
-        </div>
+              {!isLocked && (
+                <button type="button" onClick={addCertificate}
+                  className="px-3 py-1.5 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                >
+                  + Thêm danh hiệu
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3">
+              Hiển thị trên hồ sơ công khai để học viên xem.
+            </p>
+            <div className="space-y-3">
+              {kycData.certificates.length === 0 && (
+                <div className="text-center py-8 bg-gray-50 border-2 border-dashed border-gray-300 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Chưa có danh hiệu nào.
+                </div>
+              )}
+              {kycData.certificates.map((cert, index) => (
+                <div key={index} className="flex gap-3 items-center">
+                  <input required disabled={isLocked} type="text"
+                    placeholder="Ví dụ: IELTS 8.0, 5 năm kinh nghiệm ReactJS..."
+                    value={cert} onChange={(e) => handleCertificateChange(index, e.target.value)}
+                    className="flex-1 px-3 py-2.5 bg-white border-2 border-black outline-none font-bold text-sm text-gray-900 placeholder:text-gray-400"
+                  />
+                  {!isLocked && (
+                    <button type="button" onClick={() => removeCertificate(index)}
+                      className="p-2 text-red-700 hover:bg-red-50 border-2 border-black transition-colors flex-shrink-0"
+                    >
+                      <TrashIcon />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit */}
+          {!isLocked && (
+            <div className="flex justify-center pt-2">
+              <button type="submit" disabled={isSubmitting}
+                className="w-full md:w-auto px-16 py-4 bg-black text-white font-black text-sm uppercase tracking-widest border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-[1px] hover:-translate-x-[1px] active:translate-y-0 active:translate-x-0 active:shadow-none disabled:opacity-40 transition-all"
+              >
+                {isSubmitting ? 'ĐANG XỬ LÝ HỒ SƠ...' : 'NỘP HỒ SƠ KIỂM DUYỆT NGAY'}
+              </button>
+            </div>
+          )}
+        </form>
       </div>
     </MainLayout>
   );

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { InstructorSignupButton } from "../components/InstructorSignupButton";
+import { StudentSignupButton } from "../components/StudentSignupButton";
 import Navbar from "../components/Navbar";
 
 const MOCK_COURSES = [
@@ -76,18 +77,17 @@ export default async function HomePage() {
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {!userId ? (
-              <Link 
-                href="/sign-up?role=student"
+              <StudentSignupButton 
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all hover:-translate-y-1"
               >
                 Học với StudyMate
-              </Link>
+              </StudentSignupButton>
             ) : (
               <Link 
                 href="/dashboard"
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all hover:-translate-y-1"
               >
-                Vào Dashboard
+                Dashboard
               </Link>
             )}
             <InstructorSignupButton 

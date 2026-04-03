@@ -30,7 +30,7 @@ export function NavbarUserMenu() {
   return (
     <div className="flex items-center gap-4">
       <Link href="/dashboard" className="text-sm font-semibold text-purple-600 hover:text-purple-800 transition mr-4 hidden sm:block">
-        Vào Dashboard
+      Dashboard
       </Link>
       <div className="flex items-center gap-3">
         <div className="hidden md:block text-right">

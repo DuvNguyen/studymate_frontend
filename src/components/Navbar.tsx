@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NavbarUserMenu } from "./NavbarUserMenu";
+import SearchBar from "./SearchBar";
 
 export default function Navbar() {
   return (
@@ -17,6 +18,8 @@ export default function Navbar() {
           <Link href="#" className="hover:text-purple-600 transition">Sự kiện</Link>
           <Link href="#" className="hover:text-purple-600 transition">Blog</Link>
         </nav>
+
+        <SearchBar />
 
         <NavbarUserMenu />
       </div>
