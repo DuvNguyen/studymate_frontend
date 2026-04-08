@@ -7,9 +7,14 @@ interface CurrentUser {
   id: number;
   email: string;
   role: string;
+  roleId: number;
   status: string;
   avatarUrl: string | null;
   clerkUserId: string;
+  firstName: string | null;
+  lastName: string | null;
+  fullName: string | null;
+  bio: string | null;
   createdAt: string;
 }
 
