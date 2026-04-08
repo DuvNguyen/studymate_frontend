@@ -80,57 +80,64 @@ export default function AdminKycPage() {
 
   if (appLoading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin mx-auto mb-3" />
+          <p className="text-xs font-black uppercase tracking-widest text-gray-500">Đang tải...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <MainLayout role={appUser?.role}>
-      <div className="p-8 min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-gray-800">Duyệt KYC Giảng Viên</h1>
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Quản lý</p>
+          <h1 className="text-2xl font-black text-gray-900 uppercase">Duyệt KYC Giảng Viên</h1>
+        </div>
         
         {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+          <div className="flex items-center justify-center h-40 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin" />
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
             {kycs.map((u) => (
-              <div key={u.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row gap-6">
+              <div key={u.id} className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex flex-col md:flex-row gap-6">
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-1">
                     {u.fullName || u.email}
-                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full font-semibold">Chờ duyệt</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-900">
+                      Chờ duyệt
+                    </span>
                   </h3>
-                  <p className="text-sm text-gray-500 mb-4">{u.email}</p>
+                  <p className="text-sm font-medium text-gray-500 mb-4">{u.email}</p>
                   
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-4 bg-gray-50 p-4 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 text-sm mb-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-gray-50 p-4">
                     <div>
-                      <span className="text-gray-500 block mb-1">Ngân hàng</span>
-                      <strong className="text-gray-900">{u.instructorProfile?.bankName || 'N/A'}</strong>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 block mb-1">Ngân hàng</span>
+                      <strong className="text-sm font-black text-gray-900">{u.instructorProfile?.bankName || 'N/A'}</strong>
                     </div>
                     <div>
-                      <span className="text-gray-500 block mb-1">Tài liệu đính kèm</span>
-                      <strong className="text-gray-900">{u.instructorProfile?.documents?.length || 0} files files</strong>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 block mb-1">Tài liệu đính kèm</span>
+                      <strong className="text-sm font-black text-gray-900">{u.instructorProfile?.documents?.length || 0} files</strong>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col justify-center gap-3 w-full md:w-32">
+                <div className="flex flex-col justify-center gap-3 w-full md:w-40 border-t-2 border-black md:border-t-0 md:border-l-2 md:pl-6 pt-4 md:pt-0">
                   <button 
                     onClick={() => handleAction(u.id, 'APPROVED')}
                     disabled={actionLoading === u.id}
-                    className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-sm transition-colors text-sm disabled:opacity-50"
+                    className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-emerald-400 text-black hover:bg-emerald-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {actionLoading === u.id ? '...' : 'Phê Duyệt'}
                   </button>
                   <button 
                     onClick={() => handleAction(u.id, 'REJECTED')}
                     disabled={actionLoading === u.id}
-                    className="w-full py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+                    className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-red-400 text-black hover:bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {actionLoading === u.id ? '...' : 'Từ chối'}
                   </button>
@@ -139,17 +146,15 @@ export default function AdminKycPage() {
             ))}
 
             {kycs.length === 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-gray-500">
-                <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Không có yêu cầu KYC nào đang chờ duyệt.
+              <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-12 text-center">
+                <p className="text-sm font-black uppercase tracking-widest text-gray-500">
+                  Không có yêu cầu KYC nào đang chờ duyệt.
+                </p>
               </div>
             )}
           </div>
         )}
       </div>
-    </div>
     </MainLayout>
   );
 }

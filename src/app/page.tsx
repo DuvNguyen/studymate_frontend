@@ -59,51 +59,54 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 font-sans selection:bg-purple-200">
+    <div className="min-h-screen bg-gray-50 text-black font-sans selection:bg-emerald-300 selection:text-black">
       {/* Navbar */}
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-200 rounded-full blur-[120px] opacity-30 -z-10 pointer-events-none"></div>
+      <section className="relative pt-24 pb-20 lg:pt-32 lg:pb-24 overflow-hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 border-b-4 border-black bg-white shadow-[0px_8px_0px_0px_rgba(0,0,0,1)] mb-16">
         
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 mb-8 leading-[1.15]">
-            Học tập không giới hạn cùng <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">StudyMate</span>
+          <p className="text-sm font-black uppercase tracking-widest text-emerald-700 mb-6 bg-emerald-100 border-2 border-emerald-900 inline-block px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -rotate-2">
+            Nền tảng học tập thế hệ mới
+          </p>
+          <h1 className="text-5xl lg:text-7xl font-black tracking-tighter text-black mb-8 uppercase leading-[1.15]">
+            Học tập không giới hạn cùng <br />
+            <span className="bg-amber-300 px-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] inline-block mt-2">StudyMate</span>
           </h1>
-          <p className="text-lg lg:text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg lg:text-xl text-gray-800 font-bold mb-12 max-w-2xl mx-auto border-2 border-black p-4 bg-gray-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             Khám phá hàng ngàn khóa học chất lượng cao từ các chuyên gia hàng đầu. Nâng tầm kỹ năng và kiến thức của bạn ngay hôm nay.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             {!userId ? (
               <StudentSignupButton 
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all hover:-translate-y-1"
+                className="w-full sm:w-auto px-8 py-4 bg-emerald-400 hover:bg-emerald-500 text-black font-black uppercase tracking-wider text-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1.5 active:translate-x-1.5 active:shadow-none"
               >
                 Học với StudyMate
               </StudentSignupButton>
             ) : (
               <Link 
                 href="/dashboard"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all hover:-translate-y-1"
+                className="w-full sm:w-auto px-8 py-4 bg-emerald-400 hover:bg-emerald-500 text-black font-black uppercase tracking-wider text-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1.5 active:translate-x-1.5 active:shadow-none inline-flex items-center justify-center"
               >
                 Dashboard
               </Link>
             )}
             <InstructorSignupButton 
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-white border-2 border-slate-200 hover:border-indigo-600 text-slate-800 hover:text-indigo-600 font-bold text-lg transition-all hover:-translate-y-1"
+              className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-gray-100 text-black font-black uppercase tracking-wider text-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1.5 active:translate-x-1.5 active:shadow-none"
             >
               Dạy trên StudyMate
             </InstructorSignupButton>
           </div>
           
-          <div className="mt-12 flex items-center justify-center gap-8 text-sm font-medium text-slate-500">
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center">✓</span>
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-6 text-sm font-black uppercase tracking-widest text-black">
+            <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <span className="w-6 h-6 border-2 border-black bg-emerald-400 flex items-center justify-center -rotate-6">✓</span>
               Học mọi lúc mọi nơi
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center">✓</span>
+            <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <span className="w-6 h-6 border-2 border-black bg-emerald-400 flex items-center justify-center rotate-6">✓</span>
               Chứng chỉ hoàn thành
             </div>
           </div>
@@ -111,50 +114,47 @@ export default async function HomePage() {
       </section>
 
       {/* Featured Courses Placeholder */}
-      <section className="py-24 bg-slate-50 border-t border-slate-100">
+      <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Các khóa học nổi bật</h2>
-              <p className="text-slate-600">Được lựa chọn cẩn thận để giúp bạn bắt đầu lộ trình học tập.</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-4">
+            <div className="bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6">
+              <h2 className="text-3xl font-black text-black uppercase tracking-tight mb-2">Các khóa học nổi bật</h2>
+              <p className="text-gray-700 font-bold">Được lựa chọn cẩn thận để giúp bạn bắt đầu lộ trình học tập.</p>
             </div>
-            <Link href="#" className="hidden sm:block text-purple-600 font-semibold hover:text-purple-800 transition">
+            <Link href="/courses" className="inline-block px-6 py-3 bg-amber-300 hover:bg-amber-400 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none">
               Xem tất cả →
             </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {MOCK_COURSES.map((course) => (
-              <div key={course.id} className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col">
-                <div className="relative h-48 w-full overflow-hidden bg-slate-100 leading-none">
+              <div key={course.id} className="group bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col hover:-translate-y-2 hover:-translate-x-2 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer">
+                <div className="relative h-48 w-full border-b-4 border-black bg-emerald-200 overflow-hidden">
                   <img 
                     src={course.thumbnail} 
                     alt={course.title} 
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-300 scale-105"
                   />
                   {course.id === 1 && (
-                    <div className="absolute top-4 left-4 bg-amber-400 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-md">Bán chạy</div>
+                    <div className="absolute top-4 left-4 bg-amber-400 border-2 border-black text-black text-[10px] font-black uppercase tracking-wider px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Bán chạy</div>
                   )}
                 </div>
                 
                 <div className="p-6 flex flex-col flex-grow">
-                  <div className="text-xs font-bold uppercase tracking-wider text-purple-600 mb-2">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-purple-900 bg-purple-200 border-2 border-purple-900 px-2 py-1 inline-block mb-4 self-start shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     {course.category}
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 leading-tight mb-3 line-clamp-2 group-hover:text-purple-600 transition-colors">
+                  <h3 className="text-xl font-black text-black uppercase leading-tight mb-3 line-clamp-2">
                     {course.title}
                   </h3>
-                  <p className="text-sm text-slate-500 mb-4">{course.instructor}</p>
+                  <p className="text-sm font-bold text-gray-600 mb-6">{course.instructor}</p>
                   
-                  <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
+                  <div className="mt-auto flex items-center justify-between border-t-4 border-black pt-4">
                     <div className="flex items-center gap-1">
-                      <span className="text-amber-500 font-bold">{course.rating}</span>
-                      <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span className="text-xs text-slate-400 ml-1">({course.students})</span>
+                      <span className="bg-black text-white px-2 py-1 text-xs font-black">{course.rating} ★</span>
+                      <span className="text-xs font-bold text-gray-500 ml-1">({course.students})</span>
                     </div>
-                    <div className="font-bold text-slate-900">{course.price}</div>
+                    <div className="font-black text-black text-xl">{course.price}</div>
                   </div>
                 </div>
               </div>
@@ -164,8 +164,8 @@ export default async function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 text-center">
-        <p>© 2026 StudyMate LMS. Demo Interface for Evaluation.</p>
+      <footer className="bg-white border-t-4 border-black py-12 text-center mt-20">
+        <p className="font-black uppercase tracking-widest text-[10px] sm:text-xs text-black">© 2026 StudyMate LMS. Demo Interface for Evaluation.</p>
       </footer>
     </div>
   );
