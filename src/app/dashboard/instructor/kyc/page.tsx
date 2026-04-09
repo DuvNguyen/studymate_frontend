@@ -10,6 +10,7 @@ export default function KycPage() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState<string | null>(null); // name of field being uploaded
   
   const [kycData, setKycData] = useState({
     idCardUrl: '',
@@ -67,6 +68,39 @@ export default function KycPage() {
   const removeCertificate = (i: number) => setKycData({ ...kycData, certificates: kycData.certificates.filter((_, idx) => idx !== i) });
   const addDocument = () => setKycData({ ...kycData, documents: [...kycData.documents, { documentType: 'CERTIFICATE', title: '', fileUrl: '' }] });
   const removeDocument = (i: number) => setKycData({ ...kycData, documents: kycData.documents.filter((_, idx) => idx !== i) });
+
+  const handleUpload = async (file: File, fieldName: string, index?: number) => {
+    setIsUploading(index !== undefined ? `${fieldName}-${index}` : fieldName);
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('http://localhost:3001/api/v1/uploads/image', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const { data } = await res.json();
+        if (index !== undefined) {
+          const d = [...kycData.documents];
+          d[index] = { ...d[index], fileUrl: data.url };
+          setKycData({ ...kycData, documents: d });
+        } else {
+          setKycData({ ...kycData, [fieldName]: data.url });
+        }
+        toast.success('Tải lên thành công!');
+      } else {
+        toast.error('Tải lên thất bại.');
+      }
+    } catch {
+      toast.error('Có lỗi xảy ra khi tải lên.');
+    } finally {
+      setIsUploading(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,18 +196,34 @@ export default function KycPage() {
           <div className="bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-6">
             <div className="flex items-center gap-3 mb-5 pb-3 border-b-2 border-black">
               <div className="w-7 h-7 bg-black text-white flex items-center justify-center font-black text-sm">1</div>
-              <h2 className="text-sm font-black uppercase tracking-wider">Định danh cá nhân</h2>
+              <h2 className="text-sm font-black uppercase tracking-wider text-gray-900">Định danh cá nhân</h2>
             </div>
             <div className="space-y-2">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500">
-                Đường dẫn ảnh CMND / CCCD (Cloudinary)
+              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-700">
+                Ảnh CMND / CCCD
               </label>
-              <input
-                required disabled={isLocked} type="url" name="idCardUrl"
-                placeholder="Dán link ảnh tại đây..."
-                value={kycData.idCardUrl} onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-black outline-none focus:bg-white transition-colors text-gray-900 font-bold placeholder:text-gray-400 disabled:opacity-60"
-              />
+              <div className="flex flex-col gap-3">
+                {!isLocked && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file" accept="image/*" id="idCardFile" className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'idCardUrl')}
+                    />
+                    <label
+                      htmlFor="idCardFile"
+                      className="cursor-pointer px-4 py-2 bg-black text-white border-2 border-black font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 active:translate-y-[1px] transition-all disabled:opacity-50"
+                    >
+                      {isUploading === 'idCardUrl' ? 'ĐANG TẢI LÊN...' : (kycData.idCardUrl ? 'CHỌN ẢNH KHÁC' : 'TẢI ẢNH LÊN')}
+                    </label>
+                  </div>
+                )}
+                {isLocked && !kycData.idCardUrl && (
+                  <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Chưa tải ảnh</div>
+                )}
+                {kycData.idCardUrl && (
+                  <img src={kycData.idCardUrl} alt="ID Card Preview" className="w-48 h-auto border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mt-2" />
+                )}
+              </div>
             </div>
           </div>
 
@@ -181,11 +231,11 @@ export default function KycPage() {
           <div className="bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] p-6">
             <div className="flex items-center gap-3 mb-5 pb-3 border-b-2 border-black">
               <div className="w-7 h-7 bg-indigo-600 text-white flex items-center justify-center font-black text-sm">2</div>
-              <h2 className="text-sm font-black uppercase tracking-wider">Thông tin nhận thanh toán</h2>
+              <h2 className="text-sm font-black uppercase tracking-wider text-gray-900">Thông tin nhận thanh toán</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500">Tên Chủ Tài Khoản</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-700">Tên Chủ Tài Khoản</label>
                 <input required disabled={isLocked} type="text" name="bankAccountName"
                   placeholder="VÍ DỤ: NGUYỄN VĂN A"
                   value={kycData.bankAccountName} onChange={handleChange}
@@ -193,7 +243,7 @@ export default function KycPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500">Số Tài Khoản</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-700">Số Tài Khoản</label>
                 <input required disabled={isLocked} type="text" name="bankAccountNumber"
                   placeholder="NHẬP SỐ TÀI KHOẢN..."
                   value={kycData.bankAccountNumber} onChange={handleChange}
@@ -201,7 +251,7 @@ export default function KycPage() {
                 />
               </div>
               <div className="md:col-span-2 space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500">Ngân hàng &amp; Chi nhánh</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-700">Ngân hàng &amp; Chi nhánh</label>
                 <input required disabled={isLocked} type="text" name="bankName"
                   placeholder="VÍ DỤ: VIETCOMBANK - CHI NHÁNH SÀI GÒN"
                   value={kycData.bankName} onChange={handleChange}
@@ -216,7 +266,7 @@ export default function KycPage() {
             <div className="flex items-center justify-between mb-5 pb-3 border-b-2 border-black">
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 bg-emerald-600 text-white flex items-center justify-center font-black text-sm">3</div>
-                <h2 className="text-sm font-black uppercase tracking-wider">Văn bằng &amp; Chứng chỉ</h2>
+                <h2 className="text-sm font-black uppercase tracking-wider text-gray-900">Văn bằng &amp; Chứng chỉ</h2>
               </div>
               {!isLocked && (
                 <button type="button" onClick={addDocument}
@@ -246,10 +296,30 @@ export default function KycPage() {
                     value={doc.title} onChange={(e) => handleDocumentChange(index, 'title', e.target.value)}
                     className="flex-1 px-3 py-2.5 bg-white border-2 border-black outline-none font-bold text-sm text-gray-900 placeholder:text-gray-400"
                   />
-                  <input required disabled={isLocked} type="url" placeholder="Link ảnh (Cloudinary)..."
-                    value={doc.fileUrl} onChange={(e) => handleDocumentChange(index, 'fileUrl', e.target.value)}
-                    className="flex-1 px-3 py-2.5 bg-white border-2 border-black outline-none font-bold text-sm text-gray-900 placeholder:text-gray-400"
-                  />
+                  <div className="flex-1 flex flex-col justify-center items-start gap-2">
+                    {!isLocked && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file" accept="image/*" id={`docFile-${index}`} className="hidden"
+                          onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'documents', index)}
+                        />
+                        <label
+                          htmlFor={`docFile-${index}`}
+                          className="cursor-pointer px-3 py-1.5 bg-black text-white border-2 border-black font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 active:translate-y-[1px] transition-all"
+                        >
+                          {isUploading === `documents-${index}` ? 'ĐANG TẢI LÊN...' : (doc.fileUrl ? 'CHỌN FILE KHÁC' : 'TẢI FILE LÊN')}
+                        </label>
+                      </div>
+                    )}
+                    {doc.fileUrl && (
+                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-indigo-600 underline truncate max-w-full">
+                        Xem tài liệu đã đính kèm
+                      </a>
+                    )}
+                    {isLocked && !doc.fileUrl && (
+                       <span className="text-xs font-bold text-gray-400">Không có tài liệu</span>
+                    )}
+                  </div>
                   {!isLocked && (
                     <button type="button" onClick={() => removeDocument(index)}
                       className="p-2 text-red-700 hover:bg-red-50 border-2 border-black transition-colors flex-shrink-0"
@@ -267,7 +337,7 @@ export default function KycPage() {
             <div className="flex items-center justify-between mb-5 pb-3 border-b-2 border-black">
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 bg-indigo-600 text-white flex items-center justify-center font-black text-sm">4</div>
-                <h2 className="text-sm font-black uppercase tracking-wider">Danh hiệu nổi bật (Công khai)</h2>
+                <h2 className="text-sm font-black uppercase tracking-wider text-gray-900">Danh hiệu nổi bật (Công khai)</h2>
               </div>
               {!isLocked && (
                 <button type="button" onClick={addCertificate}

@@ -40,6 +40,7 @@ const ROLE_CONFIG: Record<string, { label: string; color: string }> = {
   STAFF:      { label: 'Staff',      color: 'bg-amber-400 text-black' },
   INSTRUCTOR: { label: 'Instructor', color: 'bg-indigo-500 text-white' },
   STUDENT:    { label: 'Student',    color: 'bg-emerald-500 text-white' },
+  USER:       { label: 'Pending Instructor', color: 'bg-gray-400 text-white' },
 };
 
 const navByRole: Record<string, { href: string; label: string; icon: React.ReactNode }[]> = {
@@ -72,6 +73,9 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/admin/finance',     label: 'Tài chính',   icon: <IconDashboard /> },
     { href: '/dashboard/profile', label: 'Hồ sơ',       icon: <IconProfile /> },
   ],
+  USER: [
+    { href: '/dashboard/instructor/kyc', label: 'Hồ sơ Giảng viên', icon: <IconProfile /> },
+  ],
 };
 
 interface MainLayoutProps {
@@ -86,11 +90,12 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
   const { user } = useUser();
 
   const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== 'APPROVED';
+  const isPendingUserRole = role === 'USER';
   const isKycRoute = pathname.includes('/kyc');
 
   const navItems = navByRole[role] ?? navByRole['STUDENT'];
-  const displayedNavItems = isLockedInstructor 
-    ? navItems.filter(item => item.href.includes('/kyc') || item.label === 'Hồ sơ') 
+  const displayedNavItems = isLockedInstructor || isPendingUserRole
+    ? navItems.filter(item => item.href.includes('/kyc')) 
     : navItems;
   const roleCfg = ROLE_CONFIG[role] ?? ROLE_CONFIG['STUDENT'];
 
@@ -222,7 +227,7 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50 flex flex-col">
-          {(!isKycRoute && isLockedInstructor) ? (
+          {(!isKycRoute && (isLockedInstructor || isPendingUserRole)) ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg text-center space-y-6">
                  <div className="w-16 h-16 mx-auto bg-amber-300 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3">
@@ -235,11 +240,11 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
                  </h2>
                  <p className="text-sm font-bold text-gray-600">
                    {kycStatus === 'PENDING' ? 'Hồ sơ của bạn đang được duyệt, vui lòng đợi. Hồ sơ sẽ được duyệt trong khoảng 2 đến 3 ngày làm việc.' : 
-                    kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Vui lòng kiểm tra lại lý do từ chối và cập nhật hồ sơ.' : 
-                    'Vui lòng hoàn thiện hồ sơ đăng ký KYC để mở khóa các tính năng kinh doanh dành cho Giảng viên.'}
+                    kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Bạn vui lòng tạo lại một tài khoản mới nếu muốn tham gia giảng dạy sau này.' : 
+                    'Vui lòng hoàn thiện hồ sơ đăng ký KYC để được cấp phép kinh doanh khóa học!'}
                  </p>
                  <Link href="/dashboard/instructor/kyc" className="inline-block px-6 py-3 bg-indigo-500 text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform">
-                   {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Tôi muốn xem/chỉnh sửa'}
+                   {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Kiểm tra trạng thái'}
                  </Link>
               </div>
             </div>
