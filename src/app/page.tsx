@@ -122,7 +122,7 @@ export default async function HomePage() {
               <p className="text-gray-700 font-bold">Được lựa chọn cẩn thận để giúp bạn bắt đầu lộ trình học tập.</p>
             </div>
             <Link href="/courses" className="inline-block px-6 py-3 bg-amber-300 hover:bg-amber-400 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none">
-              Xem tất cả →
+              Xem tất cả 
             </Link>
           </div>
 

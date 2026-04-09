@@ -40,7 +40,7 @@ export default function KycPage() {
           bankAccountName: data.bankAccountName || '',
           bankAccountNumber: data.bankAccountNumber || '',
           bankName: data.bankName || '',
-          kycStatus: data.kycStatus || 'PENDING',
+          kycStatus: data.kycStatus || 'UNSUBMITTED',
           rejectionReason: data.rejectionReason || '',
           certificates: data.certificates || [],
           documents: data.documents || [],
@@ -72,11 +72,12 @@ export default function KycPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const { kycStatus, rejectionReason, ...payload } = kycData;
       const token = await getToken();
       const res = await fetch('http://localhost:3001/api/v1/users/me/kyc', {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(kycData),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         toast.success('Nộp hồ sơ thành công! Đang chờ duyệt.');
@@ -109,7 +110,7 @@ export default function KycPage() {
   );
 
   return (
-    <MainLayout role="INSTRUCTOR">
+    <MainLayout role="INSTRUCTOR" kycStatus={kycData.kycStatus || "UNSUBMITTED"}>
       <div className="max-w-4xl mx-auto space-y-6 py-4">
 
         {/* Header */}

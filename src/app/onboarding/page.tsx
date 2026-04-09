@@ -50,8 +50,8 @@ export default function OnboardingPage() {
           } else {
              router.replace('/dashboard'); 
           }
-        } else if (res.status === 401 || res.status === 404) {
-          console.warn(`[Onboarding] Chưa tìm thấy User trong DB (Status ${res.status}). Webhook có thể chưa chạy xong.`);
+        } else if (res.status === 401 || res.status === 404 || res.status === 500) {
+          console.warn(`[Onboarding] Backend chưa sẵn sàng (Status ${res.status}). Đang thử lại...`);
           if (retryCount < 10) {
             setTimeout(() => checkRoleAndRedirect(retryCount + 1), 1500);
           } else {

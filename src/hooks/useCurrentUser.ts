@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from '@clerk/nextjs';
+import { useSession, useClerk } from '@clerk/nextjs';
 
 interface CurrentUser {
   id: number;
@@ -9,6 +9,7 @@ interface CurrentUser {
   role: string;
   roleId: number;
   status: string;
+  kycStatus: string | null;
   avatarUrl: string | null;
   clerkUserId: string;
   firstName: string | null;
@@ -20,6 +21,7 @@ interface CurrentUser {
 
 export function useCurrentUser() {
   const { session, isLoaded } = useSession();
+  const { signOut } = useClerk();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,8 @@ export function useCurrentUser() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!session) {
+      setUser(null);
+      setError(null);
       setLoading(false);
       return;
     }
@@ -50,13 +54,17 @@ export function useCurrentUser() {
         setUser(json.data);
       } catch (err: any) {
         setError(err.message);
+        const errorMsg = err.message.toLocaleLowerCase();
+        if (errorMsg.includes('khóa vĩnh viễn') || errorMsg.includes('đình chỉ')) {
+          signOut();
+        }
       } finally {
         setLoading(false);
       }
     }
 
     fetchUser();
-  }, [isLoaded, session]);
+  }, [isLoaded, session?.id, signOut]);
 
   return { user, loading, error };
 }

@@ -77,14 +77,21 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
 interface MainLayoutProps {
   children: React.ReactNode;
   role?: string;
+  kycStatus?: string | null;
 }
 
-export default function MainLayout({ children, role = 'STUDENT' }: MainLayoutProps) {
+export default function MainLayout({ children, role = 'STUDENT', kycStatus = null }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
   const { user } = useUser();
 
+  const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== 'APPROVED';
+  const isKycRoute = pathname.includes('/kyc');
+
   const navItems = navByRole[role] ?? navByRole['STUDENT'];
+  const displayedNavItems = isLockedInstructor 
+    ? navItems.filter(item => item.href.includes('/kyc') || item.label === 'Hồ sơ') 
+    : navItems;
   const roleCfg = ROLE_CONFIG[role] ?? ROLE_CONFIG['STUDENT'];
 
   return (
@@ -110,7 +117,7 @@ export default function MainLayout({ children, role = 'STUDENT' }: MainLayoutPro
 
         {/* Nav items */}
         <nav className="flex-1 py-3 overflow-y-auto space-y-0.5">
-          {navItems.map((item) => {
+          {displayedNavItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
@@ -148,43 +155,97 @@ export default function MainLayout({ children, role = 'STUDENT' }: MainLayoutPro
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Header */}
-        <header className="h-14 bg-white border-b-2 border-black flex items-center justify-between px-5 flex-shrink-0">
+        <header className="h-20 bg-white border-b-4 border-black flex items-center justify-between px-6 flex-shrink-0 shadow-[0px_4px_0px_0px_rgba(0,0,0,1)] z-10">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-800 hover:text-black transition-colors p-1 border border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm"
+               onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="text-black bg-white hover:bg-amber-300 transition-colors p-2.5 border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none active:translate-y-0.5 active:translate-x-0.5"
             >
               <IconMenu />
             </button>
             <SearchBar />
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* Homepage style links directly in Dashboard header */}
+          <nav className="hidden lg:flex gap-6 text-sm font-black uppercase tracking-widest text-black">
+            <Link href="#" className="hover:bg-amber-300 px-3 py-1 border-2 border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Khóa học</Link>
+            <Link href="#" className="hover:bg-amber-300 px-3 py-1 border-2 border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Sự kiện</Link>
+            <Link href="#" className="hover:bg-amber-300 px-3 py-1 border-2 border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Blog</Link>
+          </nav>
+
+          <div className="flex items-center gap-5">
             {role === 'STUDENT' && (
-              <Link href="/cart" className="relative text-gray-700 hover:text-black border border-transparent hover:border-black p-1 rounded-sm transition-all hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <Link href="/cart" className="relative text-black hover:bg-emerald-300 border-2 border-black p-2.5 rounded-none transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:translate-x-0.5">
                 <IconCart />
-                <span className="absolute -top-1 -right-1 bg-black text-white text-[9px] font-black rounded-none w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-2.5 -right-2.5 bg-red-400 text-black border-2 border-black text-[10px] font-black rounded-none w-6 h-6 flex items-center justify-center shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
                   0
                 </span>
               </Link>
             )}
-            <div className="flex items-center gap-3">
-              <div className="hidden md:block text-right">
-                <p className="text-xs font-bold text-gray-900">
+            <div className="flex items-center gap-4 bg-gray-50 border-2 border-black p-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="hidden md:block pl-2 text-right">
+                <p className="text-xs font-black text-black">
                   {user?.firstName || user?.emailAddresses[0]?.emailAddress}
                 </p>
-                <p className={`text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 ${roleCfg.color}`}>
-                  {role}
-                </p>
+                <div className="mt-0.5">
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 border-2 border-black inline-block ${roleCfg.color.replace('text-white', 'text-black')}`}>
+                    {roleCfg.label}
+                  </span>
+                </div>
               </div>
-              <UserButton />
+              <div className="border-2 border-black">
+                <UserButton 
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-9 h-9 rounded-none",
+                      userButtonTrigger: "focus:shadow-none focus:outline-none"
+                    }
+                  }}
+                >
+                  <UserButton.MenuItems>
+                    <UserButton.Link
+                      label="Trang chủ"
+                      labelIcon={<IconHome />}
+                      href="/"
+                    />
+                    <UserButton.Link
+                      label="Bảng điều khiển"
+                      labelIcon={<IconDashboard />}
+                      href="/dashboard"
+                    />
+                  </UserButton.MenuItems>
+                </UserButton>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          {children}
+        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 flex flex-col">
+          {(!isKycRoute && isLockedInstructor) ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg text-center space-y-6">
+                 <div className="w-16 h-16 mx-auto bg-amber-300 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3">
+                    <span className="text-3xl font-black text-black">!</span>
+                 </div>
+                 <h2 className="text-2xl font-black uppercase text-black">
+                   {kycStatus === 'PENDING' ? 'Hồ sơ đang được duyệt' : 
+                    kycStatus === 'REJECTED' ? 'Hồ sơ bị từ chối' : 
+                    'Hồ sơ chưa hoàn thiện'}
+                 </h2>
+                 <p className="text-sm font-bold text-gray-600">
+                   {kycStatus === 'PENDING' ? 'Hồ sơ của bạn đang được duyệt, vui lòng đợi. Hồ sơ sẽ được duyệt trong khoảng 2 đến 3 ngày làm việc.' : 
+                    kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Vui lòng kiểm tra lại lý do từ chối và cập nhật hồ sơ.' : 
+                    'Vui lòng hoàn thiện hồ sơ đăng ký KYC để mở khóa các tính năng kinh doanh dành cho Giảng viên.'}
+                 </p>
+                 <Link href="/dashboard/instructor/kyc" className="inline-block px-6 py-3 bg-indigo-500 text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform">
+                   {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Tôi muốn xem/chỉnh sửa'}
+                 </Link>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>
