@@ -10,7 +10,6 @@ export default function KycPage() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState<string | null>(null); // name of field being uploaded
   
   const [kycData, setKycData] = useState({
     idCardUrl: '',
@@ -22,6 +21,9 @@ export default function KycPage() {
     certificates: [] as string[],
     documents: [] as { documentType: string; title: string; fileUrl: string }[],
   });
+
+  const [selectedFiles, setSelectedFiles] = useState<{ idCard?: File; documents: { [key: number]: File } }>({ documents: {} });
+  const [previewUrls, setPreviewUrls] = useState<{ idCard?: string; documents: { [key: number]: string } }>({ documents: {} });
 
   const isLocked = kycData.kycStatus === 'PENDING' || kycData.kycStatus === 'APPROVED';
 
@@ -67,46 +69,81 @@ export default function KycPage() {
   const addCertificate = () => setKycData({ ...kycData, certificates: [...kycData.certificates, ''] });
   const removeCertificate = (i: number) => setKycData({ ...kycData, certificates: kycData.certificates.filter((_, idx) => idx !== i) });
   const addDocument = () => setKycData({ ...kycData, documents: [...kycData.documents, { documentType: 'CERTIFICATE', title: '', fileUrl: '' }] });
-  const removeDocument = (i: number) => setKycData({ ...kycData, documents: kycData.documents.filter((_, idx) => idx !== i) });
+  const removeDocument = (i: number) => {
+    setKycData({ ...kycData, documents: kycData.documents.filter((_, idx) => idx !== i) });
+    removeDocumentFile(i);
+  };
 
-  const handleUpload = async (file: File, fieldName: string, index?: number) => {
-    setIsUploading(index !== undefined ? `${fieldName}-${index}` : fieldName);
-    try {
-      const token = await getToken();
-      const formData = new FormData();
-      formData.append('file', file);
+  const handleIdCardSelect = (file: File) => {
+    setSelectedFiles(prev => ({ ...prev, idCard: file }));
+    setPreviewUrls(prev => {
+      if (prev.idCard) URL.revokeObjectURL(prev.idCard);
+      return { ...prev, idCard: URL.createObjectURL(file) };
+    });
+  };
 
-      const res = await fetch('http://localhost:3001/api/v1/uploads/image', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      });
+  const removeIdCardFile = () => {
+    setSelectedFiles(prev => { const next = { ...prev }; delete next.idCard; return next; });
+    setPreviewUrls(prev => {
+      if (prev.idCard) URL.revokeObjectURL(prev.idCard);
+      const next = { ...prev }; delete next.idCard; return next;
+    });
+  };
 
-      if (res.ok) {
-        const { data } = await res.json();
-        if (index !== undefined) {
-          const d = [...kycData.documents];
-          d[index] = { ...d[index], fileUrl: data.url };
-          setKycData({ ...kycData, documents: d });
-        } else {
-          setKycData({ ...kycData, [fieldName]: data.url });
-        }
-        toast.success('Tải lên thành công!');
-      } else {
-        toast.error('Tải lên thất bại.');
-      }
-    } catch {
-      toast.error('Có lỗi xảy ra khi tải lên.');
-    } finally {
-      setIsUploading(null);
-    }
+  const handleDocumentFileSelect = (index: number, file: File) => {
+    setSelectedFiles(prev => ({ ...prev, documents: { ...prev.documents, [index]: file } }));
+    setPreviewUrls(prev => {
+      if (prev.documents[index]) URL.revokeObjectURL(prev.documents[index]);
+      return { ...prev, documents: { ...prev.documents, [index]: URL.createObjectURL(file) } };
+    });
+  };
+
+  const removeDocumentFile = (index: number) => {
+    setSelectedFiles(prev => { const nextDocs = { ...prev.documents }; delete nextDocs[index]; return { ...prev, documents: nextDocs }; });
+    setPreviewUrls(prev => {
+      if (prev.documents[index]) URL.revokeObjectURL(prev.documents[index]);
+      const nextDocs = { ...prev.documents }; delete nextDocs[index]; return { ...prev, documents: nextDocs };
+    });
+  };
+
+  const uploadFileToServer = async (file: File) => {
+    const token = await getToken();
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('http://localhost:3001/api/v1/uploads/image', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Có lỗi xảy ra khi tải ảnh lên.');
+    const { data } = await res.json();
+    return data.url;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const { kycStatus, rejectionReason, ...payload } = kycData;
+      let finalIdCardUrl = kycData.idCardUrl;
+      const finalDocuments = [...kycData.documents];
+
+      if (selectedFiles.idCard) {
+        finalIdCardUrl = await uploadFileToServer(selectedFiles.idCard);
+      }
+
+      for (const [indexStr, file] of Object.entries(selectedFiles.documents)) {
+        const idx = Number(indexStr);
+        const url = await uploadFileToServer(file);
+        finalDocuments[idx].fileUrl = url;
+      }
+
+      const { kycStatus, rejectionReason, ...basePayload } = kycData;
+      const payload = {
+        ...basePayload,
+        idCardUrl: finalIdCardUrl,
+        documents: finalDocuments,
+      };
+
       const token = await getToken();
       const res = await fetch('http://localhost:3001/api/v1/users/me/kyc', {
         method: 'PUT',
@@ -207,21 +244,31 @@ export default function KycPage() {
                   <div className="flex items-center gap-2">
                     <input
                       type="file" accept="image/*" id="idCardFile" className="hidden"
-                      onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'idCardUrl')}
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) handleIdCardSelect(e.target.files[0]);
+                        e.target.value = '';
+                      }}
                     />
                     <label
                       htmlFor="idCardFile"
                       className="cursor-pointer px-4 py-2 bg-black text-white border-2 border-black font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 active:translate-y-[1px] transition-all disabled:opacity-50"
                     >
-                      {isUploading === 'idCardUrl' ? 'ĐANG TẢI LÊN...' : (kycData.idCardUrl ? 'CHỌN ẢNH KHÁC' : 'TẢI ẢNH LÊN')}
+                      {previewUrls.idCard || kycData.idCardUrl ? 'CHỌN ẢNH KHÁC' : 'TẢI ẢNH LÊN'}
                     </label>
                   </div>
                 )}
                 {isLocked && !kycData.idCardUrl && (
                   <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Chưa tải ảnh</div>
                 )}
-                {kycData.idCardUrl && (
-                  <img src={kycData.idCardUrl} alt="ID Card Preview" className="w-48 h-auto border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mt-2" />
+                {previewUrls.idCard ? (
+                  <div className="relative mt-2 inline-block self-start">
+                    <img src={previewUrls.idCard} alt="Preview" className="w-48 h-auto border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" />
+                    <button type="button" onClick={removeIdCardFile} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 flex items-center justify-center border-2 border-black font-black text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[1px] active:translate-y-0 transition-transform">X</button>
+                  </div>
+                ) : (
+                  kycData.idCardUrl && (
+                    <img src={kycData.idCardUrl} alt="ID Card Preview" className="w-48 h-auto border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mt-2" />
+                  )
                 )}
               </div>
             </div>
@@ -301,23 +348,32 @@ export default function KycPage() {
                       <div className="flex items-center gap-2">
                         <input
                           type="file" accept="image/*" id={`docFile-${index}`} className="hidden"
-                          onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'documents', index)}
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) handleDocumentFileSelect(index, e.target.files[0]);
+                            e.target.value = '';
+                          }}
                         />
                         <label
                           htmlFor={`docFile-${index}`}
                           className="cursor-pointer px-3 py-1.5 bg-black text-white border-2 border-black font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 active:translate-y-[1px] transition-all"
                         >
-                          {isUploading === `documents-${index}` ? 'ĐANG TẢI LÊN...' : (doc.fileUrl ? 'CHỌN FILE KHÁC' : 'TẢI FILE LÊN')}
+                          {previewUrls.documents[index] || doc.fileUrl ? 'CHỌN FILE KHÁC' : 'TẢI FILE LÊN'}
                         </label>
                       </div>
                     )}
-                    {doc.fileUrl && (
-                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-indigo-600 underline truncate max-w-full">
-                        Xem tài liệu đã đính kèm
-                      </a>
-                    )}
-                    {isLocked && !doc.fileUrl && (
-                       <span className="text-xs font-bold text-gray-400">Không có tài liệu</span>
+                    {previewUrls.documents[index] ? (
+                      <div className="relative inline-block self-start mt-1">
+                        <img src={previewUrls.documents[index]} alt="Preview" className="h-16 w-auto border-2 border-black object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" />
+                        <button type="button" onClick={() => removeDocumentFile(index)} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 flex items-center justify-center border-2 border-black font-black text-[10px] shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[1px] active:translate-y-0 transition-transform">X</button>
+                      </div>
+                    ) : (
+                      doc.fileUrl ? (
+                         <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-indigo-600 underline truncate max-w-full">
+                          Xem tài liệu đã đính kèm
+                        </a>
+                      ) : (
+                        isLocked && <span className="text-xs font-bold text-gray-400">Không có tài liệu</span>
+                      )
                     )}
                   </div>
                   {!isLocked && (
