@@ -90,7 +90,7 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
   const pathname = usePathname();
   const { user } = useUser();
 
-  const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== 'APPROVED';
+  const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== null && kycStatus !== 'APPROVED';
   const isPendingUserRole = role === 'USER';
   const isKycRoute = pathname.includes('/kyc');
 

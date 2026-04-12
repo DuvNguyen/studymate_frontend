@@ -62,7 +62,7 @@ export default function ProfilePage() {
           <div className="h-2 bg-black" />
           <div className="p-6">
             <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-              {clerkUser?.fullName || clerkUser?.firstName || 'Học viên StudyMate'}
+              {clerkUser?.fullName || clerkUser?.firstName || (profile.role === 'INSTRUCTOR' ? 'Giảng viên StudyMate' : profile.role === 'ADMIN' ? 'Quản trị viên StudyMate' : 'Học viên StudyMate')}
             </h1>
             <p className="text-sm text-gray-500 font-medium mt-0.5">
               {clerkUser?.primaryEmailAddress?.emailAddress || profile.email}

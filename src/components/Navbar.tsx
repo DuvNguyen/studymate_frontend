@@ -38,7 +38,7 @@ export default function Navbar({
     <header className="fixed top-0 w-full z-50 bg-white">
       {/* Tier 1 — Navbar chính */}
       <div className="border-b-4 border-black shadow-[0px_4px_0px_0px_rgba(0,0,0,1)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
           <Link

@@ -37,7 +37,7 @@ export default function CategoryNavBar({
   if (loading) {
     return (
       <div className="border-b-2 border-black bg-white">
-        <div className="max-w-7xl mx-auto px-4 h-10 flex items-center gap-1">
+        <div className="w-full px-4 h-10 flex items-center gap-1">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -54,7 +54,7 @@ export default function CategoryNavBar({
 
   return (
     <div className={`relative border-b-2 border-black ${bgColor} z-40 ${className}`}>
-      <div className="max-w-7xl mx-auto px-4 h-10 flex items-center gap-0 overflow-x-auto scrollbar-hide">
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-10 flex items-center gap-0 overflow-x-auto scrollbar-hide">
         {categories.map((cat) => (
           <div
             key={cat.id}
