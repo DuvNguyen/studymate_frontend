@@ -36,12 +36,14 @@ export function NavbarUserMenu() {
         Dashboard
       </Link>
       <div className="flex items-center gap-3 border-l-4 border-black pl-4">
-        <div className="hidden lg:block text-right">
-          <p className="text-sm font-black text-black uppercase">
-            {user.firstName || user.email || 'HỌC VIÊN'}
-          </p>
-          <a> xin chào </a>
-          <p className="text-[10px] font-black uppercase tracking-widest bg-amber-300 border-2 border-black px-1.5 py-0.5 inline-block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex flex-col items-end gap-0.5">
+            <div className="flex items-center gap-1.5 leading-none">
+              <span className="text-[10px] font-black uppercase tracking-widest text-black/60">xin chào,</span>
+              <p className="text-sm font-black text-black uppercase">
+                {user.firstName || user.email?.split('@')[0] || 'HỌC VIÊN'}
+              </p>
+            </div>
+          <p className="text-[10px] font-black uppercase tracking-widest bg-amber-300 border-2 border-black px-1.5 py-0.5 inline-block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
             {user.role}
           </p>
         </div>
