@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserButton, useUser } from '@clerk/nextjs';
 import SearchBar from './SearchBar';
+import Navbar from './Navbar';
 
 // Icons SVG
 function IconHome() {
@@ -100,25 +101,34 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
   const roleCfg = ROLE_CONFIG[role] ?? ROLE_CONFIG['STUDENT'];
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+      {/* Shared Navbar from homepage - Fixed at top */}
+      <Navbar />
 
-      {/* Sidebar */}
-      <aside
-        className={`
-          ${sidebarOpen ? 'w-56' : 'w-14'}
-          bg-gray-900 text-white flex flex-col
-          transition-all duration-200 ease-in-out flex-shrink-0
-          border-r-2 border-black
-        `}
-      >
-        {/* Logo */}
-        <Link href="/" className="flex items-center h-14 px-4 border-b-2 border-gray-700 hover:bg-gray-800 transition-colors">
-          {sidebarOpen ? (
-            <span className="text-lg font-black text-white tracking-tight uppercase">StudyMate</span>
-          ) : (
-            <span className="text-lg font-black text-white">S</span>
+      <div className="flex flex-1 overflow-hidden pt-[110px]">
+        {/* Sidebar */}
+        <aside
+          className={`
+            ${sidebarOpen ? 'w-56' : 'w-14'}
+            bg-gray-900 text-white flex flex-col
+            transition-all duration-200 ease-in-out flex-shrink-0
+            border-r-2 border-black
+          `}
+        >
+        {/* Sidebar Header with Toggle - Moved from Main Header */}
+        <div className={`flex items-center h-14 border-b-2 border-gray-700 ${sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'}`}>
+          {sidebarOpen && (
+            <Link href="/" className="flex items-center overflow-hidden flex-1">
+              <span className="text-lg font-black text-white tracking-tight uppercase transition-all duration-200">StudyMate</span>
+            </Link>
           )}
-        </Link>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`p-2 text-gray-400 hover:text-white transition-colors ${!sidebarOpen ? 'w-full flex justify-center' : ''}`}
+          >
+            <IconMenu />
+          </button>
+        </div>
 
         {/* Nav items */}
         <nav className="flex-1 py-3 overflow-y-auto space-y-0.5">
@@ -159,69 +169,15 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Header */}
-        <header className="h-20 bg-white border-b-4 border-black flex items-center justify-between px-6 flex-shrink-0 shadow-[0px_4px_0px_0px_rgba(0,0,0,1)] z-10">
+        {/* Dashboard Sub-Header (Optional Search/Breadcrumbs) */}
+        <header className="h-14 bg-white border-b-2 border-black flex items-center justify-between px-6 flex-shrink-0 z-10">
           <div className="flex items-center gap-4">
-            <button
-               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-black bg-white hover:bg-amber-300 transition-colors p-2.5 border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none active:translate-y-0.5 active:translate-x-0.5"
-            >
-              <IconMenu />
-            </button>
             <SearchBar />
           </div>
 
           {/* Homepage style links directly in Dashboard header */}
-          <nav className="hidden lg:flex gap-6 text-sm font-black uppercase tracking-widest text-black">
-            <Link href="#" className="hover:bg-amber-300 px-3 py-1 border-2 border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Khóa học</Link>
-            <Link href="#" className="hover:bg-amber-300 px-3 py-1 border-2 border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Sự kiện</Link>
-            <Link href="#" className="hover:bg-amber-300 px-3 py-1 border-2 border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Blog</Link>
-          </nav>
-
-          <div className="flex items-center gap-5">
-            {role === 'STUDENT' && (
-              <Link href="/cart" className="relative text-black hover:bg-emerald-300 border-2 border-black p-2.5 rounded-none transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:translate-x-0.5">
-                <IconCart />
-                <span className="absolute -top-2.5 -right-2.5 bg-red-400 text-black border-2 border-black text-[10px] font-black rounded-none w-6 h-6 flex items-center justify-center shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
-                  0
-                </span>
-              </Link>
-            )}
-            <div className="flex items-center gap-4 bg-gray-50 border-2 border-black p-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-              <div className="hidden md:block pl-2 text-right">
-                <p className="text-xs font-black text-black">
-                  {user?.firstName || user?.emailAddresses[0]?.emailAddress}
-                </p>
-                <div className="mt-0.5">
-                  <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 border-2 border-black inline-block ${roleCfg.color.replace('text-white', 'text-black')}`}>
-                    {roleCfg.label}
-                  </span>
-                </div>
-              </div>
-              <div className="border-2 border-black">
-                <UserButton 
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-9 h-9 rounded-none",
-                      userButtonTrigger: "focus:shadow-none focus:outline-none"
-                    }
-                  }}
-                >
-                  <UserButton.MenuItems>
-                    <UserButton.Link
-                      label="Trang chủ"
-                      labelIcon={<IconHome />}
-                      href="/"
-                    />
-                    <UserButton.Link
-                      label="Bảng điều khiển"
-                      labelIcon={<IconDashboard />}
-                      href="/dashboard"
-                    />
-                  </UserButton.MenuItems>
-                </UserButton>
-              </div>
-            </div>
+          <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-black">
+            <span className="text-gray-400">Dashboard View</span>
           </div>
         </header>
 
@@ -254,5 +210,6 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
         </main>
       </div>
     </div>
+  </div>
   );
 }
