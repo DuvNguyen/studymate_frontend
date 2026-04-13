@@ -64,7 +64,7 @@ export default async function HomePage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-20 lg:pt-32 lg:pb-24 overflow-hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 border-b-4 border-black bg-white shadow-[0px_8px_0px_0px_rgba(0,0,0,1)] mb-16">
+      <section className="relative pt-36 pb-20 lg:pt-44 lg:pb-24 overflow-hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 border-b-4 border-black bg-white shadow-[0px_8px_0px_0px_rgba(0,0,0,1)] mb-16">
         
         <div className="text-center max-w-4xl mx-auto">
           <p className="text-sm font-black uppercase tracking-widest text-emerald-700 mb-6 bg-emerald-100 border-2 border-emerald-900 inline-block px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -rotate-2">
@@ -122,7 +122,7 @@ export default async function HomePage() {
               <p className="text-gray-700 font-bold">Được lựa chọn cẩn thận để giúp bạn bắt đầu lộ trình học tập.</p>
             </div>
             <Link href="/courses" className="inline-block px-6 py-3 bg-amber-300 hover:bg-amber-400 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none">
-              Xem tất cả →
+              Xem tất cả 
             </Link>
           </div>
 

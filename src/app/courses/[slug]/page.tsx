@@ -1,0 +1,403 @@
+'use client';
+
+import { useParams } from 'next/navigation';
+import { Suspense, useState, useRef, useEffect } from 'react';
+import { useCourseDetail, CourseDetail } from '@/hooks/useCourseDetail';
+import Navbar from '@/components/Navbar';
+
+function VideoPreviewModal({ 
+  isOpen, 
+  onClose, 
+  youtubeVideoId 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  youtubeVideoId: string | null; 
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
+      <div className="relative w-full max-w-4xl bg-black border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+        <button 
+          onClick={onClose}
+          className="absolute -top-12 right-0 text-white hover:text-amber-400 font-bold text-xl focus:outline-none"
+        >
+          Đóng (X)
+        </button>
+        <div className="relative pt-[56.25%] w-full">
+          {youtubeVideoId ? (
+            <iframe
+              className="absolute top-0 left-0 w-full h-full"
+              src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1`}
+              title="Course Preview"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          ) : (
+            <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center text-white p-8 text-center bg-zinc-900">
+              <svg className="w-16 h-16 mb-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              <h3 className="text-xl font-bold mb-2">Video không khả dụng</h3>
+              <p className="text-zinc-400">Video xem trước cho bài học này hiện không có sẵn hoặc gặp lỗi.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CourseDetailContent() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const { course, loading, error } = useCourseDetail(slug);
+  const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
+  
+  // Modal state
+  const [previewVideoId, setPreviewVideoId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openPreview = (youtubeId: string | null) => {
+    setPreviewVideoId(youtubeId);
+    setIsModalOpen(true);
+  };
+
+  // Trạng thái Loading chuẩn theo ý bạn (giống hệt trang onboarding)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
+        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin mb-6"></div>
+        <h1 className="text-2xl font-black text-black uppercase tracking-tight mb-2">Đang chuẩn bị không gian học tập...</h1>
+        <p className="text-xs font-black uppercase tracking-widest text-gray-500 max-w-md">
+          Xin vui lòng chờ giây lát, StudyMate đang tải dữ liệu khóa học dành riêng cho bạn.
+        </p>
+      </div>
+    );
+  }
+
+  // Trạng thái Lỗi hoặc Không tìm thấy
+  const isNotFound = error === 'NOT_FOUND' || (!course && !loading);
+
+  if (error || !course) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center">
+          <div className="w-16 h-16 bg-red-100 border-4 border-black flex items-center justify-center mx-auto mb-6 -rotate-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <span className="text-3xl font-black text-red-600">{isNotFound ? '?' : '!'}</span>
+          </div>
+          <h2 className="text-2xl font-black uppercase text-black mb-4">
+            {isNotFound ? 'Oops! Không tìm thấy' : 'Lỗi hệ thống'}
+          </h2>
+          <p className="text-sm font-bold text-gray-600 mb-8 border-l-4 border-black pl-4 py-2 bg-gray-50 text-left">
+            {isNotFound 
+              ? 'Khóa học này không tồn tại hoặc đã được gỡ xuống. Vui lòng kiểm tra lại đường dẫn.' 
+              : `Đã có lỗi xảy ra: ${error || 'Lỗi không xác định'}`}
+          </p>
+          <button 
+            onClick={() => window.location.href = '/courses'}
+            className="w-full px-6 py-3 bg-black text-white font-black uppercase tracking-widest border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-y-0 active:translate-x-0 active:shadow-none"
+          >
+            Quay lại danh sách
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const toggleSection = (id: number) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const expandAll = () => {
+    const newExpanded: Record<number, boolean> = {};
+    course.sections?.forEach((s) => {
+      newExpanded[s.id] = true;
+    });
+    setExpandedSections(newExpanded);
+  };
+
+  const formatDuration = (secs: number) => {
+    if (!secs) return '00:00';
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (h > 0) return `${h}hr ${m}min`;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="min-h-screen bg-white font-sans text-black pb-24">
+      <Navbar />
+
+      {/* Hero Section */}
+      <div className="pt-24 bg-zinc-900 border-b-4 border-black text-white relative z-0">
+        <div className="max-w-7xl mx-auto px-4 py-12 lg:py-16 md:flex justify-between">
+          <div className="md:w-2/3 pr-8 relative z-10">
+            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-amber-400 mb-4">
+              <span className="hover:underline cursor-pointer">{course.category?.name}</span>
+              <span>/</span>
+              <span className="hover:underline cursor-pointer">{course.level}</span>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-4 leading-tight">
+              {course.title}
+            </h1>
+            <p className="text-lg md:text-xl font-medium text-zinc-300 mb-6 max-w-2xl">
+              {course.description || "Một khóa học tuyệt vời giúp bạn làm chủ các kỹ năng mới."}
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-4 text-sm font-bold mb-6">
+              <div className="flex items-center bg-amber-400 text-black px-2 py-1">
+                <span className="mr-1">{course.avgRating > 0 ? course.avgRating.toFixed(1) : 'Chưa có đánh giá'}</span>
+                <span>★</span>
+              </div>
+              <span className="text-zinc-300 underline">
+                ({course.reviewCount.toLocaleString('vi-VN')} ratings)
+              </span>
+              <span>{course.studentCount.toLocaleString('vi-VN')} students</span>
+            </div>
+
+            <div className="text-sm">
+              <p className="mb-2">
+                Created by <span className="underline text-amber-400 cursor-pointer">{course.instructor?.fullName || 'Instructor'}</span>
+              </p>
+              <div className="flex gap-4 text-zinc-400">
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Last updated {new Date(course.publishedAt || course.createdAt).toLocaleDateString('en-GB')}
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
+                  {course.language.toUpperCase()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 relative pt-8">
+        <div className="md:flex gap-8 lg:gap-16">
+          {/* Main Content Area */}
+          <div className="md:w-2/3">
+            
+            {/* What you'll learn */}
+            <div className="border-4 border-black p-6 md:p-8 mb-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <h2 className="text-2xl font-black uppercase mb-6">What you&apos;ll learn</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-bold text-gray-800">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  <span>Nắm vững các khái niệm cơ bản về lĩnh vực này.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  <span>Ứng dụng kiến thức vào các dự án thực tế.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  <span>Hiểu sâu các nguyên lý và thực hành chuyên sâu.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  <span>Sẵn sàng cho các công việc ở cấp độ trung bình đến cao.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Course Content */}
+            <div className="mb-10">
+              <h2 className="text-2xl font-black uppercase mb-4">Course content</h2>
+              
+              <div className="flex justify-between items-center mb-4 text-sm font-bold text-gray-600">
+                <div>
+                  {course.sectionCount} sections • {course.lessonCount} lectures • {formatDuration(course.totalDuration)} total length
+                </div>
+                <button onClick={expandAll} className="text-blue-700 hover:text-blue-900 font-extrabold focus:outline-none">
+                  Expand all sections
+                </button>
+              </div>
+
+              <div className="border-2 border-black divide-y-2 divide-black">
+                {course.sections && course.sections.length > 0 ? (
+                  course.sections.map((section) => {
+                    const isExpanded = expandedSections[section.id] ?? false;
+                    const sectionDuration = section.lessons ? section.lessons.reduce((acc, l) => acc + l.durationSecs, 0) : 0;
+                    
+                    return (
+                      <div key={section.id} className="bg-white">
+                        <button 
+                          onClick={() => toggleSection(section.id)}
+                          className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl font-bold">
+                              {isExpanded ? '⌃' : '⌄'}
+                            </span>
+                            <span className="font-extrabold text-left">{section.title}</span>
+                          </div>
+                          <div className="text-sm font-bold text-gray-500 whitespace-nowrap">
+                            {section.lessons?.length || 0} lectures • {formatDuration(sectionDuration)}
+                          </div>
+                        </button>
+                        
+                        {isExpanded && section.lessons && section.lessons.length > 0 && (
+                          <div className="p-4 border-t-2 border-black bg-white space-y-3">
+                            {section.lessons.map(lesson => (
+                              <div key={lesson.id} className="flex justify-between items-center group">
+                                <div className="flex items-center gap-3 max-w-[70%]">
+                                  <svg className="w-5 h-5 flex-shrink-0 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
+                                  <span className={`text-sm ${lesson.isPreview ? 'text-blue-700 hover:text-blue-900 cursor-pointer underline group-hover:text-blue-800' : 'text-gray-800'}`}>
+                                    {lesson.title}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  {lesson.isPreview && (
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openPreview(lesson.youtubeVideoId);
+                                      }}
+                                      className="text-sm font-bold text-blue-700 underline hover:text-blue-900 focus:outline-none"
+                                    >
+                                      Preview
+                                    </button>
+                                  )}
+                                  <span className="text-sm text-gray-500">
+                                    {formatDuration(lesson.durationSecs)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-8 text-center text-gray-500 font-bold">
+                    Khóa học chưa có nội dung.
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Sidebar Area (Add to Cart) */}
+          <div className="md:w-1/3 relative">
+            <div className="hidden md:block absolute -top-80 right-0 w-full z-20">
+              {/* Sticky Sidebar */}
+              <div className="bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] sticky top-24 overflow-hidden">
+                {/* Course Thumbnail Image or Preview player */}
+                <div 
+                  className="relative border-b-2 border-black bg-black pt-[56.25%] overflow-hidden group cursor-pointer"
+                  onClick={() => openPreview(course.sections?.[0]?.lessons?.[0]?.youtubeVideoId || null)}
+                >
+                  {course.thumbnailUrl ? (
+                    <img 
+                      src={course.thumbnailUrl} 
+                      alt={course.title}
+                      className="absolute top-0 left-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.classList.add('flex', 'items-center', 'justify-center', 'bg-gray-900');
+                          parent.innerHTML += `
+                            <div class="px-4 text-center">
+                              <p class="text-[10px] font-black text-amber-400 uppercase tracking-tighter line-clamp-2 mb-2">${course.title}</p>
+                              <p class="text-[8px] font-bold text-gray-500 uppercase tracking-widest leading-none">Vui lòng kiểm tra kết nối ảnh</p>
+                            </div>
+                          `;
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-white font-bold">
+                      No Preview
+                    </div>
+                  )}
+                  {/* Play icon overlay */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm rounded-full p-4 border border-white">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
+                  </div>
+                  <div className="absolute bottom-4 left-0 w-full text-center font-black text-white px-2">
+                    Preview this course
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  {/* Pricing and Cart */}
+                  <div className="text-3xl font-black mb-4">
+                    ₫{course.price.toLocaleString('vi-VN')}
+                  </div>
+
+                  <div className="flex gap-2 mb-4">
+                    <button className="flex-1 bg-white hover:bg-gray-100 text-black font-black py-3 border-2 border-black">
+                      Add to cart
+                    </button>
+                    <button className="px-4 py-3 border-2 border-black hover:bg-gray-100">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                    </button>
+                  </div>
+                  
+                  <button className="w-full bg-white hover:bg-gray-100 text-black font-black py-3 border-2 border-black mb-4">
+                    Buy now
+                  </button>
+
+                  <p className="text-xs text-center text-gray-500 font-bold mb-6">30-Day Money-Back Guarantee<br/>Full Lifetime Access</p>
+
+                  <div className="flex justify-between items-center text-sm font-bold text-black border-t-2 border-dashed border-gray-300 pt-4">
+                    <button className="hover:underline">Share</button>
+                    <button className="hover:underline">Gift this course</button>
+                    <button className="hover:underline">Apply Coupon</button>
+                  </div>
+
+                  {/* Apply Coupon Dummy View */}
+                  <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300">
+                     <p className="text-xs text-gray-500 mb-2"><b>KEEPLEARNING</b> is applied</p>
+                     <div className="flex gap-2">
+                       <input type="text" placeholder="Enter Coupon" className="flex-1 border border-black px-2 py-1 text-sm outline-none" />
+                       <button className="bg-black text-white font-bold px-3 py-1 text-sm">Apply</button>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Buy Area (shows only on mobile, sticky bottom) */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black p-4 z-50 flex items-center justify-between">
+               <div className="text-xl font-black">₫{course.price.toLocaleString('vi-VN')}</div>
+               <button className="bg-black text-white font-black px-8 py-3">Buy now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Video Modal */}
+      <VideoPreviewModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        youtubeVideoId={previewVideoId} 
+      />
+    </div>
+  );
+}
+
+export default function CourseDetailPage() {
+  const params = useParams();
+  const slug = params?.slug as string;
+
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
+        <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-none animate-spin mb-6"></div>
+      </div>
+    }>
+      <CourseDetailContent key={slug} />
+    </Suspense>
+  );
+}

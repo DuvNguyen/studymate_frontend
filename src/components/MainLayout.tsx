@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserButton, useUser } from '@clerk/nextjs';
 import SearchBar from './SearchBar';
+import Navbar from './Navbar';
 
 // Icons SVG
 function IconHome() {
@@ -40,6 +41,7 @@ const ROLE_CONFIG: Record<string, { label: string; color: string }> = {
   STAFF:      { label: 'Staff',      color: 'bg-amber-400 text-black' },
   INSTRUCTOR: { label: 'Instructor', color: 'bg-indigo-500 text-white' },
   STUDENT:    { label: 'Student',    color: 'bg-emerald-500 text-white' },
+  USER:       { label: 'Pending Instructor', color: 'bg-gray-400 text-white' },
 };
 
 const navByRole: Record<string, { href: string; label: string; icon: React.ReactNode }[]> = {
@@ -72,45 +74,65 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/admin/finance',     label: 'Tài chính',   icon: <IconDashboard /> },
     { href: '/dashboard/profile', label: 'Hồ sơ',       icon: <IconProfile /> },
   ],
+  USER: [
+    { href: '/dashboard/instructor/kyc', label: 'Hồ sơ Giảng viên', icon: <IconProfile /> },
+  ],
 };
 
 interface MainLayoutProps {
   children: React.ReactNode;
   role?: string;
+  kycStatus?: string | null;
 }
 
-export default function MainLayout({ children, role = 'STUDENT' }: MainLayoutProps) {
+export default function MainLayout({ children, role = 'STUDENT', kycStatus = null }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
   const { user } = useUser();
 
+  const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== null && kycStatus !== 'APPROVED';
+  const isPendingUserRole = role === 'USER';
+  const isKycRoute = pathname.includes('/kyc');
+
   const navItems = navByRole[role] ?? navByRole['STUDENT'];
+  const displayedNavItems = isLockedInstructor || isPendingUserRole
+    ? navItems.filter(item => item.href.includes('/kyc')) 
+    : navItems;
   const roleCfg = ROLE_CONFIG[role] ?? ROLE_CONFIG['STUDENT'];
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+      {/* Shared Navbar from homepage - Fixed at top */}
+      <Navbar />
 
-      {/* Sidebar */}
-      <aside
-        className={`
-          ${sidebarOpen ? 'w-56' : 'w-14'}
-          bg-gray-900 text-white flex flex-col
-          transition-all duration-200 ease-in-out flex-shrink-0
-          border-r-2 border-black
-        `}
-      >
-        {/* Logo */}
-        <Link href="/" className="flex items-center h-14 px-4 border-b-2 border-gray-700 hover:bg-gray-800 transition-colors">
-          {sidebarOpen ? (
-            <span className="text-lg font-black text-white tracking-tight uppercase">StudyMate</span>
-          ) : (
-            <span className="text-lg font-black text-white">S</span>
+      <div className="flex flex-1 overflow-hidden pt-[110px]">
+        {/* Sidebar */}
+        <aside
+          className={`
+            ${sidebarOpen ? 'w-56' : 'w-14'}
+            bg-gray-900 text-white flex flex-col
+            transition-all duration-200 ease-in-out flex-shrink-0
+            border-r-2 border-black
+          `}
+        >
+        {/* Sidebar Header with Toggle - Moved from Main Header */}
+        <div className={`flex items-center h-14 border-b-2 border-gray-700 ${sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'}`}>
+          {sidebarOpen && (
+            <Link href="/" className="flex items-center overflow-hidden flex-1">
+              <span className="text-lg font-black text-white tracking-tight uppercase transition-all duration-200">StudyMate</span>
+            </Link>
           )}
-        </Link>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`p-2 text-gray-400 hover:text-white transition-colors ${!sidebarOpen ? 'w-full flex justify-center' : ''}`}
+          >
+            <IconMenu />
+          </button>
+        </div>
 
         {/* Nav items */}
         <nav className="flex-1 py-3 overflow-y-auto space-y-0.5">
-          {navItems.map((item) => {
+          {displayedNavItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
@@ -147,46 +169,47 @@ export default function MainLayout({ children, role = 'STUDENT' }: MainLayoutPro
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Header */}
-        <header className="h-14 bg-white border-b-2 border-black flex items-center justify-between px-5 flex-shrink-0">
+        {/* Dashboard Sub-Header (Optional Search/Breadcrumbs) */}
+        <header className="h-14 bg-white border-b-2 border-black flex items-center justify-between px-6 flex-shrink-0 z-10">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-800 hover:text-black transition-colors p-1 border border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-sm"
-            >
-              <IconMenu />
-            </button>
             <SearchBar />
           </div>
 
-          <div className="flex items-center gap-4">
-            {role === 'STUDENT' && (
-              <Link href="/cart" className="relative text-gray-700 hover:text-black border border-transparent hover:border-black p-1 rounded-sm transition-all hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <IconCart />
-                <span className="absolute -top-1 -right-1 bg-black text-white text-[9px] font-black rounded-none w-4 h-4 flex items-center justify-center">
-                  0
-                </span>
-              </Link>
-            )}
-            <div className="flex items-center gap-3">
-              <div className="hidden md:block text-right">
-                <p className="text-xs font-bold text-gray-900">
-                  {user?.firstName || user?.emailAddresses[0]?.emailAddress}
-                </p>
-                <p className={`text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 ${roleCfg.color}`}>
-                  {role}
-                </p>
-              </div>
-              <UserButton />
-            </div>
+          {/* Homepage style links directly in Dashboard header */}
+          <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-black">
+            <span className="text-gray-400">Dashboard View</span>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          {children}
+        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 flex flex-col">
+          {(!isKycRoute && (isLockedInstructor || isPendingUserRole)) ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg text-center space-y-6">
+                 <div className="w-16 h-16 mx-auto bg-amber-300 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3">
+                    <span className="text-3xl font-black text-black">!</span>
+                 </div>
+                 <h2 className="text-2xl font-black uppercase text-black">
+                   {kycStatus === 'PENDING' ? 'Hồ sơ đang được duyệt' : 
+                    kycStatus === 'REJECTED' ? 'Hồ sơ bị từ chối' : 
+                    'Hồ sơ chưa hoàn thiện'}
+                 </h2>
+                 <p className="text-sm font-bold text-gray-600">
+                   {kycStatus === 'PENDING' ? 'Hồ sơ của bạn đang được duyệt, vui lòng đợi. Hồ sơ sẽ được duyệt trong khoảng 2 đến 3 ngày làm việc.' : 
+                    kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Bạn vui lòng tạo lại một tài khoản mới nếu muốn tham gia giảng dạy sau này.' : 
+                    'Vui lòng hoàn thiện hồ sơ đăng ký KYC để được cấp phép kinh doanh khóa học!'}
+                 </p>
+                 <Link href="/dashboard/instructor/kyc" className="inline-block px-6 py-3 bg-indigo-500 text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform">
+                   {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Kiểm tra trạng thái'}
+                 </Link>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>
+  </div>
   );
 }
