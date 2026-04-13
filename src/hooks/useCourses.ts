@@ -27,10 +27,12 @@ export interface Course {
   status: string;
   totalDuration: number;
   lessonCount: number;
+  sectionCount: number;
   studentCount: number;
   avgRating: number;
   reviewCount: number;
   publishedAt: string | null;
+  createdAt: string;
   instructor: CourseInstructor;
   category: CourseCategory;
 }
@@ -91,13 +93,13 @@ export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
 
         setCourses(Array.isArray(items) ? items : []);
         setMeta(metaInfo);
+        setLoading(false);
       })
       .catch((err: Error) => {
-        if (err.name !== 'AbortError') {
-          setError(err.message);
-        }
-      })
-      .finally(() => setLoading(false));
+        if (err.name === 'AbortError') return;
+        setError(err.message);
+        setLoading(false);
+      });
 
     return () => controller.abort();
   // eslint-disable-next-line react-hooks/exhaustive-deps

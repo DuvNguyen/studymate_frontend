@@ -80,10 +80,10 @@ export default function OnboardingPage() {
   }, [isLoaded, isAuthLoaded, user, router, getToken]);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 text-center">
-      <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-6"></div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-2">Đang thiết lập cổng không gian học tập...</h1>
-      <p className="text-slate-500 max-w-md">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
+      <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin mb-6"></div>
+      <h1 className="text-2xl font-black text-black uppercase tracking-tight mb-2">Đang thiết lập cổng không gian học tập...</h1>
+      <p className="text-xs font-black uppercase tracking-widest text-gray-500 max-w-md">
         {error || 'Xin vui lòng chờ giây lát, StudyMate đang tối ưu hoá trải nghiệm dành riêng cho vai trò của bạn.'}
       </p>
     </div>

@@ -209,7 +209,7 @@ export default function KycPage() {
           )}
           {kycData.kycStatus === 'APPROVED' && (
             <div className="flex items-center gap-4 p-4 bg-emerald-50 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-emerald-900">
-              <span className="text-xl">✅</span>
+              <span className="text-xl">!</span>
               <div>
                 <p className="text-xs font-black uppercase tracking-wider">Xác minh thành công</p>
                 <p className="text-xs font-medium mt-0.5 opacity-80">Bạn đã có quyền tạo chương trình học và nhận thanh toán.</p>

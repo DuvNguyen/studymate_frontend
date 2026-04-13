@@ -50,7 +50,7 @@ export default function CourseCard({ course }: CourseCardProps) {
       className="group block bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all duration-150"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video bg-gray-100 border-b-2 border-black overflow-hidden">
+      <div className="relative aspect-video bg-gray-100 border-b-2 border-black overflow-hidden group">
         {course.thumbnailUrl ? (
           <Image
             src={course.thumbnailUrl}
@@ -58,6 +58,23 @@ export default function CourseCard({ course }: CourseCardProps) {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            onError={(e) => {
+              // Fallback if image fails to load
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const parent = target.parentElement;
+              if (parent) {
+                parent.classList.add('flex', 'items-center', 'justify-center', 'bg-amber-50');
+                parent.innerHTML += `
+                  <div class="p-6 text-center">
+                    <svg class="w-12 h-12 text-amber-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-[10px] font-black uppercase text-black block leading-tight px-2">${course.title}</span>
+                  </div>
+                `;
+              }
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
@@ -66,6 +83,8 @@ export default function CourseCard({ course }: CourseCardProps) {
             </svg>
           </div>
         )}
+
+        {/* Level badge */}
 
         {/* Level badge */}
         <span className={`absolute top-2 left-2 text-[10px] font-black uppercase px-1.5 py-0.5 border ${levelColor}`}>

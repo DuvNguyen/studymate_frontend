@@ -202,10 +202,10 @@ function CoursesPageContent() {
 export default function CoursesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-black border-t-amber-400 rounded-full animate-spin mx-auto mb-2" />
-          <p className="font-bold text-sm">Đang tải...</p>
+          <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin mx-auto mb-3" />
+          <p className="text-xs font-black uppercase tracking-widest text-gray-500">Đang tải...</p>
         </div>
       </div>
     }>
