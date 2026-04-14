@@ -55,9 +55,9 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
   INSTRUCTOR: [
     { href: '/dashboard',                   label: 'Tổng quan',        icon: <IconDashboard /> },
     { href: '/dashboard/instructor/kyc',    label: 'Hồ sơ Giảng viên', icon: <IconProfile /> },
-    { href: '/instructor/courses',          label: 'Khóa học của tôi', icon: <IconCourses /> },
+    { href: '/dashboard/instructor/courses',label: 'Khóa học của tôi', icon: <IconCourses /> },
     { href: '/dashboard/instructor/videos', label: 'Quản lý Video',    icon: <IconMyLearning /> },
-    { href: '/instructor/revenue',          label: 'Doanh thu',        icon: <IconDashboard /> },
+    { href: '/dashboard/instructor/revenue',label: 'Doanh thu',        icon: <IconDashboard /> },
     { href: '/dashboard/profile',           label: 'Hồ sơ',            icon: <IconProfile /> },
   ],
   STAFF: [

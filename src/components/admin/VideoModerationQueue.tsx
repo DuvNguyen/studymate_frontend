@@ -48,7 +48,7 @@ export default function VideoModerationQueue() {
       {/* Sticky Header Style from KYC Page */}
       <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex justify-between items-center">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-black/50 mb-1">Kiếm duyệt nội dung</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Kiếm duyệt nội dung</p>
           <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Hàng đợi Video</h1>
         </div>
         <Button onClick={refetch} variant="outline" size="sm">
@@ -62,7 +62,7 @@ export default function VideoModerationQueue() {
         </div>
       ) : videos.length === 0 ? (
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-16 text-center">
-          <p className="text-xl font-black uppercase tracking-widest text-black/20 leading-none">
+          <p className="text-xl font-black uppercase tracking-widest text-black/40 leading-none">
             Không có video nào đang chờ duyệt.
           </p>
         </div>
@@ -81,22 +81,22 @@ export default function VideoModerationQueue() {
                       Chờ duyệt
                     </span>
                   </div>
-                  <p className="text-xs font-black text-black/40 mb-6 uppercase tracking-widest">
+                  <p className="text-xs font-black text-black/70 mb-6 uppercase tracking-widest">
                     Mã Video: V-{vid.id} • Tải lên: {new Date(vid.uploadedAt).toLocaleString('vi-VN')}
                   </p>
                   
                   {/* Summary Grid */}
                   <div className="grid grid-cols-3 gap-6 text-sm mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-yellow-50 p-6">
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/50 block mb-1">Thời lượng</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/80 block mb-1">Thời lượng</span>
                       <strong className="text-base font-black text-black underline decoration-2">{formatDuration(vid.durationSecs)}</strong>
                     </div>
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/50 block mb-1">Chất lượng</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/80 block mb-1">Chất lượng</span>
                       <strong className="text-base font-black text-black uppercase italic">{vid.definition || '—'}</strong>
                     </div>
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/50 block mb-1">Dung lượng</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/80 block mb-1">Dung lượng</span>
                       <strong className="text-base font-black text-black">{vid.fileSizeKb ? `${(vid.fileSizeKb / 1024).toFixed(1)} MB` : 'N/A'}</strong>
                     </div>
                   </div>
@@ -147,19 +147,19 @@ export default function VideoModerationQueue() {
                     <div className="space-y-4">
                       <h4 className="font-black text-xs uppercase tracking-[0.3em] border-b-4 border-black pb-2 inline-block text-black">Quy tắc tự động</h4>
                       <div className="bg-white border-2 border-black p-4 text-xs font-black space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <p className="flex justify-between items-center bg-emerald-100 p-2 border border-black">
-                          <span>Giới hạn 5p - 120p:</span>
-                          <span className="bg-emerald-400 px-2 py-1 text-[10px]">HỢP LỆ</span>
+                        <p className="flex justify-between items-center bg-emerald-50 p-3 border-2 border-black">
+                          <span className="text-emerald-950 font-black">Giới hạn 5p - 120p:</span>
+                          <span className="bg-emerald-400 px-3 py-1 text-[10px] border-2 border-black font-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">HỢP LỆ</span>
                         </p>
-                        <p className="flex justify-between items-center bg-gray-50 p-2 border border-black">
-                          <span>Định dạng YouTube:</span>
-                          <span className="uppercase font-black italic underline decoration-2">{vid.definition || 'HD'}</span>
+                        <p className="flex justify-between items-center bg-gray-100 p-3 border-2 border-black">
+                          <span className="text-black font-black">Định dạng YouTube:</span>
+                          <span className="uppercase font-black italic underline decoration-2 text-black">{vid.definition || 'HD'}</span>
                         </p>
                       </div>
                     </div>
                     <div className="space-y-4">
                       <h4 className="font-black text-xs uppercase tracking-[0.3em] border-b-4 border-black pb-2 inline-block text-black">Ghi chú hệ thống</h4>
-                      <p className="text-xs font-black text-black/60 italic leading-loose bg-yellow-50 p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      <p className="text-xs font-black text-black italic leading-relaxed bg-yellow-50 p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                         "Nội dung video này sau khi phê duyệt sẽ được ánh xạ trực tiếp vào khóa học của Giảng viên. 
                         Vui lòng kiểm tra tính sư phạm và chất lượng âm thanh kỹ thuật."
                       </p>
@@ -173,13 +173,13 @@ export default function VideoModerationQueue() {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
                   <div className="bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
                     <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none">Từ chối Video</h2>
-                    <p className="text-xs font-black text-black/40 uppercase tracking-[0.2em] mb-6">Video: {vid.title}</p>
+                    <p className="text-xs font-black text-black/70 uppercase tracking-[0.2em] mb-6">Video: {vid.title}</p>
                     
                     <textarea
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Nhập lý do chi tiết để giảng viên sửa đổi..."
-                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 outline-none placeholder:text-black/10 min-h-[160px] mb-8 shadow-inner transition-colors"
+                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 outline-none placeholder:text-black/30 min-h-[160px] mb-8 shadow-inner transition-colors"
                     />
 
                     <div className="flex gap-6">
