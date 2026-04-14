@@ -17,9 +17,9 @@ export const getButtonClasses = (
 
   let variantClass = '';
   if (variant === 'primary') {
-    variantClass = 'bg-black text-white hover:bg-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]';
+    variantClass = 'bg-black text-white hover:bg-yellow-400 hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]';
   } else if (variant === 'outline') {
-    variantClass = 'bg-white text-black hover:bg-gray-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]';
+    variantClass = 'bg-white text-black hover:bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]';
   } else if (variant === 'danger') {
     variantClass = 'bg-red-600 text-white hover:bg-red-700 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]';
   }
