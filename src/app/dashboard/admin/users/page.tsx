@@ -1,226 +1,387 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useClerk } from '@clerk/nextjs';
+import { useDeleteUser } from '@/hooks/useDeleteUser';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
-import { useAdminUsers, AdminUser } from '@/hooks/useAdminUsers';
+
+type Tab = 'STUDENT' | 'INSTRUCTOR' | 'STAFF' | 'ADMIN';
+
+interface BanModalState {
+  open: boolean;
+  userId: number | null;
+  email: string;
+  reason: string;
+}
+
+interface BanReasonModalState {
+  open: boolean;
+  email: string;
+  banReason: string | null;
+  bannedAt: string | null;
+  violationCount: number;
+  status: string;
+}
 
 export default function AdminUsersPage() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  
-  const { users, total, loading, error, fetchUsers, updateStatus, updateRole } = useAdminUsers();
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>('STUDENT');
+  const { session } = useClerk();
+  const { deleteUser, loading: isDeleting } = useDeleteUser();
+  const [isActing, setIsActing] = useState(false);
+  const { user: appUser, loading: appLoading } = useCurrentUser();
 
-  useEffect(() => {
-    fetchUsers({ page, limit: 10, role: roleFilter, status: statusFilter, search });
-  }, [page, roleFilter, statusFilter, fetchUsers]); // search sẽ trigger qua nút "Tìm"
+  const [banModal, setBanModal] = useState<BanModalState>({
+    open: false,
+    userId: null,
+    email: '',
+    reason: '',
+  });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1); // reset về trang 1
-    fetchUsers({ page: 1, limit: 10, role: roleFilter, status: statusFilter, search });
-  };
+  const [banReasonModal, setBanReasonModal] = useState<BanReasonModalState>({
+    open: false,
+    email: '',
+    banReason: null,
+    bannedAt: null,
+    violationCount: 0,
+    status: '',
+  });
 
-  const handleChangeStatus = async (id: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-    if (confirm(`Bạn có chắc muốn đổi trạng thái người dùng thành ${newStatus}?`)) {
-        try {
-            await updateStatus(id, newStatus);
-        } catch (err: any) {
-            alert(err.message);
-        }
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const token = await session?.getToken();
+      if (!token) return;
+
+      const res = await fetch(`http://localhost:3001/api/v1/users?limit=50&role=${activeTab}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (res.ok && json.data) {
+        setUsers(json.data);
+      } else {
+        setUsers([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setUsers([]);
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (session) {
+      fetchUsers();
+    }
+  }, [session, activeTab]);
+
+  const handleDelete = async (id: number, email: string) => {
+    const confirm = window.confirm(`Bạn có CHẮC CHẮN muốn XÓA CỨNG người dùng [${email}] không?\n\nHành động này sẽ xóa dữ liệu trên Clerk và DB, KHÔNG THỂ KHÔI PHỤC!`);
+    if (!confirm) return;
+
+    try {
+      await deleteUser(id);
+      alert('Đã xóa cứng người dùng thành công!');
+      fetchUsers();
+    } catch (err: any) {
+      alert(err.message || 'Có lỗi xảy ra khi xóa người dùng');
+    }
+  };
+
+  const openBanModal = (id: number, email: string) => {
+    setBanModal({ open: true, userId: id, email, reason: '' });
+  };
+
+  const handleConfirmBan = async () => {
+    if (!banModal.userId) return;
+    try {
+      setIsActing(true);
+      const token = await session?.getToken();
+      const res = await fetch(`http://localhost:3001/api/v1/users/${banModal.userId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'BANNED', reason: banModal.reason || undefined })
+      });
+      if (res.ok) {
+        setBanModal({ open: false, userId: null, email: '', reason: '' });
+        fetchUsers();
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Có lỗi khi cấm người dùng.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Có lỗi khi gọi API.');
+    } finally {
+      setIsActing(false);
+    }
+  };
+
+  const handleUnban = async (id: number, email: string) => {
+    const confirm = window.confirm(`Bỏ đình chỉ người dùng [${email}]?`);
+    if (!confirm) return;
+    try {
+      setIsActing(true);
+      const token = await session?.getToken();
+      const res = await fetch(`http://localhost:3001/api/v1/users/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'ACTIVE' })
+      });
+      if (res.ok) {
+        fetchUsers();
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Có lỗi khi bỏ đình chỉ.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Có lỗi khi gọi API.');
+    } finally {
+      setIsActing(false);
+    }
+  };
+
+  const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
+    ACTIVE: { 
+      label: 'Hoạt động', 
+      cls: 'bg-emerald-100 text-emerald-700 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' 
+    },
+    BANNED: { 
+      label: 'Bị cấm', 
+      cls: 'bg-red-100 text-red-700 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' 
+    },
+    SUSPENDED: { 
+      label: 'Đình chỉ', 
+      cls: 'bg-yellow-100 text-yellow-700 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' 
+    },
+  };
+
+  const ACTION_BTN_BASE = "px-3 py-1.5 border border-black font-bold text-xs uppercase tracking-tight rounded-sm transition-all hover:-translate-y-[1px] hover:-translate-x-[1px] active:translate-y-[1px] active:translate-x-[1px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0";
+
+  const tabs: { value: Tab; label: string }[] = [
+    { value: 'STUDENT',    label: 'Học viên' },
+    { value: 'INSTRUCTOR', label: 'Giảng viên' },
+    { value: 'STAFF',      label: 'Nhân viên (Staff)' },
+    { value: 'ADMIN',      label: 'Quản trị viên' },
+  ];
+
+  if (appLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <div className="animate-spin rounded-none h-10 w-10 border-4 border-black border-t-transparent"></div>
+      </div>
+    );
+  }
+
   return (
-    <MainLayout role="ADMIN">
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Quản lý người dùng</h1>
-            <p className="text-gray-500 text-sm mt-1">Tổng cộng {total} tài khoản trong hệ thống</p>
-          </div>
+    <MainLayout role={appUser?.role}>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Quản lý</p>
+          <h1 className="text-2xl font-black text-gray-900 uppercase">Quản lý Người dùng</h1>
         </div>
 
-        {/* Filters */}
-        <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-100 flex flex-wrap gap-4 items-end">
-          <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-semibold text-gray-500 mb-1">TÌM KIẾM THEO EMAIL</label>
-            <div className="flex">
-              <input
-                type="text"
-                placeholder="Nhập email..."
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-l-md text-sm outline-none focus:border-purple-500"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <button type="submit" className="bg-purple-600 text-white px-4 py-2 rounded-r-md text-sm font-medium hover:bg-purple-700">
-                Lọc
-              </button>
-            </div>
-          </form>
-
-          <div className="w-48">
-             <label className="block text-xs font-semibold text-gray-500 mb-1">VAI TRÒ</label>
-             <select 
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm outline-none"
-                value={roleFilter}
-                onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-              >
-                <option value="">Tất cả vai trò</option>
-                <option value="STUDENT">Học viên</option>
-                <option value="INSTRUCTOR">Giảng viên</option>
-                <option value="STAFF">Nhân viên</option>
-                <option value="ADMIN">Quản trị viên</option>
-             </select>
-          </div>
-
-          <div className="w-48">
-             <label className="block text-xs font-semibold text-gray-500 mb-1">TRẠNG THÁI</label>
-             <select 
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm outline-none"
-                value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="ACTIVE">Hoạt động</option>
-                <option value="SUSPENDED">Tạm khóa</option>
-                <option value="BANNED">Cấm vĩnh viễn</option>
-             </select>
-          </div>
+        {/* Tabs */}
+        <div className="flex flex-wrap gap-2">
+          {tabs.map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`py-2 px-6 font-black text-xs uppercase tracking-widest border-2 border-black transition-all ${
+                activeTab === tab.value
+                  ? 'bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-2px] translate-x-[-2px]'
+                  : 'bg-white text-black hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thông tin</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai trò</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày đăng ký</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
-                    <div className="flex justify-center flex-col items-center">
-                      <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mb-2"></div>
-                      Đang tải dữ liệu...
-                    </div>
-                  </td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-red-500">
-                    {error}
-                  </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
-                    Không tìm thấy người dùng nào
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold overflow-hidden">
-                          {/* Placeholder avatar or initial */}
-                          {user.firstName ? user.firstName[0] : user.email[0].toUpperCase()}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {user.firstName || user.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Chưa cập nhật tên'}
-                          </div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold
-                        ${user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-                          user.role === 'STAFF' ? 'bg-yellow-100 text-yellow-800' :
-                          user.role === 'INSTRUCTOR' ? 'bg-blue-100 text-blue-800' :
-                          'bg-purple-100 text-purple-800'}
-                      `}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        ${user.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 
-                          user.status === 'SUSPENDED' ? 'bg-orange-100 text-orange-800' : 
-                          'bg-red-100 text-red-800'}
-                      `}>
-                        {user.status === 'ACTIVE' && <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>}
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button 
-                        onClick={() => handleChangeStatus(user.id, user.status)}
-                        className={`${user.status === 'ACTIVE' ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'} mr-4`}
-                      >
-                        {user.status === 'ACTIVE' ? 'Đình chỉ' : 'Mở khoá'}
-                      </button>
-                      <button className="text-purple-600 hover:text-purple-900">
-                        Sửa role
-                      </button>
-                    </td>
+        {loading ? (
+          <div className="flex justify-center items-center h-40 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="animate-spin rounded-none h-10 w-10 border-4 border-black border-t-transparent"></div>
+          </div>
+        ) : (
+          <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-black text-white border-b-2 border-black">
+                    <th className="p-4 font-black uppercase text-[10px] tracking-widest">Họ và Tên</th>
+                    <th className="p-4 font-black uppercase text-[10px] tracking-widest">Email</th>
+                    {activeTab === 'INSTRUCTOR' && (
+                      <th className="p-4 font-black uppercase text-[10px] tracking-widest">Vi phạm</th>
+                    )}
+                    <th className="p-4 font-black uppercase text-[10px] tracking-widest">Trạng thái</th>
+                    <th className="p-4 font-black uppercase text-[10px] tracking-widest text-center">Hành động</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody className="divide-y-2 divide-black">
+                  {users.map((u) => {
+                    const statusCfg = STATUS_CONFIG[u.status] ?? { label: u.status, cls: 'bg-gray-100 text-gray-600 border border-black' };
+                    const isBanned = u.status === 'BANNED' || u.status === 'SUSPENDED';
 
-        {/* Pagination */}
-        {!loading && total > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4 rounded-lg">
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Hiển thị <span className="font-medium">{(page - 1) * 10 + 1}</span> đến <span className="font-medium">{Math.min(page * 10, total)}</span> trong <span className="font-medium">{total}</span> kết quả
-                </p>
-              </div>
-              <div>
-                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-                  >
-                    <span className="sr-only">Previous</span>
-                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setPage(p => p + 1)}
-                    disabled={page * 10 >= total}
-                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-                  >
-                    <span className="sr-only">Next</span>
-                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </nav>
-              </div>
+                    return (
+                      <tr key={u.id} className="hover:bg-yellow-50 transition-colors">
+                        <td className="p-4">
+                          <div className="text-sm font-black text-black uppercase">
+                            {u.fullName || <span className="text-gray-400 italic">Chưa cập nhật</span>}
+                          </div>
+                        </td>
+                        <td className="p-4 text-xs font-bold text-gray-600">{u.email}</td>
+
+                        {activeTab === 'INSTRUCTOR' && (
+                          <td className="p-4 text-center">
+                            <span className={`font-black ${u.violationCount > 0 ? 'text-red-500 underline decoration-2' : 'text-gray-400'}`}>
+                              {u.violationCount || 0}
+                            </span>
+                          </td>
+                        )}
+
+                        <td className="p-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isBanned) {
+                                setBanReasonModal({
+                                  open: true,
+                                  email: u.email,
+                                  banReason: u.banReason ?? null,
+                                  bannedAt: u.bannedAt ?? null,
+                                  violationCount: u.violationCount || 0,
+                                  status: u.status,
+                                });
+                              }
+                            }}
+                            className={`px-3 py-1 font-black text-[9px] uppercase tracking-wider ${statusCfg.cls} ${
+                              isBanned ? 'cursor-pointer hover:scale-105 transition-transform' : 'cursor-default'
+                            }`}
+                          >
+                            {statusCfg.label}{isBanned ? ' ℹ️' : ''}
+                          </button>
+                        </td>
+
+                        <td className="p-4 flex gap-2 justify-center items-center">
+                          {isBanned ? (
+                            <button
+                              onClick={() => handleUnban(u.id, u.email)}
+                              disabled={isActing || u.role === 'ADMIN'}
+                              className={`${ACTION_BTN_BASE} bg-emerald-400 text-black`}
+                            >
+                              Bỏ đình chỉ
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openBanModal(u.id, u.email)}
+                              disabled={isActing || u.role === 'ADMIN'}
+                              className={`${ACTION_BTN_BASE} bg-amber-400 text-black`}
+                            >
+                              Cấm 
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDelete(u.id, u.email)}
+                            disabled={isDeleting || u.role === 'ADMIN'}
+                            className={`${ACTION_BTN_BASE} bg-red-400 text-black`}
+                          >
+                            {isDeleting ? '...' : 'Xóa Cứng'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
-
       </div>
+
+      {/* MODALS remain same but with minor path corrections */}
+      {banModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-md mx-4">
+            <h2 className="text-2xl font-black text-black mb-4 uppercase tracking-tighter">Cấm người dùng</h2>
+            <p className="text-sm font-bold text-gray-800 mb-6 border-l-4 border-red-500 pl-3">
+              Tài khoản <span className="font-black text-black underline">{banModal.email}</span> sẽ bị đình chỉ ngay lập tức.
+            </p>
+
+            <textarea
+              className="w-full border-2 border-black p-4 text-sm text-black font-bold focus:outline-none focus:bg-yellow-50 resize-none placeholder-gray-400 min-h-[100px]"
+              placeholder="Nhập lý do vi phạm..."
+              value={banModal.reason}
+              onChange={(e) => setBanModal(prev => ({ ...prev, reason: e.target.value }))}
+            />
+
+            <div className="flex gap-4 mt-8">
+              <button
+                onClick={() => setBanModal({ open: false, userId: null, email: '', reason: '' })}
+                className="flex-1 px-6 py-3 text-xs font-black uppercase border-2 border-black bg-white text-black hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmBan}
+                disabled={isActing}
+                className="flex-1 px-6 py-3 text-xs font-black uppercase border-2 border-black bg-red-400 text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50"
+              >
+                {isActing ? '...' : 'Xác nhận Cấm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BAN REASON MODAL */}
+      {banReasonModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-sm mx-4">
+            <div className="flex items-center justify-between mb-6 border-b-4 border-black pb-4">
+              <h2 className="text-lg font-black uppercase tracking-tighter">Chi tiết đình chỉ</h2>
+              <button onClick={() => setBanReasonModal(prev => ({ ...prev, open: false }))} className="font-black text-2xl hover:rotate-90 transition-transform">✕</button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-yellow-50 border-2 border-black p-4">
+                <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Email</p>
+                <p className="text-sm font-black text-black">{banReasonModal.email}</p>
+              </div>
+
+              <div className="bg-red-50 border-2 border-black p-4">
+                <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Lý do</p>
+                <p className="text-sm font-bold text-black">{banReasonModal.banReason || 'Không có lý do ghi nhận'}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 border-2 border-black p-4 text-center">
+                  <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Vi phạm</p>
+                  <p className="text-2xl font-black text-red-600">{banReasonModal.violationCount}</p>
+                </div>
+                <div className="bg-gray-50 border-2 border-black p-4 text-center">
+                  <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Tình trạng</p>
+                  <p className="text-xs font-black uppercase">{banReasonModal.status}</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+                onClick={() => setBanReasonModal(prev => ({ ...prev, open: false }))}
+                className="w-full mt-8 py-3 text-xs font-black uppercase border-2 border-black bg-black text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)]"
+              >
+                Đóng
+            </button>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }
