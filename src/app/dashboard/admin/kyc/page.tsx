@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useClerk } from '@clerk/nextjs';
-import { useCurrentUser } from '../../../hooks/useCurrentUser';
-import MainLayout from '../../../components/MainLayout';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import MainLayout from '@/components/MainLayout';
 
 export default function AdminKycPage() {
   const [kycs, setKycs] = useState<any[]>([]);

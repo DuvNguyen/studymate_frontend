@@ -81,6 +81,26 @@ export default function CourseBuilderPage() {
     }
   };
 
+  const handleSubmitCourse = async () => {
+    if (!confirm('Bạn có chắc chắn muốn gửi duyệt khóa học này? Sau khi gửi, bạn sẽ không thể chỉnh sửa cho đến khi có kết quả duyệt.')) return;
+    try {
+      const token = await getToken();
+      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${id}/submit`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast.success('Đã gửi khóa học để phê duyệt');
+        fetchCourseDetail();
+      } else {
+        const error = await res.json();
+        toast.error(error.message || 'Lỗi gửi duyệt khóa học');
+      }
+    } catch {
+      toast.error('Lỗi kết nối');
+    }
+  };
+
   const handleCreateLesson = async (sectionId: number) => {
     if (!newLessonTitle.trim()) {
       toast.error('Vui lòng nhập tên bài học');
@@ -204,11 +224,35 @@ export default function CourseBuilderPage() {
     <MainLayout role="INSTRUCTOR">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
-          <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Xây dựng khóa học</p>
-          <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none mb-4">{course?.title}</h1>
-          <p className="text-sm font-bold text-black border-l-4 border-black pl-3 py-1 bg-yellow-50">
-            Trạng thái: <span className="uppercase">{course?.status}</span>
-          </p>
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Xây dựng khóa học</p>
+              <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none mb-4">{course?.title}</h1>
+              <p className="text-sm font-bold text-black border-l-4 border-black pl-3 py-1 bg-yellow-50 mb-2 inline-block">
+                Trạng thái: <span className="uppercase">{course?.status}</span>
+              </p>
+              {course?.status === 'REJECTED' && course?.rejectionReason && (
+                <div className="bg-red-50 border-2 border-dashed border-red-500 p-4 mt-2 max-w-2xl">
+                  <h4 className="text-red-800 font-black uppercase text-xs mb-1">Lý do từ chối:</h4>
+                  <p className="text-red-900 text-sm font-medium">{course?.rejectionReason}</p>
+                </div>
+              )}
+            </div>
+            
+            {(course?.status === 'DRAFT' || course?.status === 'REJECTED') && (
+              <button 
+                onClick={handleSubmitCourse}
+                className="bg-emerald-400 border-2 border-black px-6 py-3 font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+              >
+                Gửi duyệt khóa học
+              </button>
+            )}
+            {course?.status === 'PENDING_REVIEW' && (
+              <div className="bg-amber-300 border-2 border-black px-6 py-3 font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black">
+                Đang chờ duyệt
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-6">
