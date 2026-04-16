@@ -7,6 +7,9 @@ import Navbar from '@/components/Navbar';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { useClerk } from '@clerk/nextjs';
 
 function VideoPreviewModal({ 
   isOpen, 
@@ -67,34 +70,102 @@ function CourseDetailContent() {
 
   const { addToCart } = useCart();
   const router = useRouter();
+  const { user, loading: userLoading } = useCurrentUser();
+  const { signOut } = useClerk();
+
+  // Loading states
+  const [isAdding, setIsAdding] = useState(false);
+  const [isBuying, setIsBuying] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [showRoleMismatchModal, setShowRoleMismatchModal] = useState(false);
+
+  const handleRoleMismatchConfirm = async () => {
+    setShowRoleMismatchModal(false);
+    await signOut();
+    window.localStorage.setItem('intended_role', 'STUDENT');
+    router.push('/sign-up?role=student');
+  };
 
   const handleAddToCart = async () => {
     if (!course) return;
-    const res = await addToCart(course.id);
-    if (!res.success && res.error) {
-      if (res.error === 'Khóa học này đã có trong giỏ hàng') {
-        toast('Khóa học này đã có trong giỏ hàng', { icon: '🛒' });
+
+    // Instructor safety check
+    if (user?.role === 'INSTRUCTOR') {
+      setShowRoleMismatchModal(true);
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const res = await addToCart(course.id);
+      if (!res.success && res.error) {
+        if (res.error === 'Khóa học này đã có trong giỏ hàng') {
+          toast('Khóa học này đã có trong giỏ hàng', { icon: '🛒' });
+        } else {
+          toast.error(res.error);
+        }
       } else {
-        toast.error(res.error);
+        toast.success('Đã thêm vào giỏ hàng!');
       }
-    } else {
-      toast.success('Đã thêm vào giỏ hàng!');
+    } finally {
+      setIsAdding(false);
     }
   };
 
   const handleBuyNow = async () => {
     if (!course) return;
-    const res = await addToCart(course.id);
-    // If successful OR if already in cart (error message check)
-    if (res.success || (res.error && res.error === 'Khóa học này đã có trong giỏ hàng')) {
-      router.push('/cart');
-    } else {
-      toast.error(res.error || 'Lỗi thêm vào giỏ hàng');
+
+    // Instructor safety check
+    if (user?.role === 'INSTRUCTOR') {
+      setShowRoleMismatchModal(true);
+      return;
+    }
+
+    setIsBuying(true);
+    try {
+      const res = await addToCart(course.id);
+      // If successful OR if already in cart (error message check)
+      if (res.success || (res.error && res.error === 'Khóa học này đã có trong giỏ hàng')) {
+        router.push('/cart');
+      } else {
+        toast.error(res.error || 'Lỗi thêm vào giỏ hàng');
+      }
+    } finally {
+      setIsBuying(false);
     }
   };
 
-  // Trạng thái Loading chuẩn theo ý bạn (giống hệt trang onboarding)
-  if (loading) {
+  const handleDirectEnroll = async () => {
+    if (!course || !user) return;
+    
+    setIsEnrolling(true);
+    try {
+      const token = await (window as any).Clerk?.session?.getToken();
+      const res = await fetch('http://localhost:3001/api/v1/enrollments/direct', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ courseId: course.id }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        toast.success('Ghi danh trực tiếp thành công! Đang chuyển hướng...');
+        setTimeout(() => router.push('/dashboard/student/courses'), 1500);
+      } else {
+        toast.error(result.message || 'Lỗi ghi danh trực tiếp');
+      }
+    } catch (err: any) {
+      toast.error('Lỗi kết nối server');
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
+
+  // Chờ cả dữ liệu khóa học và thông tin User (để xác định đúng role trước khi render UI)
+  if (loading || userLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
         <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin mb-6"></div>
@@ -367,26 +438,42 @@ function CourseDetailContent() {
                   </div>
 
                   <div className="flex gap-2 mb-4">
-                    <button 
-                      onClick={handleAddToCart}
-                      className="flex-1 bg-white hover:bg-amber-400 focus:bg-amber-500 text-black font-black py-3 border-2 border-black transition-colors"
-                    >
-                      Add to cart
-                    </button>
-                    <button 
-                      onClick={() => toast('Tính năng Wishlist đang phát triển!', { icon: '❤️' })} 
-                      className="px-4 py-3 border-2 border-black bg-white hover:bg-red-400 hover:text-white transition-colors group"
-                    >
-                      <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                    </button>
+                    {user?.role === 'ADMIN' || user?.role === 'STAFF' ? (
+                      <button 
+                        onClick={handleDirectEnroll}
+                        disabled={isEnrolling}
+                        className="flex-1 bg-emerald-400 hover:bg-emerald-500 disabled:bg-gray-200 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+                      >
+                        {isEnrolling ? 'Đang ghi danh...' : 'Ghi danh trực tiếp'}
+                      </button>
+                    ) : (
+                      <>
+                        <button 
+                          onClick={handleAddToCart}
+                          disabled={isAdding}
+                          className="flex-1 bg-white hover:bg-amber-400 focus:bg-amber-500 disabled:bg-gray-100 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+                        >
+                          {isAdding ? 'Đang thêm...' : 'Thêm vào giỏ'}
+                        </button>
+                        <button 
+                          onClick={() => toast('Tính năng Yêu thích đang phát triển!', { icon: '❤️' })} 
+                          className="px-6 py-4 border-4 border-black bg-white hover:bg-red-400 hover:text-white transition-colors group shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none"
+                        >
+                          <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                        </button>
+                      </>
+                    )}
                   </div>
                   
-                  <button 
-                    onClick={handleBuyNow}
-                    className="w-full bg-white hover:bg-gray-100 text-black font-black py-3 border-2 border-black mb-4 transition-colors"
-                  >
-                    Buy now
-                  </button>
+                  {user?.role !== 'ADMIN' && user?.role !== 'STAFF' && (
+                    <button 
+                      onClick={handleBuyNow}
+                      disabled={isBuying}
+                      className="w-full bg-white hover:bg-amber-400 disabled:bg-gray-100 text-black font-black py-4 border-4 border-black mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+                    >
+                      {isBuying ? 'Đang xử lý...' : 'Mua ngay'}
+                    </button>
+                  )}
 
                   <p className="text-xs text-center text-gray-500 font-bold mb-6">30-Day Money-Back Guarantee<br/>Full Lifetime Access</p>
 
@@ -411,17 +498,35 @@ function CourseDetailContent() {
             {/* Mobile Buy Area (shows only on mobile, sticky bottom) */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black p-4 z-50 flex items-center justify-between shadow-[0px_-4px_0px_0px_rgba(0,0,0,1)]">
                <div className="text-xl font-black">₫{course.price.toLocaleString('vi-VN')}</div>
-               <button onClick={handleBuyNow} className="bg-black text-white hover:bg-gray-800 font-black px-8 py-3">Buy now</button>
+               {user?.role === 'ADMIN' || user?.role === 'STAFF' ? (
+                 <button onClick={handleDirectEnroll} disabled={isEnrolling} className="bg-emerald-400 text-black hover:bg-emerald-500 font-black px-8 py-3">
+                   {isEnrolling ? '...' : 'Ghi danh'}
+                 </button>
+               ) : (
+                 <button onClick={handleBuyNow} disabled={isBuying} className="bg-black text-white hover:bg-gray-800 font-black px-8 py-3">
+                   {isBuying ? '...' : 'Mua ngay'}
+                 </button>
+               )}
             </div>
           </div>
         </div>
       </div>
       
-      {/* Video Modal */}
       <VideoPreviewModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         youtubeVideoId={previewVideoId} 
+      />
+
+      <ConfirmModal
+        isOpen={showRoleMismatchModal}
+        onClose={() => setShowRoleMismatchModal(false)}
+        onConfirm={handleRoleMismatchConfirm}
+        title="Yêu cầu hệ thống"
+        message={`Giảng viên và Học viên phải sử dụng 2 tài khoản riêng biệt.\n\nTài khoản hiện tại của bạn đang là ${user?.role}. Bạn có muốn ĐĂNG XUẤT tài khoản này để tạo tài khoản Học viên mới (bằng một Email khác) không?`}
+        confirmText="Đồng ý đăng xuất"
+        cancelText="Để sau"
+        confirmVariant="warning"
       />
     </div>
   );

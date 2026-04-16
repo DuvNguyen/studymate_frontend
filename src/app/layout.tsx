@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 import { CartProvider } from '@/contexts/CartContext';
+import { UserProvider } from '@/contexts/UserContext';
 
 export default function RootLayout({
   children,
@@ -17,14 +18,16 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <CartProvider>
-        <html lang="vi">
-          <body>
-              {children}
-              <Toaster position="top-right" />
-          </body>
-        </html>
-      </CartProvider>
+      <UserProvider>
+        <CartProvider>
+          <html lang="vi">
+            <body>
+                {children}
+                <Toaster position="top-right" />
+            </body>
+          </html>
+        </CartProvider>
+      </UserProvider>
     </ClerkProvider>
   );
 }
