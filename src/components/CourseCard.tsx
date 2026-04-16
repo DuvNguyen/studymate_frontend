@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Course } from '@/hooks/useCourses';
+import { useCart } from '@/contexts/CartContext';
 
 const LEVEL_LABELS: Record<string, string> = {
   BEGINNER: 'Cơ bản',
@@ -40,9 +41,11 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function CourseCard({ course }: CourseCardProps) {
+  const { addToCart } = useCart();
   const hasDiscount = course.originalPrice && course.originalPrice > course.price;
   const levelLabel = LEVEL_LABELS[course.level] ?? course.level;
   const levelColor = LEVEL_COLORS[course.level] ?? 'bg-gray-100 text-gray-700 border-gray-300';
+
 
   return (
     <Link
@@ -127,18 +130,38 @@ export default function CourseCard({ course }: CourseCardProps) {
           </span>
         </div>
 
-        {/* Price */}
-        <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
-          <span className="font-black text-base text-black">
-            {course.price === 0
-              ? 'Miễn phí'
-              : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.price)}
-          </span>
-          {hasDiscount && (
-            <span className="text-[11px] text-gray-400 line-through font-medium">
-              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.originalPrice!)}
+        {/* Price & Add to Cart */}
+        <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+          <div className="flex flex-col">
+            {hasDiscount && (
+              <span className="text-[10px] text-gray-400 line-through font-medium leading-none">
+                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.originalPrice!)}
+              </span>
+            )}
+            <span className="font-black text-sm text-black leading-none mt-0.5">
+              {course.price === 0
+                ? 'Miễn phí'
+                : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.price)}
             </span>
-          )}
+          </div>
+
+          {/* Add to Cart button */}
+          <button
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const result = await addToCart(course.id);
+              if (!result.success && result.error) {
+                alert(result.error);
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-black hover:bg-amber-400 text-white hover:text-black transition-colors rounded-none outline-none"
+            title="Thêm vào giỏ hàng"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </button>
         </div>
       </div>
     </Link>

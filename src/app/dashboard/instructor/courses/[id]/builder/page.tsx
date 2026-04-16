@@ -25,11 +25,21 @@ export default function CourseBuilderPage() {
 
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
   const [editLessonTitle, setEditLessonTitle] = useState('');
+  const [editLessonIsPreview, setEditLessonIsPreview] = useState(false);
   const [editSelectedVideo, setEditSelectedVideo] = useState<any>(null);
 
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [newLessonIsPreview, setNewLessonIsPreview] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerMode, setPickerMode] = useState<'NEW' | 'EDIT'>('NEW');
+  const [pickerMode, setPickerMode] = useState<'NEW' | 'EDIT' | 'COURSE_PREVIEW'>('NEW');
+
+  // Course Settings
+  const [editingCourseSettings, setEditingCourseSettings] = useState(false);
+  const [editThumbnailUrl, setEditThumbnailUrl] = useState('');
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [editCoursePreviewVideo, setEditCoursePreviewVideo] = useState<any>(null);
 
 
   useEffect(() => {
@@ -44,7 +54,10 @@ export default function CourseBuilderPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setCourse(data.data || data);
+        const courseData = data.data || data;
+        setCourse(courseData);
+        setEditThumbnailUrl(courseData.thumbnailUrl || '');
+        setEditCoursePreviewVideo(courseData.previewVideo || null);
       } else {
         toast.error('Không tìm thấy khóa học');
         router.push('/dashboard/instructor/courses');
@@ -53,6 +66,57 @@ export default function CourseBuilderPage() {
       toast.error('Lỗi khi tải khóa học');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const uploadFileToServer = async (file: File) => {
+    const token = await getToken();
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('http://localhost:3001/api/v1/uploads/image', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Có lỗi xảy ra khi tải ảnh lên.');
+    const { data } = await res.json();
+    return data.url;
+  };
+
+  const handleUpdateCourseSettings = async () => {
+    setIsUploading(true);
+    try {
+      let finalThumbnailUrl = editThumbnailUrl;
+      if (thumbnailFile) {
+        finalThumbnailUrl = await uploadFileToServer(thumbnailFile);
+      }
+
+      const token = await getToken();
+      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          thumbnailUrl: finalThumbnailUrl,
+          previewVideoId: editCoursePreviewVideo ? editCoursePreviewVideo.id : null,
+        })
+      });
+      if (res.ok) {
+        toast.success('Đã lưu cài đặt khóa học');
+        setEditingCourseSettings(false);
+        setThumbnailFile(null);
+        if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
+        setThumbnailPreview(null);
+        fetchCourseDetail();
+      } else {
+        toast.error('Lỗi khi lưu cài đặt');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Lỗi kết nối');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -108,7 +172,7 @@ export default function CourseBuilderPage() {
     }
     try {
       const token = await getToken();
-      const body: any = { title: newLessonTitle };
+      const body: any = { title: newLessonTitle, isPreview: newLessonIsPreview };
       if (selectedVideo) {
         body.videoId = selectedVideo.id;
       }
@@ -124,6 +188,7 @@ export default function CourseBuilderPage() {
         toast.success('Đã thêm bài học');
         setAddingLessonToSectionId(null);
         setNewLessonTitle('');
+        setNewLessonIsPreview(false);
         setSelectedVideo(null);
         fetchCourseDetail();
       } else {
@@ -175,7 +240,7 @@ export default function CourseBuilderPage() {
     if (!editLessonTitle.trim()) return;
     try {
       const token = await getToken();
-      const body: any = { title: editLessonTitle };
+      const body: any = { title: editLessonTitle, isPreview: editLessonIsPreview };
       if (editSelectedVideo) {
         body.videoId = editSelectedVideo.id;
       }
@@ -226,15 +291,110 @@ export default function CourseBuilderPage() {
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Xây dựng khóa học</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-black mb-1">Xây dựng khóa học</p>
               <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none mb-4">{course?.title}</h1>
-              <p className="text-sm font-bold text-black border-l-4 border-black pl-3 py-1 bg-yellow-50 mb-2 inline-block">
-                Trạng thái: <span className="uppercase">{course?.status}</span>
-              </p>
+              <div className="flex items-center gap-4 mb-4">
+                <p className="text-sm font-black text-black border-l-4 border-black pl-3 py-1 bg-yellow-50 inline-block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  Trạng thái: <span className="uppercase text-black">{course?.status}</span>
+                </p>
+                <button
+                  onClick={() => setEditingCourseSettings(!editingCourseSettings)}
+                  className="bg-black border-2 border-black px-4 py-1 text-xs font-black uppercase text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:text-black transition-all active:shadow-none active:translate-y-px active:translate-x-px"
+                >
+                  {editingCourseSettings ? 'TRỞ LẠI' : 'CÀI ĐẶT CHUNG (THUMBNAIL...)'}
+                </button>
+              </div>
+
+              {editingCourseSettings && (
+                <div className="bg-gray-100 border-2 border-black p-4 mb-4 max-w-2xl space-y-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest mb-1 text-black">
+                      Ảnh bìa Khóa học
+                    </label>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="thumbnailInput"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setThumbnailFile(file);
+                              const preview = URL.createObjectURL(file);
+                              setThumbnailPreview(preview);
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="thumbnailInput"
+                          className="cursor-pointer bg-black text-white px-4 py-2 text-xs font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all"
+                        >
+                          {thumbnailPreview || editThumbnailUrl ? 'ĐỔI ẢNH' : '+ TẢI ẢNH LÊN'}
+                        </label>
+                        <span className="text-[10px] font-black text-black uppercase italic">Hoặc dán URL:</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={editThumbnailUrl}
+                        onChange={(e) => setEditThumbnailUrl(e.target.value)}
+                        placeholder="DÁN ĐƯỜNG DẪN ẢNH (VD: HTTPS://IMAGES.UNSPLASH.COM/...)"
+                        className="w-full bg-white border-2 border-black px-3 py-2 font-black text-sm text-black outline-none focus:bg-yellow-50 placeholder:text-black"
+                      />
+                    </div>
+                    {(thumbnailPreview || editThumbnailUrl) && (
+                      <div className="mt-2 relative inline-block">
+                        <img 
+                          src={thumbnailPreview || editThumbnailUrl} 
+                          alt="Thumbnail Preview" 
+                          className="h-24 w-auto object-cover border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" 
+                        />
+                        {thumbnailPreview && (
+                           <button 
+                             onClick={() => { setThumbnailFile(null); setThumbnailPreview(null); }}
+                             className="absolute -top-2 -right-2 bg-red-500 text-black w-6 h-6 flex items-center justify-center border-2 border-black font-black text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                           >
+                             X
+                           </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest mb-1 text-black">
+                      Video Giới thiệu (Preview Video)
+                    </label>
+                    <div className="flex gap-4 items-center">
+                      <button 
+                        onClick={() => { setPickerMode('COURSE_PREVIEW'); setPickerOpen(true); }} 
+                        className="bg-black text-white px-4 py-2 text-xs font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:text-black transition-all"
+                      >
+                        {editCoursePreviewVideo ? 'ĐỔI VIDEO' : '+ CHỌN VIDEO'}
+                      </button>
+                      {editCoursePreviewVideo && (
+                        <span className="text-xs font-black bg-green-200 border-2 border-black px-2 py-1 line-clamp-1">
+                          ✓ {editCoursePreviewVideo.title?.substring(0, 30)}...
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      onClick={handleUpdateCourseSettings}
+                      disabled={isUploading}
+                      className="bg-emerald-400 border-2 border-black px-4 py-2 text-xs font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-emerald-500 active:shadow-none active:translate-y-1 active:translate-x-1 transition-all disabled:opacity-50"
+                    >
+                      {isUploading ? 'ĐANG LƯU...' : 'LƯU CÀI ĐẶT'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {course?.status === 'REJECTED' && course?.rejectionReason && (
                 <div className="bg-red-50 border-2 border-dashed border-red-500 p-4 mt-2 max-w-2xl">
-                  <h4 className="text-red-800 font-black uppercase text-xs mb-1">Lý do từ chối:</h4>
-                  <p className="text-red-900 text-sm font-medium">{course?.rejectionReason}</p>
+                  <h4 className="text-red-900 font-black uppercase text-xs mb-1">Lý do từ chối:</h4>
+                  <p className="text-red-900 text-sm font-black">{course?.rejectionReason}</p>
                 </div>
               )}
             </div>
@@ -267,8 +427,8 @@ export default function CourseBuilderPage() {
                       onChange={(e) => setEditSectionTitle(e.target.value)}
                       className="flex-1 bg-white border-2 border-black px-2 py-1 font-black uppercase text-sm outline-none focus:bg-yellow-50"
                     />
-                    <button onClick={() => handleUpdateSection(section.id)} className="bg-emerald-400 border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">Lưu</button>
-                    <button onClick={() => setEditingSectionId(null)} className="bg-white border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">Hủy</button>
+                    <button onClick={() => handleUpdateSection(section.id)} className="bg-emerald-400 border-2 border-black px-4 py-1 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-emerald-500 hover:translate-y-px hover:translate-x-px hover:shadow-none transition-all">LƯU</button>
+                    <button onClick={() => setEditingSectionId(null)} className="bg-white border-2 border-black px-4 py-1 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100 hover:translate-y-px hover:translate-x-px hover:shadow-none transition-all">HUỶ</button>
                   </div>
                 ) : (
                   <>
@@ -276,8 +436,18 @@ export default function CourseBuilderPage() {
                       Chương {index + 1}: {section.title}
                     </h2>
                     <div className="flex gap-2">
-                      <button onClick={() => { setEditingSectionId(section.id); setEditSectionTitle(section.title); }} className="text-xs font-black uppercase bg-yellow-100 border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-200">Sửa</button>
-                      <button onClick={() => handleDeleteSection(section.id)} className="text-xs font-black uppercase bg-red-100 border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-200 text-red-900">Xóa</button>
+                      <button 
+                        onClick={() => { setEditingSectionId(section.id); setEditSectionTitle(section.title); }}
+                        className="bg-yellow-300 border-2 border-black px-3 py-1 text-[10px] font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
+                      >
+                        SỬA
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteSection(section.id)}
+                        className="bg-red-500 border-2 border-black px-3 py-1 text-[10px] font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:shadow-none active:translate-x-px active:translate-y-px"
+                      >
+                        XÓA
+                      </button>
                     </div>
                   </>
                 )}
@@ -287,24 +457,35 @@ export default function CourseBuilderPage() {
                   <div key={lesson.id} className="bg-gray-50 border-2 border-black p-4">
                     {editingLessonId === lesson.id ? (
                       <div className="space-y-4">
-                        <input
-                          type="text"
-                          value={editLessonTitle}
-                          onChange={(e) => setEditLessonTitle(e.target.value)}
-                          className="w-full bg-white border-2 border-black px-4 py-2 font-black uppercase text-sm outline-none"
-                        />
+                        <div className="flex gap-4 items-center mb-2">
+                          <input
+                            type="text"
+                            value={editLessonTitle}
+                            onChange={(e) => setEditLessonTitle(e.target.value)}
+                            className="flex-1 bg-white border-2 border-black px-4 py-2 font-black uppercase text-sm text-black outline-none focus:bg-yellow-50 placeholder:text-black"
+                          />
+                          <label className="flex items-center gap-2 cursor-pointer font-black text-xs uppercase bg-white border-2 border-black px-3 py-2 text-black">
+                            <input
+                              type="checkbox"
+                              checked={editLessonIsPreview}
+                              onChange={(e) => setEditLessonIsPreview(e.target.checked)}
+                              className="w-4 h-4 accent-black cursor-pointer"
+                            />
+                            Học thử
+                          </label>
+                        </div>
                         <div className="flex justify-between items-center">
                           <div className="flex gap-4 items-center">
-                            <button onClick={() => { setPickerMode('EDIT'); setPickerOpen(true); }} className="bg-black text-white px-4 py-2 text-xs font-black uppercase">
-                              {editSelectedVideo ? 'ĐỔI VIDEO' : '+ CHỌN VIDEO'}
+                            <button onClick={() => { setPickerMode('EDIT'); setPickerOpen(true); }} className="bg-black text-white px-4 py-2 text-xs font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:text-black transition-all">
+                               {editSelectedVideo ? 'ĐỔI VIDEO' : '+ CHỌN VIDEO'}
                             </button>
                             {editSelectedVideo && (
                               <span className="text-xs font-bold bg-green-200 border-2 border-black px-2 py-1 line-clamp-1">✓ {editSelectedVideo.title?.substring(0, 30)}</span>
                             )}
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => handleUpdateLesson(lesson.id)} className="bg-emerald-400 border-2 border-black px-4 py-2 text-xs font-black uppercase block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Lưu</button>
-                            <button onClick={() => setEditingLessonId(null)} className="bg-white border-2 border-black px-4 py-2 text-xs font-black uppercase block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Hủy</button>
+                            <button onClick={() => handleUpdateLesson(lesson.id)} className="bg-emerald-400 border-2 border-black px-4 py-2 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-emerald-500 transition-all">LƯU</button>
+                            <button onClick={() => setEditingLessonId(null)} className="bg-white border-2 border-black px-4 py-2 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100 transition-all">HUỶ</button>
                           </div>
                         </div>
                       </div>
@@ -316,16 +497,32 @@ export default function CourseBuilderPage() {
                             <span className="font-bold text-sm text-black">{lesson.title}</span>
                           </div>
                           <div className="flex items-center gap-2 mt-1">
+                            {lesson.isPreview && <span className="bg-yellow-300 text-black border border-black font-black text-[10px] px-2 py-1 uppercase inline-block shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">Học thử</span>}
                             {lesson.youtubeVideoId ? (
-                               <span className="bg-emerald-100 text-emerald-900 border border-black font-black text-[10px] px-2 py-1 uppercase inline-block">Đã có Video</span>
+                               <span className="bg-emerald-400 text-black border-2 border-black font-black text-[10px] px-2 py-1 uppercase inline-block shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">Đã có Video</span>
                             ) : (
-                               <span className="bg-amber-100 text-amber-900 border border-black font-black text-[10px] px-2 py-1 uppercase inline-block">Thiếu Video</span>
+                               <span className="bg-amber-400 text-black border-2 border-black font-black text-[10px] px-2 py-1 uppercase inline-block shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">Thiếu Video</span>
                             )}
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => { setEditingLessonId(lesson.id); setEditLessonTitle(lesson.title); setEditSelectedVideo(lesson.video ? { id: lesson.video.id, title: lesson.video.title } : null); }} className="text-xs font-black uppercase bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100">Sửa</button>
-                          <button onClick={() => handleDeleteLesson(lesson.id)} className="text-xs font-black uppercase bg-red-50 text-red-900 border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-100">Xóa</button>
+                          <button 
+                            onClick={() => { 
+                              setEditingLessonId(lesson.id); 
+                              setEditLessonTitle(lesson.title); 
+                              setEditLessonIsPreview(lesson.isPreview);
+                              setEditSelectedVideo(lesson.video ? { id: lesson.video.id, title: lesson.video.title } : null); 
+                            }} 
+                            className="bg-yellow-300 border-2 border-black px-3 py-1 text-[10px] font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
+                          >
+                            SỬA
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteLesson(lesson.id)} 
+                            className="bg-red-500 border-2 border-black px-3 py-1 text-[10px] font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
+                          >
+                            XÓA
+                          </button>
                         </div>
                       </div>
                     )}
@@ -334,23 +531,34 @@ export default function CourseBuilderPage() {
 
                 {addingLessonToSectionId === section.id && (
                   <div className="bg-yellow-50 border-2 border-black p-4 space-y-4">
-                    <input
-                      type="text"
-                      value={newLessonTitle}
-                      onChange={(e) => setNewLessonTitle(e.target.value)}
-                      placeholder="NHẬP TÊN BÀI HỌC..."
-                      className="w-full bg-white border-2 border-black px-4 py-2 font-black uppercase text-sm outline-none"
-                    />
+                    <div className="flex gap-4 items-center">
+                      <input
+                        type="text"
+                        value={newLessonTitle}
+                        onChange={(e) => setNewLessonTitle(e.target.value)}
+                        placeholder="NHẬP TÊN BÀI HỌC..."
+                        className="flex-1 bg-white border-2 border-black px-4 py-2 font-black uppercase text-sm text-black outline-none focus:bg-yellow-50 placeholder:text-black"
+                      />
+                      <label className="flex items-center gap-2 cursor-pointer font-black text-xs uppercase bg-white border-2 border-black px-3 py-2 text-black hover:bg-gray-50">
+                        <input
+                          type="checkbox"
+                          checked={newLessonIsPreview}
+                          onChange={(e) => setNewLessonIsPreview(e.target.checked)}
+                          className="w-4 h-4 accent-black cursor-pointer"
+                        />
+                        Học thử
+                      </label>
+                    </div>
                     
                     <div className="flex gap-4 items-center">
                       <button
                         onClick={() => { setPickerMode('NEW'); setPickerOpen(true); }}
-                        className="bg-black text-white px-4 py-2 text-xs font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        className="bg-black text-white px-4 py-2 text-xs font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:text-black transition-all"
                       >
                         {selectedVideo ? 'ĐỔI VIDEO' : '+ CHỌN VIDEO (TÙY CHỌN)'}
                       </button>
                       {selectedVideo && (
-                        <span className="text-xs font-bold bg-green-200 border-2 border-black px-2 py-1 line-clamp-1">
+                        <span className="text-xs font-bold bg-green-200 border-2 border-black px-2 py-1 line-clamp-1 text-black">
                           ✓ {selectedVideo.title?.substring(0, 30)}...
                         </span>
                       )}
@@ -361,9 +569,10 @@ export default function CourseBuilderPage() {
                         onClick={() => {
                           setAddingLessonToSectionId(null);
                           setNewLessonTitle('');
+                          setNewLessonIsPreview(false);
                           setSelectedVideo(null);
                         }}
-                        className="bg-white border-2 border-black px-4 py-2 text-xs font-black uppercase border-b-[4px]"
+                        className="bg-white border-2 border-black px-4 py-2 text-xs font-black uppercase border-b-[4px] text-black"
                       >
                         HỦY
                       </button>
@@ -381,9 +590,9 @@ export default function CourseBuilderPage() {
               {addingLessonToSectionId !== section.id && (
                 <button 
                   onClick={() => setAddingLessonToSectionId(section.id)}
-                  className="text-xs font-black uppercase tracking-widest text-black bg-yellow-100 border-2 border-black px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-200 transition-colors mt-2"
+                  className="w-full bg-yellow-300 border-2 border-black py-3 font-black uppercase tracking-widest text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:translate-y-px hover:translate-x-px hover:shadow-none transition-all"
                 >
-                  + Thêm bài học
+                  + THÊM BÀI HỌC
                 </button>
               )}
             </div>
@@ -396,17 +605,17 @@ export default function CourseBuilderPage() {
                 value={newSectionTitle}
                 onChange={(e) => setNewSectionTitle(e.target.value)}
                 placeholder="NHẬP TÊN CHƯƠNG MỚI..."
-                className="flex-1 bg-white border-2 border-black px-4 py-2 font-black uppercase placeholder:text-gray-400 outline-none focus:bg-yellow-50"
+                className="flex-1 bg-white border-2 border-black px-4 py-2 font-black uppercase placeholder:text-black text-black outline-none focus:bg-yellow-50"
               />
               <button 
                 onClick={handleCreateSection}
-                className="bg-black text-white px-6 py-2 border-2 border-black font-black uppercase tracking-widest hover:bg-gray-800"
+                className="bg-black text-white px-6 py-2 border-2 border-black font-black uppercase tracking-widest hover:bg-yellow-400 hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 Lưu
               </button>
               <button 
                 onClick={() => setIsAddingSection(false)}
-                className="bg-white text-black px-4 py-2 border-2 border-black font-black uppercase tracking-widest hover:bg-gray-100"
+                className="bg-white text-black px-4 py-2 border-2 border-black font-black uppercase tracking-widest hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 Hủy
               </button>
@@ -414,7 +623,7 @@ export default function CourseBuilderPage() {
           ) : (
             <button 
               onClick={() => setIsAddingSection(true)}
-              className="w-full bg-gray-100 border-2 border-black border-dashed p-6 text-center font-black uppercase tracking-widest text-black/60 hover:bg-gray-200 hover:text-black transition-colors"
+              className="w-full bg-gray-100 border-2 border-black border-dashed p-6 text-center font-black uppercase tracking-widest text-black hover:bg-gray-200 transition-colors"
             >
               + THÊM CHƯƠNG MỚI
             </button>
@@ -428,6 +637,8 @@ export default function CourseBuilderPage() {
         onSelect={(id, videoData) => {
           if (pickerMode === 'EDIT') {
             setEditSelectedVideo(videoData);
+          } else if (pickerMode === 'COURSE_PREVIEW') {
+            setEditCoursePreviewVideo(videoData);
           } else {
             setSelectedVideo(videoData);
           }

@@ -10,16 +10,20 @@ export default function AdminKycPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
   const { session } = useClerk();
   const { user: appUser, loading: appLoading } = useCurrentUser();
 
-  const fetchPendingKycs = async () => {
+  const fetchKycs = async () => {
     try {
       setLoading(true);
       const token = await session?.getToken();
       if (!token) return;
 
-      const res = await fetch('http://localhost:3001/api/v1/users/kyc-pending', {
+      const params = new URLSearchParams();
+      if (activeTab !== 'ALL') params.append('status', activeTab);
+
+      const res = await fetch(`http://localhost:3001/api/v1/users/kyc-requests?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const json = await res.json();
@@ -38,9 +42,9 @@ export default function AdminKycPage() {
 
   useEffect(() => {
     if (session) {
-      fetchPendingKycs();
+      fetchKycs();
     }
-  }, [session]);
+  }, [session, activeTab]);
 
   const handleAction = async (id: number, status: 'APPROVED' | 'REJECTED') => {
     let reason = '';
@@ -67,7 +71,7 @@ export default function AdminKycPage() {
 
       if (res.ok) {
         alert(status === 'APPROVED' ? 'Đã duyệt KYC thành công!' : 'Đã từ chối KYC.');
-        fetchPendingKycs();
+        fetchKycs();
       } else {
         const err = await res.json();
         alert(err.message || 'Có lỗi xảy ra.');
@@ -92,10 +96,35 @@ export default function AdminKycPage() {
 
   return (
     <MainLayout role={appUser?.role}>
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Quản lý</p>
-          <h1 className="text-2xl font-black text-gray-900 uppercase">Duyệt KYC Giảng Viên</h1>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex justify-between items-center">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Quản lý</p>
+            <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Duyệt KYC Giảng Viên</h1>
+          </div>
+          <button onClick={fetchKycs} className="font-black uppercase text-sm border-2 border-black px-4 py-2 hover:bg-gray-50 flex items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-px active:translate-x-px active:shadow-none transition-all">
+            Làm mới ↻
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 pb-2 overflow-x-auto">
+          {[
+            { id: 'PENDING', label: 'CHỜ DUYỆT' },
+            { id: 'APPROVED', label: 'ĐÃ DUYỆT' },
+            { id: 'REJECTED', label: 'TỪ CHỐI' },
+            { id: 'ALL', label: 'TẤT CẢ' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-6 py-3 font-black uppercase text-sm border-2 border-black whitespace-nowrap transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
+                activeTab === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
         
         {loading ? (
@@ -110,8 +139,12 @@ export default function AdminKycPage() {
                   <div className="flex-1">
                     <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-1">
                       {u.fullName || u.email}
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-900">
-                        Chờ duyệt
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
+                        u.instructorProfile?.kycStatus === 'PENDING' ? 'bg-amber-300 text-black' :
+                        u.instructorProfile?.kycStatus === 'APPROVED' ? 'bg-emerald-300 text-black' :
+                        u.instructorProfile?.kycStatus === 'REJECTED' ? 'bg-red-300 text-black' : 'bg-gray-100 text-black'
+                      }`}>
+                        {u.instructorProfile?.kycStatus}
                       </span>
                     </h3>
                     <p className="text-sm font-medium text-gray-500 mb-4">{u.email}</p>
@@ -135,23 +168,44 @@ export default function AdminKycPage() {
                     </button>
                   </div>
 
-                  <div className="flex flex-col justify-center gap-3 w-full md:w-40 border-t-2 border-black md:border-t-0 md:border-l-2 md:pl-6 pt-4 md:pt-0">
-                    <button 
-                      onClick={() => handleAction(u.id, 'APPROVED')}
-                      disabled={actionLoading === u.id}
-                      className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-emerald-400 text-black hover:bg-emerald-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {actionLoading === u.id ? '...' : 'Phê Duyệt'}
-                    </button>
-                    <button 
-                      onClick={() => handleAction(u.id, 'REJECTED')}
-                      disabled={actionLoading === u.id}
-                      className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-red-400 text-black hover:bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {actionLoading === u.id ? '...' : 'Từ chối'}
-                    </button>
+                  <div className="flex flex-col gap-3 w-full md:w-40 border-t-2 border-black md:border-t-0 md:border-l-2 md:pl-6 pt-4 md:pt-0">
+                    {u.instructorProfile?.kycStatus === 'PENDING' && (
+                      <>
+                        <button 
+                          onClick={() => handleAction(u.id, 'APPROVED')}
+                          disabled={actionLoading === u.id}
+                          className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-emerald-400 text-black hover:bg-emerald-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {actionLoading === u.id ? '...' : 'Phê Duyệt'}
+                        </button>
+                        <button 
+                          onClick={() => handleAction(u.id, 'REJECTED')}
+                          disabled={actionLoading === u.id}
+                          className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-red-400 text-black hover:bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {actionLoading === u.id ? '...' : 'Từ chối'}
+                        </button>
+                      </>
+                    )}
+                    {u.instructorProfile?.kycStatus === 'REJECTED' && (
+                      <button 
+                        onClick={() => handleAction(u.id, 'APPROVED')}
+                        disabled={actionLoading === u.id}
+                        className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-amber-400 text-black hover:bg-amber-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {actionLoading === u.id ? '...' : 'Duyệt Lại'}
+                      </button>
+                    )}
                   </div>
                 </div>
+
+                {/* Hiển thị lý do từ chối nếu có */}
+                {u.instructorProfile?.rejectionReason && (
+                   <div className="bg-red-50 border-x-2 border-b-2 border-black p-4 relative z-0 mt-[-2px] ml-6 mr-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                     <p className="text-[10px] uppercase font-black text-red-600">Lý do từ chối:</p>
+                     <p className="text-sm font-black text-black">{u.instructorProfile.rejectionReason}</p>
+                   </div>
+                )}
 
                 {expandedId === u.id && (
                   <div className="bg-white border-x-2 border-b-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 pt-8 mt-[-10px] grid grid-cols-1 md:grid-cols-2 gap-8 relative z-0 animate-in slide-in-from-top-2 fade-in duration-200">

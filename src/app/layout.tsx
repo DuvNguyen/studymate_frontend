@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: 'Nền tảng học trực tuyến',
 };
 
+import { CartProvider } from '@/contexts/CartContext';
+
 export default function RootLayout({
   children,
 }: {
@@ -15,12 +17,14 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="vi">
-        <body>
-            {children}
-            <Toaster position="top-right" />
-        </body>
-      </html>
+      <CartProvider>
+        <html lang="vi">
+          <body>
+              {children}
+              <Toaster position="top-right" />
+          </body>
+        </html>
+      </CartProvider>
     </ClerkProvider>
   );
 }

@@ -55,6 +55,23 @@ export default function CategoryNavBar({
   return (
     <div className={`relative border-b-2 border-black ${bgColor} z-40 ${className}`}>
       <div className="w-full px-4 sm:px-6 lg:px-8 h-10 flex items-center gap-0 overflow-x-auto scrollbar-hide">
+        {/* Nút "TẤT CẢ" ở đầu */}
+        <div className="relative flex-shrink-0">
+          <Link
+            href="/courses"
+            className={`
+              inline-flex items-center px-3 h-10 text-[11px] font-black uppercase tracking-wide
+              border-b-2 transition-all duration-100 whitespace-nowrap
+              ${!activeCategory && !megaMenuOpen && typeof window !== 'undefined' && window.location.pathname === '/courses' && !window.location.search.includes('category=')
+                ? 'border-black text-black bg-amber-300'
+                : 'border-transparent text-black hover:bg-amber-100/50 hover:border-black'
+              }
+            `}
+          >
+            TẤT CẢ
+          </Link>
+        </div>
+
         {categories.map((cat) => (
           <div
             key={cat.id}
