@@ -48,13 +48,13 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
   STUDENT: [
     { href: '/dashboard',         label: 'Tổng quan',     icon: <IconDashboard /> },
     { href: '/courses',           label: 'Khóa học',      icon: <IconCourses /> },
-    { href: '/my-learning',       label: 'Học của tôi',   icon: <IconMyLearning /> },
-    { href: '/wishlist',          label: 'Yêu thích',     icon: <IconWishlist /> },
+    { href: '/dashboard/student/courses', label: 'Khóa học của tôi',   icon: <IconMyLearning /> },
+    { href: '/dashboard/student/wishlist', label: 'Yêu thích',     icon: <IconWishlist /> },
     { href: '/dashboard/profile', label: 'Hồ sơ',         icon: <IconProfile /> },
   ],
   INSTRUCTOR: [
     { href: '/dashboard',                   label: 'Tổng quan',        icon: <IconDashboard /> },
-    { href: '/dashboard/instructor/kyc',    label: 'Hồ sơ Giảng viên', icon: <IconProfile /> },
+    { href: '/dashboard/instructor/kyc',    label: 'Hồ sơ giảng viên', icon: <IconProfile /> },
     { href: '/dashboard/instructor/courses',label: 'Khóa học của tôi', icon: <IconCourses /> },
     { href: '/dashboard/instructor/videos', label: 'Quản lý Video',    icon: <IconMyLearning /> },
     { href: '/dashboard/instructor/revenue',label: 'Doanh thu',        icon: <IconDashboard /> },

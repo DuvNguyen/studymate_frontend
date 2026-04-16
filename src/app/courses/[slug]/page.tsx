@@ -4,6 +4,9 @@ import { useParams } from 'next/navigation';
 import { Suspense, useState, useRef, useEffect } from 'react';
 import { useCourseDetail, CourseDetail } from '@/hooks/useCourseDetail';
 import Navbar from '@/components/Navbar';
+import { useCart } from '@/contexts/CartContext';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 function VideoPreviewModal({ 
   isOpen, 
@@ -60,6 +63,34 @@ function CourseDetailContent() {
   const openPreview = (youtubeId: string | null) => {
     setPreviewVideoId(youtubeId);
     setIsModalOpen(true);
+  };
+
+  const { addToCart } = useCart();
+  const router = useRouter();
+
+  const handleAddToCart = async () => {
+    if (!course) return;
+    const res = await addToCart(course.id);
+    if (!res.success && res.error) {
+      if (res.error === 'Khóa học này đã có trong giỏ hàng') {
+        toast('Khóa học này đã có trong giỏ hàng', { icon: '🛒' });
+      } else {
+        toast.error(res.error);
+      }
+    } else {
+      toast.success('Đã thêm vào giỏ hàng!');
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!course) return;
+    const res = await addToCart(course.id);
+    // If successful OR if already in cart (error message check)
+    if (res.success || (res.error && res.error === 'Khóa học này đã có trong giỏ hàng')) {
+      router.push('/cart');
+    } else {
+      toast.error(res.error || 'Lỗi thêm vào giỏ hàng');
+    }
   };
 
   // Trạng thái Loading chuẩn theo ý bạn (giống hệt trang onboarding)
@@ -336,15 +367,24 @@ function CourseDetailContent() {
                   </div>
 
                   <div className="flex gap-2 mb-4">
-                    <button className="flex-1 bg-white hover:bg-gray-100 text-black font-black py-3 border-2 border-black">
+                    <button 
+                      onClick={handleAddToCart}
+                      className="flex-1 bg-white hover:bg-amber-400 focus:bg-amber-500 text-black font-black py-3 border-2 border-black transition-colors"
+                    >
                       Add to cart
                     </button>
-                    <button className="px-4 py-3 border-2 border-black hover:bg-gray-100">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                    <button 
+                      onClick={() => toast('Tính năng Wishlist đang phát triển!', { icon: '❤️' })} 
+                      className="px-4 py-3 border-2 border-black bg-white hover:bg-red-400 hover:text-white transition-colors group"
+                    >
+                      <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                     </button>
                   </div>
                   
-                  <button className="w-full bg-white hover:bg-gray-100 text-black font-black py-3 border-2 border-black mb-4">
+                  <button 
+                    onClick={handleBuyNow}
+                    className="w-full bg-white hover:bg-gray-100 text-black font-black py-3 border-2 border-black mb-4 transition-colors"
+                  >
                     Buy now
                   </button>
 
@@ -369,9 +409,9 @@ function CourseDetailContent() {
             </div>
 
             {/* Mobile Buy Area (shows only on mobile, sticky bottom) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black p-4 z-50 flex items-center justify-between">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black p-4 z-50 flex items-center justify-between shadow-[0px_-4px_0px_0px_rgba(0,0,0,1)]">
                <div className="text-xl font-black">₫{course.price.toLocaleString('vi-VN')}</div>
-               <button className="bg-black text-white font-black px-8 py-3">Buy now</button>
+               <button onClick={handleBuyNow} className="bg-black text-white hover:bg-gray-800 font-black px-8 py-3">Buy now</button>
             </div>
           </div>
         </div>
