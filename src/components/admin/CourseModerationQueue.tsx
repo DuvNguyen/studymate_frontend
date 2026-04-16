@@ -1,26 +1,40 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAdminCourses } from '@/hooks/useAdminCourses';
+import { useCategories } from '@/hooks/useCategories';
 import { Button } from '@/components/Button';
 
-export default function CourseModerationQueue() {
-  const { courses, loading, error, fetchCourses, approveCourse, rejectCourse } = useAdminCourses();
+export default function CourseManagementQueue() {
+  const { courses, loading, error, fetchCourses, approveCourse, rejectCourse, suspendCourse } = useAdminCourses();
+  const { categories, loading: categoriesLoading } = useCategories();
+  
+  // Tabs & Search states
+  const [activeTab, setActiveTab] = useState<'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ALL'>('PENDING_REVIEW');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<number | ''>('');
+  const [triggerFetch, setTriggerFetch] = useState(0);
+
   const [rejectReason, setRejectReason] = useState('');
   const [activeCourseId, setActiveCourseId] = useState<number | null>(null);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [suspendingCourseId, setSuspendingCourseId] = useState<number | null>(null);
+
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchCourses({ page: 1, limit: 50, status: 'PENDING_REVIEW' });
-  }, [fetchCourses]);
+    fetchCourses({ page: 1, limit: 50, status: activeTab, search: searchQuery, categoryId: filterCategory ? String(filterCategory) : '' });
+  }, [fetchCourses, activeTab, triggerFetch]);
 
-  const refetch = () => fetchCourses({ page: 1, limit: 50, status: 'PENDING_REVIEW' });
+  const handleSearch = () => {
+    setTriggerFetch(prev => prev + 1);
+  };
 
   const handleApprove = async (id: number) => {
     if (!window.confirm("Xác nhận phê duyệt khóa học này? Khóa học sẽ được PUBLISH.")) return;
     try {
       await approveCourse(id);
-      refetch();
+      handleSearch();
     } catch (err: any) {
       alert(err.message);
     }
@@ -35,21 +49,97 @@ export default function CourseModerationQueue() {
       await rejectCourse(id, rejectReason);
       setRejectReason('');
       setActiveCourseId(null);
-      refetch();
+      handleSearch();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleSuspend = async (id: number) => {
+    if (!suspendReason.trim()) {
+      alert('Vui lòng nhập lý do đình chỉ');
+      return;
+    }
+    try {
+      await suspendCourse(id, suspendReason);
+      setSuspendReason('');
+      setSuspendingCourseId(null);
+      handleSearch();
     } catch (err: any) {
       alert(err.message);
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex justify-between items-center">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Kiếm duyệt nội dung</p>
-          <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Hàng đợi Khóa học</h1>
+          <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Quản lý Khóa học</p>
+          <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Admin Hub</h1>
         </div>
-        <Button onClick={refetch} variant="outline" size="sm">
+        <Button onClick={handleSearch} variant="outline" size="sm">
           Làm mới ↻
+        </Button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 pb-2 overflow-x-auto">
+        {[
+          { id: 'PENDING_REVIEW', label: 'CHỜ DUYỆT' },
+          { id: 'PUBLISHED', label: 'ĐANG HOẠT ĐỘNG' },
+          { id: 'REJECTED', label: 'TỪ CHỐI / ĐÌNH CHỈ' },
+          { id: 'ALL', label: 'TẤT CẢ' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-6 py-3 font-black uppercase text-sm border-2 border-black whitespace-nowrap transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
+              activeTab === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Search & Filter Bar */}
+      <div className="bg-yellow-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex flex-col md:flex-row gap-4 items-end">
+        <div className="flex-1 w-full">
+          <label className="block text-xs font-black text-black uppercase mb-1">Tìm kiếm khóa học</label>
+          <input 
+            type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Nhập tên khóa học..."
+            className="w-full bg-white border-2 border-black px-4 py-2 font-black text-black outline-none focus:bg-yellow-100 placeholder:text-black/30"
+          />
+        </div>
+        <div className="w-full md:w-64">
+          <label className="block text-xs font-black text-black uppercase mb-1">Danh mục</label>
+          <select 
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value ? Number(e.target.value) : '')}
+            className="w-full bg-white border-2 border-black px-4 py-2 font-black text-black outline-none focus:bg-yellow-100 disabled:opacity-50"
+            disabled={categoriesLoading}
+          >
+            <option value="">-- TẤT CẢ --</option>
+            {categories.map((cat) => (
+              <optgroup key={cat.id} label={cat.name.toUpperCase()} className="font-black bg-gray-200">
+                {cat.children && cat.children.map(sub => (
+                  <option key={sub.id} value={sub.id} className="font-bold bg-white">
+                    {sub.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+        <Button 
+          onClick={handleSearch}
+          className="bg-emerald-400 py-3 px-8 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] w-full md:w-auto"
+        >
+          LỌC
         </Button>
       </div>
 
@@ -60,7 +150,7 @@ export default function CourseModerationQueue() {
       ) : courses.length === 0 ? (
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-16 text-center">
           <p className="text-xl font-black uppercase tracking-widest text-black/40 leading-none">
-            Không có khóa học nào đang chờ duyệt.
+            {activeTab === 'PENDING_REVIEW' ? 'Không có khóa học nào đang chờ duyệt.' : 'Không tìm thấy kết quả phù hợp.'}
           </p>
         </div>
       ) : (
@@ -73,14 +163,26 @@ export default function CourseModerationQueue() {
                     <h3 className="text-2xl font-black text-black uppercase leading-tight">
                       {course.title}
                     </h3>
-                    <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 bg-amber-300 text-black border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] whitespace-nowrap">
-                      Chờ duyệt
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] whitespace-nowrap text-black ${
+                      course.status === 'PENDING_REVIEW' ? 'bg-amber-300' :
+                      course.status === 'PUBLISHED' ? 'bg-emerald-300' :
+                      course.status === 'REJECTED' ? 'bg-red-300' :
+                      course.status === 'ARCHIVED' ? 'bg-gray-300' : 'bg-gray-100'
+                    }`}>
+                      {course.status}
                     </span>
                   </div>
                   <p className="text-xs font-black text-black/70 mb-6 uppercase tracking-widest">
                     GV: {course.instructor?.fullName || 'N/A'} • Giá: {course.price}đ • Danh mục: {course.category?.name || 'N/A'}
                   </p>
                   
+                  {course.rejectionReason && (
+                    <div className="mb-6 bg-red-50 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-4">
+                      <span className="text-[10px] font-black uppercase text-red-600 mb-1 block">Lý do từ chối/đình chỉ:</span>
+                      <p className="text-sm font-black text-black">{course.rejectionReason}</p>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-3 gap-6 text-sm mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-yellow-50 p-6">
                     <div>
                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/80 block mb-1">Chương</span>
@@ -106,23 +208,31 @@ export default function CourseModerationQueue() {
                   </Button>
                 </div>
 
-                <div className="flex flex-col justify-center gap-4 w-full md:w-48 border-t-4 border-black md:border-t-0 md:border-l-4 md:pl-8 pt-6 md:pt-0">
-                  <Button 
-                    onClick={() => handleApprove(course.id)}
-                    className="bg-emerald-400 py-4 hover:bg-emerald-500"
-                  >
-                    Phê Duyệt
-                  </Button>
-                  <Button 
-                    onClick={() => setActiveCourseId(course.id)}
-                    variant="danger"
-                    className="py-4 bg-red-400 text-black hover:bg-red-500"
-                  >
-                    Từ chối
-                  </Button>
+                <div className="flex flex-col gap-4 w-full md:w-48 border-t-4 border-black md:border-t-0 md:border-l-4 md:pl-8 pt-6 md:pt-0">
+                  {course.status === 'PENDING_REVIEW' && (
+                    <>
+                      <Button onClick={() => handleApprove(course.id)} className="bg-emerald-400 py-4 hover:bg-emerald-500 text-black">
+                        Phê Duyệt
+                      </Button>
+                      <Button onClick={() => setActiveCourseId(course.id)} className="bg-red-400 py-4 hover:bg-red-500 text-black">
+                        Từ chối
+                      </Button>
+                    </>
+                  )}
+                  {course.status === 'PUBLISHED' && (
+                    <Button onClick={() => setSuspendingCourseId(course.id)} className="bg-red-400 py-4 hover:bg-red-500 text-black">
+                      Tạm Đình Chỉ
+                    </Button>
+                  )}
+                  {course.status === 'REJECTED' && (
+                    <Button onClick={() => handleApprove(course.id)} className="bg-amber-400 py-4 hover:bg-amber-500 text-black">
+                      Duyệt Lại
+                    </Button>
+                  )}
                 </div>
               </div>
 
+              {/* Chi tiết khóa học */}
               {expandedId === course.id && (
                 <div className="bg-white border-x-2 border-b-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8 pt-12 mt-[-10px] space-y-8 relative z-0 animate-in slide-in-from-top-4 fade-in duration-300">
                   <div className="space-y-4">
@@ -134,19 +244,19 @@ export default function CourseModerationQueue() {
                         <div className="space-y-2">
                           {section.lessons?.map((lesson: any, lIndex: number) => (
                             <div key={lesson.id} className="bg-white border-2 border-black p-3 text-xs flex justify-between items-center relative overflow-hidden">
-                              <span className="font-bold relative z-10 text-black">Bài {lIndex + 1}: {lesson.title}</span>
+                              <span className="font-black relative z-10 text-black">Bài {lIndex + 1}: {lesson.title}</span>
                               <div className="flex gap-2">
-                                {lesson.isPreview && <span className="bg-blue-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase">Preview</span>}
+                                {lesson.isPreview && <span className="bg-blue-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase text-black">Preview</span>}
                                 {lesson.youtubeVideoId ? (
-                                  <span className="bg-emerald-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase">Có Video</span>
+                                  <span className="bg-emerald-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase text-black">Có Video</span>
                                 ) : (
-                                  <span className="bg-amber-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase">Chưa có video</span>
+                                  <span className="bg-amber-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase text-black">Chưa có video</span>
                                 )}
                               </div>
                             </div>
                           ))}
                           {(!section.lessons || section.lessons.length === 0) && (
-                            <p className="text-[10px] uppercase font-black text-gray-500 italic p-2 border-2 border-dashed border-gray-300">Chương này chưa có bài học.</p>
+                            <p className="text-[10px] uppercase font-black text-black/50 italic p-2 border-2 border-dashed border-gray-300">Chương này chưa có bài học.</p>
                           )}
                         </div>
                       </div>
@@ -160,31 +270,51 @@ export default function CourseModerationQueue() {
                 </div>
               )}
 
+              {/* Modal Từ Chối */}
               {activeCourseId === course.id && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
                   <div className="bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
-                    <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none">Từ chối Khóa học</h2>
+                    <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none text-black">Từ chối Khóa học</h2>
                     <p className="text-xs font-black text-black/70 uppercase tracking-[0.2em] mb-6">Khóa học: {course.title}</p>
                     
                     <textarea
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
-                      placeholder="Nhập lý do chi tiết (VD: Nội dung bài 2 vi phạm bản quyền)..."
-                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 outline-none placeholder:text-black/30 min-h-[160px] mb-8 shadow-inner transition-colors"
+                      placeholder="Nhập lý do chi tiết..."
+                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 text-black outline-none placeholder:text-black/30 min-h-[160px] mb-8 shadow-inner transition-colors"
                     />
 
                     <div className="flex gap-6">
-                      <Button 
-                        onClick={() => handleReject(course.id)}
-                        className="flex-1 bg-red-400 text-black py-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500"
-                      >
+                      <Button onClick={() => handleReject(course.id)} className="flex-1 bg-red-400 text-black py-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500">
                         Xác nhận từ chối
                       </Button>
-                      <Button 
-                        onClick={() => { setActiveCourseId(null); setRejectReason(''); }}
-                        variant="outline"
-                        className="px-10 py-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100"
-                      >
+                      <Button onClick={() => { setActiveCourseId(null); setRejectReason(''); }} variant="outline" className="px-10 py-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100">
+                        Hủy
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal Tạm Đình Chỉ */}
+              {suspendingCourseId === course.id && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+                  <div className="bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
+                    <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none text-black">Tạm Đình Chỉ</h2>
+                    <p className="text-xs font-black text-black/70 uppercase tracking-[0.2em] mb-6">Khóa học: {course.title}</p>
+                    
+                    <textarea
+                      value={suspendReason}
+                      onChange={(e) => setSuspendReason(e.target.value)}
+                      placeholder="Nhập lý do đình chỉ (VD: Vi phạm bản quyền)..."
+                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 text-black outline-none placeholder:text-black/30 min-h-[160px] mb-8 shadow-inner transition-colors"
+                    />
+
+                    <div className="flex gap-6">
+                      <Button onClick={() => handleSuspend(course.id)} className="flex-1 bg-red-400 text-black py-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500">
+                        Đình Chỉ Ngay
+                      </Button>
+                      <Button onClick={() => { setSuspendingCourseId(null); setSuspendReason(''); }} variant="outline" className="px-10 py-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100">
                         Hủy
                       </Button>
                     </div>

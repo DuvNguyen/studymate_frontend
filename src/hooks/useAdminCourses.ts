@@ -8,7 +8,7 @@ export function useAdminCourses() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchCourses = useCallback(async ({ page = 1, limit = 10, status = '' }) => {
+  const fetchCourses = useCallback(async ({ page = 1, limit = 10, status = '', search = '', categoryId = '' }) => {
     setLoading(true);
     setError('');
     try {
@@ -17,7 +17,9 @@ export function useAdminCourses() {
         page: String(page),
         limit: String(limit),
       });
-      if (status) params.append('status', status);
+      if (status && status !== 'ALL') params.append('status', status);
+      if (search) params.append('search', search);
+      if (categoryId) params.append('categoryId', String(categoryId));
 
       const res = await fetch(`http://localhost:3001/api/v1/admin/courses?${params.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -66,5 +68,21 @@ export function useAdminCourses() {
     }
   };
 
-  return { courses, total, loading, error, fetchCourses, approveCourse, rejectCourse };
+  const suspendCourse = async (id: number, reason: string) => {
+    const token = await getToken();
+    const res = await fetch(`http://localhost:3001/api/v1/admin/courses/${id}/suspend`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ reason })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Lỗi khi đình chỉ khóa học');
+    }
+  };
+
+  return { courses, total, loading, error, fetchCourses, approveCourse, rejectCourse, suspendCourse };
 }

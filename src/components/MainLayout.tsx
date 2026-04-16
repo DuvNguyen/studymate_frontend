@@ -127,7 +127,7 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`p-2 text-gray-400 hover:text-white transition-colors ${!sidebarOpen ? 'w-full flex justify-center' : ''}`}
+            className={`p-2 text-white hover:text-white transition-colors ${!sidebarOpen ? 'w-full flex justify-center' : ''}`}
           >
             <IconMenu />
           </button>
@@ -146,7 +146,7 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
                   transition-all duration-150
                   ${isActive
                     ? 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    : 'text-gray-100 hover:bg-gray-800 hover:text-white'
                   }
                 `}
               >
@@ -179,8 +179,8 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
           </div>
 
           {/* Homepage style links directly in Dashboard header */}
-          <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-black">
-            <span className="text-gray-400">Dashboard View</span>
+          <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-black/80">
+            <span>Dashboard View</span>
           </div>
         </header>
 
@@ -197,7 +197,7 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
                     kycStatus === 'REJECTED' ? 'Hồ sơ bị từ chối' : 
                     'Hồ sơ chưa hoàn thiện'}
                  </h2>
-                 <p className="text-sm font-bold text-gray-600">
+                 <p className="text-sm font-black text-black">
                    {kycStatus === 'PENDING' ? 'Hồ sơ của bạn đang được duyệt, vui lòng đợi. Hồ sơ sẽ được duyệt trong khoảng 2 đến 3 ngày làm việc.' : 
                     kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Bạn vui lòng tạo lại một tài khoản mới nếu muốn tham gia giảng dạy sau này.' : 
                     'Vui lòng hoàn thiện hồ sơ đăng ký KYC để được cấp phép kinh doanh khóa học!'}
