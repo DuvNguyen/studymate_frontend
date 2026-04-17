@@ -234,14 +234,14 @@ export default function VideoModerationQueue() {
               {activeVideoId === vid.id && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
                   <div className="bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
-                    <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none">Từ chối Video</h2>
-                    <p className="text-xs font-black text-black/70 uppercase tracking-[0.2em] mb-6">Video: {vid.title}</p>
+                    <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none text-black">Từ chối Video</h2>
+                    <p className="text-xs font-black text-black uppercase tracking-[0.2em] mb-6">Video: {vid.title}</p>
                     
                     <textarea
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Nhập lý do chi tiết để giảng viên sửa đổi..."
-                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 outline-none placeholder:text-black/30 min-h-[160px] mb-8 shadow-inner transition-colors"
+                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 outline-none placeholder:text-black/50 min-h-[160px] mb-8 shadow-inner transition-colors text-black"
                     />
 
                     <div className="flex gap-6">

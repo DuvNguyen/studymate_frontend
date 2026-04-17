@@ -78,7 +78,7 @@ export default function StudentCoursesPage() {
                       />
                     </div>
                     
-                    <Link href={`/courses/${enrollment.course_id}/learn`} className="block">
+                    <Link href={`/courses/${enrollment.course.slug}/learn`} className="block">
                       <Button className="w-full bg-black text-white hover:bg-emerald-500 hover:text-black border-2 border-black font-black uppercase tracking-widest transition-colors py-3">
                         {enrollment.progress_percent > 0 ? 'TIẾP TỤC HỌC' : 'BẮT ĐẦU HỌC'}
                       </Button>

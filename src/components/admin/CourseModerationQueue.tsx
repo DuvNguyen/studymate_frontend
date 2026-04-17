@@ -77,7 +77,7 @@ export default function CourseManagementQueue() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex justify-between items-center">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Quản lý Khóa học</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-black mb-1">Quản lý Khóa học</p>
           <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Admin Hub</h1>
         </div>
         <Button onClick={handleSearch} variant="outline" size="sm">
@@ -115,7 +115,7 @@ export default function CourseManagementQueue() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Nhập tên khóa học..."
-            className="w-full bg-white border-2 border-black px-4 py-2 font-black text-black outline-none focus:bg-yellow-100 placeholder:text-black/30"
+            className="w-full bg-white border-2 border-black px-4 py-2 font-black text-black outline-none focus:bg-yellow-100 placeholder:text-black/50"
           />
         </div>
         <div className="w-full md:w-64">
@@ -151,8 +151,8 @@ export default function CourseManagementQueue() {
           <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin" />
         </div>
       ) : courses.length === 0 ? (
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-16 text-center">
-          <p className="text-xl font-black uppercase tracking-widest text-black/40 leading-none">
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-16 text-center text-black">
+          <p className="text-xl font-black uppercase tracking-widest leading-none opacity-40">
             {activeTab === 'PENDING_REVIEW' ? 'Không có khóa học nào đang chờ duyệt.' : 'Không tìm thấy kết quả phù hợp.'}
           </p>
         </div>
@@ -175,7 +175,7 @@ export default function CourseManagementQueue() {
                       {course.status}
                     </span>
                   </div>
-                  <p className="text-xs font-black text-black/70 mb-6 uppercase tracking-widest">
+                  <p className="text-xs font-black text-black mb-6 uppercase tracking-widest opacity-80">
                     GV: {course.instructor?.fullName || 'N/A'} • Giá: {course.price}đ • Danh mục: {course.category?.name || 'N/A'}
                   </p>
                   
@@ -273,18 +273,17 @@ export default function CourseManagementQueue() {
                 </div>
               )}
 
-              {/* Modal Từ Chối */}
               {activeCourseId === course.id && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
                   <div className="bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
                     <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none text-black">Từ chối Khóa học</h2>
-                    <p className="text-xs font-black text-black/70 uppercase tracking-[0.2em] mb-6">Khóa học: {course.title}</p>
+                    <p className="text-xs font-black text-black uppercase tracking-[0.2em] mb-6">Khóa học: {course.title}</p>
                     
                     <textarea
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Nhập lý do chi tiết..."
-                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 text-black outline-none placeholder:text-black/30 min-h-[160px] mb-8 shadow-inner transition-colors"
+                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 text-black outline-none placeholder:text-black/50 min-h-[160px] mb-8 shadow-inner transition-colors"
                     />
 
                     <div className="flex gap-6">
@@ -304,13 +303,13 @@ export default function CourseManagementQueue() {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
                   <div className="bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
                     <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none text-black">Tạm Đình Chỉ</h2>
-                    <p className="text-xs font-black text-black/70 uppercase tracking-[0.2em] mb-6">Khóa học: {course.title}</p>
+                    <p className="text-xs font-black text-black uppercase tracking-[0.2em] mb-6">Khóa học: {course.title}</p>
                     
                     <textarea
                       value={suspendReason}
                       onChange={(e) => setSuspendReason(e.target.value)}
                       placeholder="Nhập lý do đình chỉ (VD: Vi phạm bản quyền)..."
-                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 text-black outline-none placeholder:text-black/30 min-h-[160px] mb-8 shadow-inner transition-colors"
+                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 text-black outline-none placeholder:text-black/50 min-h-[160px] mb-8 shadow-inner transition-colors"
                     />
 
                     <div className="flex gap-6">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { Suspense, useState, useRef, useEffect } from 'react';
+import { Suspense, useState, useRef, useEffect, useMemo } from 'react';
 import { useCourseDetail, CourseDetail } from '@/hooks/useCourseDetail';
 import PublicLayout from '@/components/PublicLayout';
 import { useCart } from '@/contexts/CartContext';
@@ -11,6 +11,10 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useClerk } from '@clerk/nextjs';
 import Footer from '@/components/Footer';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
+import Link from 'next/link';
+import LoadingScreen from '@/components/LoadingScreen';
 
 function VideoPreviewModal({ 
   isOpen, 
@@ -73,12 +77,36 @@ function CourseDetailContent() {
   const router = useRouter();
   const { user, loading: userLoading } = useCurrentUser();
   const { signOut } = useClerk();
+  const { enrollments, loading: enrollLoading } = useEnrolledCourses();
+
+  const isEnrolled = useMemo(() => {
+    if (!course || !enrollments) return false;
+    return enrollments.some(e => e.course_id === course.id);
+  }, [course?.id, enrollments]);
 
   // Loading states
   const [isAdding, setIsAdding] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const isTogglingRef = useRef(false);
   const [showRoleMismatchModal, setShowRoleMismatchModal] = useState(false);
+  
+  const { toggleWishlist, checkInWishlist } = useWishlist();
+  const toggleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const clickCountRef = useRef(0);
+  const lastToastTimeRef = useRef(0);
+
+  useEffect(() => {
+    if (course && user) {
+      checkInWishlist(course.id).then(res => {
+        // Only update from server if we are not actively toggling
+        if (!isTogglingRef.current) {
+          setIsInWishlist(res);
+        }
+      });
+    }
+  }, [course, user, checkInWishlist]);
 
   const handleRoleMismatchConfirm = async () => {
     setShowRoleMismatchModal(false);
@@ -113,6 +141,51 @@ function CourseDetailContent() {
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleToggleWishlist = () => {
+    if (!course) return;
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để thêm vào danh sách yêu thích');
+      return;
+    }
+
+    // 0. Spam Detection
+    clickCountRef.current += 1;
+    const now = Date.now();
+    if (clickCountRef.current > 5 && now - lastToastTimeRef.current > 2000) {
+      toast('Bạn đang thao tác hơi nhanh, vui lòng thao tác chậm lại đợi phản hồi từ hệ thống!');
+      lastToastTimeRef.current = now;
+    }
+
+    // Reset snap count after 2s of inactivity
+    const timer = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, 2000);
+
+    // 1. Instant UI Feedback
+    const nextState = !isInWishlist;
+    setIsInWishlist(nextState);
+    isTogglingRef.current = true; // Block useEffect updates
+
+    // 2. Debounce API call
+    if (toggleTimerRef.current) clearTimeout(toggleTimerRef.current);
+
+    toggleTimerRef.current = setTimeout(async () => {
+      const result = await toggleWishlist(course.id, nextState);
+      
+      if (result !== null) {
+        setIsInWishlist(result);
+      } else {
+        // Revert on error
+        setIsInWishlist(!nextState);
+      }
+      
+      // Allow useEffect updates again after a small delay to ensure server sync
+      setTimeout(() => {
+        isTogglingRef.current = false;
+      }, 500);
+    }, 300);
   };
 
   const handleBuyNow = async () => {
@@ -168,16 +241,8 @@ function CourseDetailContent() {
   };
 
   // Chờ cả dữ liệu khóa học và thông tin User (để xác định đúng role trước khi render UI)
-  if (loading || userLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin mb-6"></div>
-        <h1 className="text-2xl font-black text-black uppercase tracking-tight mb-2">Đang chuẩn bị không gian học tập...</h1>
-        <p className="text-xs font-black uppercase tracking-widest text-gray-500 max-w-md">
-          Xin vui lòng chờ giây lát, StudyMate đang tải dữ liệu khóa học dành riêng cho bạn.
-        </p>
-      </div>
-    );
+  if (loading || userLoading || enrollLoading) {
+    return <LoadingScreen />;
   }
 
   // Trạng thái Lỗi hoặc Không tìm thấy
@@ -266,7 +331,7 @@ function CourseDetailContent() {
 
             <div className="text-sm">
               <p className="mb-2">
-                Created by <span className="underline text-amber-400 cursor-pointer">{course.instructor?.fullName || 'Instructor'}</span>
+                Created by <Link href={`/instructors/${course.instructor?.id}`} className="underline text-amber-400 hover:text-amber-300 font-extrabold cursor-pointer decoration-2 underline-offset-4">{course.instructor?.fullName || 'Instructor'}</Link>
               </p>
               <div className="flex gap-4 text-zinc-400">
                 <span className="flex items-center gap-1">
@@ -440,43 +505,60 @@ function CourseDetailContent() {
                     ₫{course.price.toLocaleString('vi-VN')}
                   </div>
 
-                  <div className="flex gap-2 mb-4">
-                    {user?.role === 'ADMIN' || user?.role === 'STAFF' ? (
+                  <div className="space-y-4 mb-4">
+                    {isEnrolled ? (
                       <button 
-                        onClick={handleDirectEnroll}
-                        disabled={isEnrolling}
-                        className="flex-1 bg-emerald-400 hover:bg-emerald-500 disabled:bg-gray-200 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+                        onClick={() => router.push(`/courses/${course.slug}/learn`)}
+                        className="w-full bg-emerald-400 hover:bg-emerald-500 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center justify-center gap-2 uppercase italic tracking-tighter"
                       >
-                        {isEnrolling ? 'Đang ghi danh...' : 'Ghi danh trực tiếp'}
+                         <svg className="w-6 h-6 fill-black" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                         HỌC NGAY
                       </button>
                     ) : (
                       <>
-                        <button 
-                          onClick={handleAddToCart}
-                          disabled={isAdding}
-                          className="flex-1 bg-white hover:bg-amber-400 focus:bg-amber-500 disabled:bg-gray-100 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
-                        >
-                          {isAdding ? 'Đang thêm...' : 'Thêm vào giỏ'}
-                        </button>
-                        <button 
-                          onClick={() => toast('Tính năng Yêu thích đang phát triển!', { icon: '❤️' })} 
-                          className="px-6 py-4 border-4 border-black bg-white hover:bg-red-400 hover:text-white transition-colors group shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none"
-                        >
-                          <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                        </button>
+                        <div className="flex gap-2">
+                          {user?.role === 'ADMIN' || user?.role === 'STAFF' ? (
+                            <button 
+                              onClick={handleDirectEnroll}
+                              disabled={isEnrolling}
+                              className="flex-1 bg-emerald-400 hover:bg-emerald-500 disabled:bg-gray-200 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+                            >
+                              {isEnrolling ? 'Đang ghi danh...' : 'Ghi danh trực tiếp'}
+                            </button>
+                          ) : (
+                            <>
+                              <button 
+                                onClick={handleAddToCart}
+                                disabled={isAdding}
+                                className="flex-1 bg-white hover:bg-amber-400 focus:bg-amber-500 disabled:bg-gray-100 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+                              >
+                                {isAdding ? 'Đang thêm...' : 'Thêm vào giỏ'}
+                              </button>
+                                <button 
+                                onClick={handleToggleWishlist} 
+                                className={`px-6 py-4 border-4 border-black transition-colors group shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none ${isInWishlist ? 'bg-amber-400' : 'bg-white hover:bg-amber-300'}`}
+                                title={isInWishlist ? "Xóa khỏi danh sách yêu thích" : "Thêm vào danh sách yêu thích"}
+                              >
+                                <svg className={`w-6 h-6 group-hover:scale-110 transition-transform ${isInWishlist ? 'fill-black' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        
+                        {user?.role !== 'ADMIN' && user?.role !== 'STAFF' && (
+                          <button 
+                            onClick={handleBuyNow}
+                            disabled={isBuying}
+                            className="w-full bg-white hover:bg-amber-400 disabled:bg-gray-100 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+                          >
+                            {isBuying ? 'Đang xử lý...' : 'Mua ngay'}
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
-                  
-                  {user?.role !== 'ADMIN' && user?.role !== 'STAFF' && (
-                    <button 
-                      onClick={handleBuyNow}
-                      disabled={isBuying}
-                      className="w-full bg-white hover:bg-amber-400 disabled:bg-gray-100 text-black font-black py-4 border-4 border-black mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
-                    >
-                      {isBuying ? 'Đang xử lý...' : 'Mua ngay'}
-                    </button>
-                  )}
 
                   <p className="text-xs text-center text-gray-500 font-bold mb-6">30-Day Money-Back Guarantee<br/>Full Lifetime Access</p>
 
@@ -499,18 +581,27 @@ function CourseDetailContent() {
             </div>
 
             {/* Mobile Buy Area (shows only on mobile, sticky bottom) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black p-4 z-50 flex items-center justify-between shadow-[0px_-4px_0px_0px_rgba(0,0,0,1)]">
-               <div className="text-xl font-black">₫{course.price.toLocaleString('vi-VN')}</div>
-               {user?.role === 'ADMIN' || user?.role === 'STAFF' ? (
-                 <button onClick={handleDirectEnroll} disabled={isEnrolling} className="bg-emerald-400 text-black hover:bg-emerald-500 font-black px-8 py-3">
-                   {isEnrolling ? '...' : 'Ghi danh'}
-                 </button>
-               ) : (
-                 <button onClick={handleBuyNow} disabled={isBuying} className="bg-black text-white hover:bg-gray-800 font-black px-8 py-3">
-                   {isBuying ? '...' : 'Mua ngay'}
-                 </button>
-               )}
-            </div>
+                <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black p-4 z-50 flex items-center justify-between shadow-[0px_-4px_0px_0px_rgba(0,0,0,1)]">
+                   <div className="text-xl font-black">₫{course.price.toLocaleString('vi-VN')}</div>
+                   {isEnrolled ? (
+                      <button 
+                        onClick={() => router.push(`/courses/${course.slug}/learn`)}
+                        className="bg-emerald-400 text-black hover:bg-emerald-500 font-black px-8 py-3 uppercase italic tracking-tighter"
+                      >
+                        HỌC NGAY
+                      </button>
+                   ) : (
+                     user?.role === 'ADMIN' || user?.role === 'STAFF' ? (
+                       <button onClick={handleDirectEnroll} disabled={isEnrolling} className="bg-emerald-400 text-black hover:bg-emerald-500 font-black px-8 py-3">
+                         {isEnrolling ? '...' : 'Ghi danh'}
+                       </button>
+                     ) : (
+                       <button onClick={handleBuyNow} disabled={isBuying} className="bg-black text-white hover:bg-gray-800 font-black px-8 py-3">
+                         {isBuying ? '...' : 'Mua ngay'}
+                       </button>
+                     )
+                   )}
+                </div>
           </div>
         </div>
       </div>
