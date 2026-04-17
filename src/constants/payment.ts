@@ -1,0 +1,6 @@
+export const PAYMENT_CONFIG = {
+  BANK_BIN: '970436', // Vietcombank
+  ACCOUNT_NO: '1035926142',
+  ACCOUNT_NAME: 'NGUYEN DUC VI',
+  CURRENCY: 'VND',
+};

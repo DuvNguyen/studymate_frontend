@@ -86,7 +86,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setCart(result.data);
       return { success: true };
     } catch (err: any) {
-      console.error('[CartContext] Error in addToCart:', err.message);
+      // Don't console.error here to avoid Next.js dev overlay for business logic errors
       return { success: false, error: err.message };
     }
   };

@@ -3,13 +3,14 @@
 import { useParams } from 'next/navigation';
 import { Suspense, useState, useRef, useEffect } from 'react';
 import { useCourseDetail, CourseDetail } from '@/hooks/useCourseDetail';
-import Navbar from '@/components/Navbar';
+import PublicLayout from '@/components/PublicLayout';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useClerk } from '@clerk/nextjs';
+import Footer from '@/components/Footer';
 
 function VideoPreviewModal({ 
   isOpen, 
@@ -101,6 +102,8 @@ function CourseDetailContent() {
       if (!res.success && res.error) {
         if (res.error === 'Khóa học này đã có trong giỏ hàng') {
           toast('Khóa học này đã có trong giỏ hàng', { icon: '🛒' });
+        } else if (res.error === 'Bạn đã sở hữu khóa học này') {
+          toast.success('Bạn đã sở hữu khóa học này! Hãy vào Dashboard để học ngay.');
         } else {
           toast.error(res.error);
         }
@@ -231,11 +234,11 @@ function CourseDetailContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-black pb-24">
-      <Navbar />
+    <PublicLayout>
+      <div className="bg-white font-sans text-black pb-24">
 
       {/* Hero Section */}
-      <div className="pt-24 bg-zinc-900 border-b-4 border-black text-white relative z-0">
+      <div className="-mt-36 pt-36 bg-zinc-900 border-b-4 border-black text-white relative z-0">
         <div className="max-w-7xl mx-auto px-4 py-12 lg:py-16 md:flex justify-between">
           <div className="md:w-2/3 pr-8 relative z-10">
             <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-amber-400 mb-4">
@@ -528,7 +531,8 @@ function CourseDetailContent() {
         cancelText="Để sau"
         confirmVariant="warning"
       />
-    </div>
+      </div>
+    </PublicLayout>
   );
 }
 

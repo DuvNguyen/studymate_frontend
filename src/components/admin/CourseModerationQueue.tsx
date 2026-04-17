@@ -4,15 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAdminCourses } from '@/hooks/useAdminCourses';
 import { useCategories } from '@/hooks/useCategories';
 import { Button } from '@/components/Button';
+import { Pagination } from '@/components/Pagination';
 
 export default function CourseManagementQueue() {
-  const { courses, loading, error, fetchCourses, approveCourse, rejectCourse, suspendCourse } = useAdminCourses();
+  const { courses, meta, loading, error, fetchCourses, approveCourse, rejectCourse, suspendCourse } = useAdminCourses();
   const { categories, loading: categoriesLoading } = useCategories();
   
   // Tabs & Search states
   const [activeTab, setActiveTab] = useState<'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ALL'>('PENDING_REVIEW');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<number | ''>('');
+  const [page, setPage] = useState(1);
   const [triggerFetch, setTriggerFetch] = useState(0);
 
   const [rejectReason, setRejectReason] = useState('');
@@ -23,10 +25,11 @@ export default function CourseManagementQueue() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchCourses({ page: 1, limit: 50, status: activeTab, search: searchQuery, categoryId: filterCategory ? String(filterCategory) : '' });
-  }, [fetchCourses, activeTab, triggerFetch]);
+    fetchCourses({ page, limit: 5, status: activeTab, search: searchQuery, categoryId: filterCategory ? String(filterCategory) : '' });
+  }, [fetchCourses, activeTab, triggerFetch, page]);
 
   const handleSearch = () => {
+    setPage(1);
     setTriggerFetch(prev => prev + 1);
   };
 
@@ -324,6 +327,15 @@ export default function CourseManagementQueue() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {meta && (
+        <Pagination
+          currentPage={page}
+          totalPages={meta.totalPages}
+          onPageChange={(p) => setPage(p)}
+        />
       )}
     </div>
   );

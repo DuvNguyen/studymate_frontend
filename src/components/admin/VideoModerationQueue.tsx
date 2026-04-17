@@ -1,15 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePendingVideos, useReviewVideo, Video } from '@/hooks/useVideos';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { Button } from '@/components/Button';
+import { Pagination } from '@/components/Pagination';
 
 export default function VideoModerationQueue() {
-  const { videos, loading, error, refetch } = usePendingVideos();
+  const { videos, meta, loading, error, refetch } = usePendingVideos();
   const { review, reviewing } = useReviewVideo();
+  const { users: instructors, fetchUsers: fetchInstructors } = useAdminUsers();
+
   const [rejectReason, setRejectReason] = useState('');
   const [activeVideoId, setActiveVideoId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Filters
+  const [page, setPage] = useState(1);
+  const [filterUploaderId, setFilterUploaderId] = useState<number | ''>('');
+  const [filterVideoId, setFilterVideoId] = useState<string>('');
+
+  useEffect(() => {
+    fetchInstructors({ role: 'INSTRUCTOR', limit: 100 });
+  }, [fetchInstructors]);
+
+  useEffect(() => {
+    refetch({
+      page,
+      limit: 5,
+      uploaderId: filterUploaderId || undefined,
+      id: filterVideoId ? Number(filterVideoId) : undefined,
+    });
+  }, [page, filterUploaderId, filterVideoId, refetch]);
+
+  const handleFilter = () => {
+    setPage(1);
+    // Values are already synced with state, so refetch will trigger via useEffect
+  };
 
   const handleApprove = async (id: number) => {
     if (!window.confirm("Xác nhận phê duyệt video này?")) return;
@@ -51,8 +78,43 @@ export default function VideoModerationQueue() {
           <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Kiếm duyệt nội dung</p>
           <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Hàng đợi Video</h1>
         </div>
-        <Button onClick={refetch} variant="outline" size="sm">
+        <Button onClick={() => refetch()} variant="outline" size="sm">
           Làm mới ↻
+        </Button>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="bg-yellow-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex flex-col md:flex-row gap-4 items-end">
+        <div className="w-full md:w-64">
+          <label className="block text-[10px] font-black text-black uppercase mb-1">Giảng viên</label>
+          <select 
+            value={filterUploaderId}
+            onChange={(e) => setFilterUploaderId(e.target.value ? Number(e.target.value) : '')}
+            className="w-full bg-white border-2 border-black px-4 py-2 font-black text-xs text-black outline-none focus:bg-yellow-100"
+          >
+            <option value="">-- TẤT CẢ GIẢNG VIÊN --</option>
+            {instructors.map((ins) => (
+              <option key={ins.id} value={ins.id}>
+                {ins.fullName || ins.email} (ID: {ins.id})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="w-full md:w-48">
+          <label className="block text-[10px] font-black text-black uppercase mb-1">Mã Video (Hệ thống)</label>
+          <input 
+            type="text" 
+            value={filterVideoId}
+            onChange={(e) => setFilterVideoId(e.target.value)}
+            placeholder="VD: 123"
+            className="w-full bg-white border-2 border-black px-4 py-2 font-black text-xs text-black outline-none focus:bg-yellow-100 placeholder:text-black/30"
+          />
+        </div>
+        <Button 
+          onClick={handleFilter}
+          className="bg-black text-white px-8 py-2 text-xs shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)]"
+        >
+          LỌC
         </Button>
       </div>
 
@@ -203,6 +265,15 @@ export default function VideoModerationQueue() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {meta && (
+        <Pagination
+          currentPage={page}
+          totalPages={meta.totalPages}
+          onPageChange={(p) => setPage(p)}
+        />
       )}
     </div>
   );

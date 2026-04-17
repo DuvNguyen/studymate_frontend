@@ -5,8 +5,9 @@ import { Suspense, useState } from 'react';
 import { useCourses, CourseFilters } from '@/hooks/useCourses';
 import { useCategories } from '@/hooks/useCategories';
 import CoursesGrid from '@/components/CoursesGrid';
-import Navbar from '@/components/Navbar';
-import CategoryNavBar from '@/components/CategoryNavBar';
+import { Pagination } from '@/components/Pagination';
+import Footer from '@/components/Footer';
+import PublicLayout from '@/components/PublicLayout';
 
 const LEVEL_OPTIONS = [
   { value: '', label: 'Tất cả cấp độ' },
@@ -30,7 +31,7 @@ function CoursesPageContent() {
     search: search || undefined,
     level: level || undefined,
     page,
-    limit: 12,
+    limit: 9,
   };
 
   const { courses, meta, loading } = useCourses(filters);
@@ -51,12 +52,8 @@ function CoursesPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navbar fixed ở trên cùng - Đồng bộ hoàn toàn với homepage */}
-      <Navbar />
-      
-      {/* Header padding for offset fixed navbar - Đồng bộ spacing với homepage */}
-      <div className="pt-36">
+    <PublicLayout>
+      <div className="bg-white">
         {/* Category Hero section — Premium style like Udemy */}
         <div className="border-b-2 border-black bg-white">
           <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
@@ -160,42 +157,15 @@ function CoursesPageContent() {
         <CoursesGrid courses={courses} loading={loading} />
 
         {/* Pagination */}
-        {meta && meta.totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="px-4 py-2 border-2 border-black text-sm font-black disabled:opacity-40 hover:bg-amber-300 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:shadow-none"
-            >
-              ← Trước
-            </button>
-
-            {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => {
-              const p = Math.max(1, Math.min(page - 2, meta.totalPages - 4)) + i;
-              return (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={`w-10 h-10 border-2 border-black text-sm font-black transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
-                    p === page ? 'bg-black text-white' : 'bg-white hover:bg-amber-100'
-                  }`}
-                >
-                  {p}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
-              disabled={page >= meta.totalPages}
-              className="px-4 py-2 border-2 border-black text-sm font-black disabled:opacity-40 hover:bg-amber-300 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:shadow-none"
-            >
-              Sau →
-            </button>
-          </div>
+        {meta && (
+          <Pagination
+            currentPage={page}
+            totalPages={meta.totalPages}
+            onPageChange={(p) => setPage(p)}
+          />
         )}
       </div>
-    </div>
+    </PublicLayout>
   );
 }
 

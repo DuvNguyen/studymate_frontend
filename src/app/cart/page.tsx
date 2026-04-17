@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { useRouter } from 'next/navigation';
+import PublicLayout from '@/components/PublicLayout';
 
 export default function CartPage() {
   const { cart, loading, removeFromCart, checkout, checkoutLoading } = useCart();
@@ -24,10 +25,8 @@ export default function CartPage() {
   const itemCount = cart?.cart_items?.length || 0;
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-
-      <div className="pt-36 max-w-6xl mx-auto px-4 pb-20">
+    <PublicLayout>
+      <div className="max-w-6xl mx-auto px-4 pb-20">
         <h1 className="text-4xl font-black uppercase text-black tracking-tighter mb-8">
           Giỏ hàng của bạn
         </h1>
@@ -138,6 +137,6 @@ export default function CartPage() {
           </div>
         )}
       </div>
-    </div>
+    </PublicLayout>
   );
 }

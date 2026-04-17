@@ -11,7 +11,18 @@ export interface AdminUser {
   lastName: string | null;
   role: string;
   status: string;
+  fullName: string | null;
+  violationCount: number;
+  banReason: string | null;
+  bannedAt: string | null;
   createdAt: string;
+}
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 interface FetchUsersParams {
@@ -26,6 +37,7 @@ export function useAdminUsers() {
   const { session } = useSession();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,8 +68,10 @@ export function useAdminUsers() {
       }
 
       const json = await res.json();
-      setUsers(json.data);
-      setTotal(json.total);
+      const d = json.data || json;
+      setUsers(d.data || []);
+      setTotal(d.meta?.total || 0);
+      setMeta(d.meta || null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -113,5 +127,5 @@ export function useAdminUsers() {
     }
   };
 
-  return { users, total, loading, error, fetchUsers, updateStatus, updateRole };
+  return { users, total, meta, loading, error, fetchUsers, updateStatus, updateRole };
 }
