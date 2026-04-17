@@ -57,6 +57,8 @@ export interface CourseFilters {
   level?: string;
   page?: number;
   limit?: number;
+  sortBy?: 'publishedAt' | 'avgRating' | 'studentCount';
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -79,6 +81,8 @@ export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
     if (filters.level) params.set('level', filters.level);
     if (filters.page) params.set('page', String(filters.page));
     if (filters.limit) params.set('limit', String(filters.limit));
+    if (filters.sortBy) params.set('sortBy', filters.sortBy);
+    if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
 
     fetch(`${API_BASE}/courses?${params.toString()}`, { signal: controller.signal })
       .then((res) => {
@@ -109,6 +113,8 @@ export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
     filters.level,
     filters.page,
     filters.limit,
+    filters.sortBy,
+    filters.sortOrder,
   ]);
 
   return { courses, meta, loading, error };

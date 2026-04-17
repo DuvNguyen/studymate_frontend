@@ -17,6 +17,21 @@ export interface Video {
   uploadedAt: string;
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface FetchVideosParams {
+  page?: number;
+  limit?: number;
+  uploaderId?: number;
+  id?: number;
+  status?: string;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL + '/videos';
 
 // ─── Hook: Giảng viên upload video ───
@@ -63,21 +78,30 @@ export function useUploadVideo() {
 export function useInstructorVideos() {
   const { session, isLoaded } = useSession();
   const [videos, setVideos] = useState<Video[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchVideos = async () => {
+  const fetchVideos = async (params: FetchVideosParams = {}) => {
     if (!session) return;
     try {
       setLoading(true);
       const token = await session.getToken();
-      const res = await fetch(`${API_URL}/instructor`, {
+      
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.set('page', params.page.toString());
+      if (params.limit) queryParams.set('limit', params.limit.toString());
+      if (params.status) queryParams.set('status', params.status);
+
+      const res = await fetch(`${API_URL}/instructor?${queryParams.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error('Lỗi lấy danh sách video');
       const json = await res.json();
-      setVideos(json.data || []);
+      const d = json.data || json;
+      setVideos(d.data || []);
+      setMeta(d.meta || null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -87,34 +111,45 @@ export function useInstructorVideos() {
 
   useEffect(() => {
     if (isLoaded && session) {
-      fetchVideos();
+      fetchVideos({ page: 1, limit: 5 });
     } else if (isLoaded && !session) {
       setLoading(false);
     }
   }, [isLoaded, session]);
 
-  return { videos, loading, error, refetch: fetchVideos };
+  return { videos, meta, loading, error, refetch: fetchVideos };
 }
 
 // ─── Hook: Staff/Admin lấy danh sách chờ duyệt ───
 export function usePendingVideos() {
   const { session, isLoaded } = useSession();
   const [videos, setVideos] = useState<Video[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchVideos = async () => {
+  const fetchVideos = async (params: FetchVideosParams = {}) => {
     if (!session) return;
     try {
       setLoading(true);
       const token = await session.getToken();
-      const res = await fetch(`${API_URL}/pending`, {
+      
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.set('page', params.page.toString());
+      if (params.limit) queryParams.set('limit', params.limit.toString());
+      if (params.uploaderId) queryParams.set('uploaderId', params.uploaderId.toString());
+      if (params.id) queryParams.set('id', params.id.toString());
+      if (params.status) queryParams.set('status', params.status);
+
+      const res = await fetch(`${API_URL}/pending?${queryParams.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error('Lỗi lấy danh sách chờ duyệt');
       const json = await res.json();
-      setVideos(json.data || []);
+      const d = json.data || json;
+      setVideos(d.data || []);
+      setMeta(d.meta || null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -124,13 +159,13 @@ export function usePendingVideos() {
 
   useEffect(() => {
     if (isLoaded && session) {
-      fetchVideos();
+      fetchVideos({ page: 1, limit: 5 });
     } else if (isLoaded && !session) {
       setLoading(false);
     }
   }, [isLoaded, session]);
 
-  return { videos, loading, error, refetch: fetchVideos };
+  return { videos, meta, loading, error, refetch: fetchVideos };
 }
 
 // ─── Hook: Staff/Admin duyệt video ───

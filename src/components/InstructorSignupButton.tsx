@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useClerk } from '@clerk/nextjs';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { ConfirmModal } from './ConfirmModal';
 
 interface Props {
   className?: string;
@@ -14,11 +15,10 @@ export function InstructorSignupButton({ className, children }: Props) {
   const { user, loading } = useCurrentUser();
   const { signOut } = useClerk();
   const router = useRouter();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    
-    // Nếu đang tải thông tin user, tạm thời không làm gì hoặc cho phép
     if (loading) return;
 
     if (!user) {
@@ -32,20 +32,32 @@ export function InstructorSignupButton({ className, children }: Props) {
       return;
     }
 
-    const confirmNewAccount = window.confirm(
-      `Yêu cầu hệ thống: Giảng viên và Học viên phải sử dụng 2 tài khoản riêng biệt.\n\nTài khoản hiện tại của bạn đang là ${user.role}. Bạn có muốn ĐĂNG XUẤT tài khoản này để tạo tài khoản Giảng viên mới (bằng một Email khác) không?`
-    );
+    setShowConfirm(true);
+  };
 
-    if (confirmNewAccount) {
-      await signOut();
-      window.localStorage.setItem('intended_role', 'INSTRUCTOR');
-      router.push('/sign-up?role=instructor');
-    }
+  const handleConfirm = async () => {
+    setShowConfirm(false);
+    await signOut();
+    window.localStorage.setItem('intended_role', 'INSTRUCTOR');
+    router.push('/sign-up?role=instructor');
   };
 
   return (
-    <button onClick={handleClick} className={className}>
-      {children}
-    </button>
+    <>
+      <button onClick={handleClick} className={className}>
+        {children}
+      </button>
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleConfirm}
+        title="Yêu cầu hệ thống"
+        message={`Giảng viên và Học viên phải sử dụng 2 tài khoản riêng biệt.\n\nTài khoản hiện tại của bạn đang là ${user?.role}. Bạn có muốn ĐĂNG XUẤT tài khoản này để tạo tài khoản Giảng viên mới (bằng một Email khác) không?`}
+        confirmText="Đồng ý đăng xuất"
+        cancelText="Để sau"
+        confirmVariant="warning"
+      />
+    </>
   );
 }

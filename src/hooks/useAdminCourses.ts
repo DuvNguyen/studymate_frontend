@@ -1,10 +1,18 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export function useAdminCourses() {
   const { getToken } = useAuth();
   const [courses, setCourses] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,8 +35,9 @@ export function useAdminCourses() {
       if (res.ok) {
         const data = await res.json();
         const d = data.data || data;
-        setCourses(d.data || d);
+        setCourses(d.data || []);
         setTotal(d.meta?.total || 0);
+        setMeta(d.meta || null);
       } else {
         const err = await res.json();
         setError(err.message || 'Lỗi lấy danh sách khóa học');
@@ -84,5 +93,5 @@ export function useAdminCourses() {
     }
   };
 
-  return { courses, total, loading, error, fetchCourses, approveCourse, rejectCourse, suspendCourse };
+  return { courses, total, meta, loading, error, fetchCourses, approveCourse, rejectCourse, suspendCourse };
 }

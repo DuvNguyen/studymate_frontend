@@ -5,6 +5,8 @@ import { useClerk } from '@clerk/nextjs';
 import { useDeleteUser } from '@/hooks/useDeleteUser';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { Pagination } from '@/components/Pagination';
 
 type Tab = 'STUDENT' | 'INSTRUCTOR' | 'STAFF' | 'ADMIN';
 
@@ -25,13 +27,13 @@ interface BanReasonModalState {
 }
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('STUDENT');
+  const [page, setPage] = useState(1);
   const { session } = useClerk();
   const { deleteUser, loading: isDeleting } = useDeleteUser();
   const [isActing, setIsActing] = useState(false);
   const { user: appUser, loading: appLoading } = useCurrentUser();
+  const { users, meta, loading, fetchUsers, updateStatus } = useAdminUsers();
 
   const [banModal, setBanModal] = useState<BanModalState>({
     open: false,
@@ -49,34 +51,11 @@ export default function AdminUsersPage() {
     status: '',
   });
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const token = await session?.getToken();
-      if (!token) return;
-
-      const res = await fetch(`http://localhost:3001/api/v1/users?limit=50&role=${activeTab}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const json = await res.json();
-      if (res.ok && json.data) {
-        setUsers(json.data);
-      } else {
-        setUsers([]);
-      }
-    } catch (err) {
-      console.error(err);
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (session) {
-      fetchUsers();
+      fetchUsers({ page, limit: 10, role: activeTab });
     }
-  }, [session, activeTab]);
+  }, [session, activeTab, page, fetchUsers]);
 
   const handleDelete = async (id: number, email: string) => {
     const confirm = window.confirm(`Bạn có CHẮC CHẮN muốn XÓA CỨNG người dùng [${email}] không?\n\nHành động này sẽ xóa dữ liệu trên Clerk và DB, KHÔNG THỂ KHÔI PHỤC!`);
@@ -194,7 +173,10 @@ export default function AdminUsersPage() {
           {tabs.map(tab => (
             <button
               key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
+              onClick={() => {
+                setActiveTab(tab.value);
+                setPage(1);
+              }}
               className={`py-2 px-6 font-black text-xs uppercase tracking-widest border-2 border-black transition-all ${
                 activeTab === tab.value
                   ? 'bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-2px] translate-x-[-2px]'
@@ -303,6 +285,14 @@ export default function AdminUsersPage() {
               </table>
             </div>
           </div>
+        )}
+
+        {meta && (
+          <Pagination
+            currentPage={page}
+            totalPages={meta.totalPages}
+            onPageChange={(p) => setPage(p)}
+          />
         )}
       </div>
 

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { UserButton, useUser } from '@clerk/nextjs';
 import SearchBar from './SearchBar';
 import Navbar from './Navbar';
+import Footer from './Footer';
 
 // Icons SVG
 function IconHome() {
@@ -185,31 +186,35 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 flex flex-col">
-          {(!isKycRoute && (isLockedInstructor || isPendingUserRole)) ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg text-center space-y-6">
-                 <div className="w-16 h-16 mx-auto bg-amber-300 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3">
-                    <span className="text-3xl font-black text-black">!</span>
-                 </div>
-                 <h2 className="text-2xl font-black uppercase text-black">
-                   {kycStatus === 'PENDING' ? 'Hồ sơ đang được duyệt' : 
-                    kycStatus === 'REJECTED' ? 'Hồ sơ bị từ chối' : 
-                    'Hồ sơ chưa hoàn thiện'}
-                 </h2>
-                 <p className="text-sm font-black text-black">
-                   {kycStatus === 'PENDING' ? 'Hồ sơ của bạn đang được duyệt, vui lòng đợi. Hồ sơ sẽ được duyệt trong khoảng 2 đến 3 ngày làm việc.' : 
-                    kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Bạn vui lòng tạo lại một tài khoản mới nếu muốn tham gia giảng dạy sau này.' : 
-                    'Vui lòng hoàn thiện hồ sơ đăng ký KYC để được cấp phép kinh doanh khóa học!'}
-                 </p>
-                 <Link href="/dashboard/instructor/kyc" className="inline-block px-6 py-3 bg-indigo-500 text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform">
-                   {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Kiểm tra trạng thái'}
-                 </Link>
+        <main className="flex-1 overflow-y-auto bg-gray-50 flex flex-col">
+          <div className="flex-1 p-6 flex flex-col">
+            {(!isKycRoute && (isLockedInstructor || isPendingUserRole)) ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg text-center space-y-6">
+                   <div className="w-16 h-16 mx-auto bg-amber-300 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3">
+                      <span className="text-3xl font-black text-black">!</span>
+                   </div>
+                   <h2 className="text-2xl font-black uppercase text-black">
+                     {kycStatus === 'PENDING' ? 'Hồ sơ đang được duyệt' : 
+                      kycStatus === 'REJECTED' ? 'Hồ sơ bị từ chối' : 
+                      'Hồ sơ chưa hoàn thiện'}
+                   </h2>
+                   <p className="text-sm font-black text-black">
+                     {kycStatus === 'PENDING' ? 'Hồ sơ của bạn đang được duyệt, vui lòng đợi. Hồ sơ sẽ được duyệt trong khoảng 2 đến 3 ngày làm việc.' : 
+                      kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Bạn vui lòng tạo lại một tài khoản mới nếu muốn tham gia giảng dạy sau này.' : 
+                      'Vui lòng hoàn thiện hồ sơ đăng ký KYC để được cấp phép kinh doanh khóa học!'}
+                   </p>
+                   <Link href="/dashboard/instructor/kyc" className="inline-block px-6 py-3 bg-indigo-500 text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform">
+                     {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Kiểm tra trạng thái'}
+                   </Link>
+                </div>
               </div>
-            </div>
-          ) : (
-            children
-          )}
+            ) : (
+              children
+            )}
+          </div>
+          {/* Footer inside scrollable area */}
+          <Footer />
         </main>
       </div>
     </div>
