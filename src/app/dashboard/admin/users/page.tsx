@@ -306,7 +306,7 @@ export default function AdminUsersPage() {
             </p>
 
             <textarea
-              className="w-full border-2 border-black p-4 text-sm text-black font-bold focus:outline-none focus:bg-yellow-50 resize-none placeholder-gray-400 min-h-[100px]"
+              className="w-full border-2 border-black p-4 text-sm text-black font-black focus:outline-none focus:bg-yellow-50 resize-none placeholder-black/50 min-h-[100px]"
               placeholder="Nhập lý do vi phạm..."
               value={banModal.reason}
               onChange={(e) => setBanModal(prev => ({ ...prev, reason: e.target.value }))}
@@ -341,23 +341,23 @@ export default function AdminUsersPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-yellow-50 border-2 border-black p-4">
-                <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Email</p>
-                <p className="text-sm font-black text-black">{banReasonModal.email}</p>
+              <div className="bg-yellow-50 border-2 border-black p-4 text-black">
+                <p className="text-[10px] font-black uppercase mb-1 opacity-60">Email</p>
+                <p className="text-sm font-black">{banReasonModal.email}</p>
               </div>
 
-              <div className="bg-red-50 border-2 border-black p-4">
-                <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Lý do</p>
-                <p className="text-sm font-bold text-black">{banReasonModal.banReason || 'Không có lý do ghi nhận'}</p>
+              <div className="bg-red-50 border-2 border-black p-4 text-black">
+                <p className="text-[10px] font-black uppercase mb-1 opacity-60">Lý do</p>
+                <p className="text-sm font-black">{banReasonModal.banReason || 'Không có lý do ghi nhận'}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 border-2 border-black p-4 text-center">
-                  <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Vi phạm</p>
+                <div className="bg-gray-50 border-2 border-black p-4 text-center text-black">
+                  <p className="text-[10px] font-black uppercase mb-1 opacity-60">Vi phạm</p>
                   <p className="text-2xl font-black text-red-600">{banReasonModal.violationCount}</p>
                 </div>
-                <div className="bg-gray-50 border-2 border-black p-4 text-center">
-                  <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Tình trạng</p>
+                <div className="bg-gray-50 border-2 border-black p-4 text-center text-black">
+                  <p className="text-[10px] font-black uppercase mb-1 opacity-60">Tình trạng</p>
                   <p className="text-xs font-black uppercase">{banReasonModal.status}</p>
                 </div>
               </div>

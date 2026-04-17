@@ -11,6 +11,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useClerk } from '@clerk/nextjs';
 import Footer from '@/components/Footer';
+import { useWishlist } from '@/hooks/useWishlist';
 
 function VideoPreviewModal({ 
   isOpen, 
@@ -78,7 +79,25 @@ function CourseDetailContent() {
   const [isAdding, setIsAdding] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const isTogglingRef = useRef(false);
   const [showRoleMismatchModal, setShowRoleMismatchModal] = useState(false);
+  
+  const { toggleWishlist, checkInWishlist } = useWishlist();
+  const toggleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const clickCountRef = useRef(0);
+  const lastToastTimeRef = useRef(0);
+
+  useEffect(() => {
+    if (course && user) {
+      checkInWishlist(course.id).then(res => {
+        // Only update from server if we are not actively toggling
+        if (!isTogglingRef.current) {
+          setIsInWishlist(res);
+        }
+      });
+    }
+  }, [course, user, checkInWishlist]);
 
   const handleRoleMismatchConfirm = async () => {
     setShowRoleMismatchModal(false);
@@ -113,6 +132,51 @@ function CourseDetailContent() {
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleToggleWishlist = () => {
+    if (!course) return;
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để thêm vào danh sách yêu thích');
+      return;
+    }
+
+    // 0. Spam Detection
+    clickCountRef.current += 1;
+    const now = Date.now();
+    if (clickCountRef.current > 5 && now - lastToastTimeRef.current > 2000) {
+      toast('Bạn đang thao tác hơi nhanh, vui lòng thao tác chậm lại đợi phản hồi từ hệ thống!');
+      lastToastTimeRef.current = now;
+    }
+
+    // Reset snap count after 2s of inactivity
+    const timer = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, 2000);
+
+    // 1. Instant UI Feedback
+    const nextState = !isInWishlist;
+    setIsInWishlist(nextState);
+    isTogglingRef.current = true; // Block useEffect updates
+
+    // 2. Debounce API call
+    if (toggleTimerRef.current) clearTimeout(toggleTimerRef.current);
+
+    toggleTimerRef.current = setTimeout(async () => {
+      const result = await toggleWishlist(course.id, nextState);
+      
+      if (result !== null) {
+        setIsInWishlist(result);
+      } else {
+        // Revert on error
+        setIsInWishlist(!nextState);
+      }
+      
+      // Allow useEffect updates again after a small delay to ensure server sync
+      setTimeout(() => {
+        isTogglingRef.current = false;
+      }, 500);
+    }, 300);
   };
 
   const handleBuyNow = async () => {
@@ -458,12 +522,15 @@ function CourseDetailContent() {
                         >
                           {isAdding ? 'Đang thêm...' : 'Thêm vào giỏ'}
                         </button>
-                        <button 
-                          onClick={() => toast('Tính năng Yêu thích đang phát triển!', { icon: '❤️' })} 
-                          className="px-6 py-4 border-4 border-black bg-white hover:bg-red-400 hover:text-white transition-colors group shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none"
-                        >
-                          <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                        </button>
+                          <button 
+                           onClick={handleToggleWishlist} 
+                           className={`px-6 py-4 border-4 border-black transition-colors group shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none ${isInWishlist ? 'bg-amber-400' : 'bg-white hover:bg-amber-300'}`}
+                           title={isInWishlist ? "Xóa khỏi danh sách yêu thích" : "Thêm vào danh sách yêu thích"}
+                         >
+                           <svg className={`w-6 h-6 group-hover:scale-110 transition-transform ${isInWishlist ? 'fill-black' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                           </svg>
+                         </button>
                       </>
                     )}
                   </div>

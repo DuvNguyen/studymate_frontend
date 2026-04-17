@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from '@clerk/nextjs';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface Video {
   id: number;
@@ -11,7 +11,7 @@ export interface Video {
   status: 'PROCESSING' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
   durationSecs: number | null;
   title: string | null;
-  definition: string | null;
+  definition: string | null;  
   rejectReason: string | null;
   fileSizeKb: number | null;
   uploadedAt: string;
@@ -82,7 +82,7 @@ export function useInstructorVideos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchVideos = async (params: FetchVideosParams = {}) => {
+  const fetchVideos = useCallback(async (params: FetchVideosParams = {}) => {
     if (!session) return;
     try {
       setLoading(true);
@@ -107,7 +107,7 @@ export function useInstructorVideos() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
     if (isLoaded && session) {
@@ -128,7 +128,7 @@ export function usePendingVideos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchVideos = async (params: FetchVideosParams = {}) => {
+  const fetchVideos = useCallback(async (params: FetchVideosParams = {}) => {
     if (!session) return;
     try {
       setLoading(true);
@@ -155,7 +155,7 @@ export function usePendingVideos() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
     if (isLoaded && session) {
