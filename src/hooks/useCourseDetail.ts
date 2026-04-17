@@ -10,6 +10,7 @@ export interface Lesson {
   isPreview: boolean;
   youtubeVideoId: string | null;
   position: number;
+  content: string | null;
 }
 
 export interface Section {
