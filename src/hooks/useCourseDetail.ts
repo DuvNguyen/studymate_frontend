@@ -13,15 +13,28 @@ export interface Lesson {
   content: string | null;
 }
 
+export interface Quiz {
+  id: number;
+  title: string;
+  description: string | null;
+  passingScore: number;
+  timeLimit: number;
+  numQuestions: number;
+  isFinal: boolean;
+  sectionId: number | null;
+}
+
 export interface Section {
   id: number;
   title: string;
   position: number;
   lessons: Lesson[];
+  quiz: Quiz | null;
 }
 
 export interface CourseDetail extends Course {
   sections: Section[];
+  finalQuiz: Quiz | null;
 }
 
 interface UseCourseDetailReturn {

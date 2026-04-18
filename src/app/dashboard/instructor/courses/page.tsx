@@ -158,7 +158,7 @@ export default function InstructorCoursesPage() {
   }
 
   return (
-    <MainLayout role="INSTRUCTOR">
+    <MainLayout role="INSTRUCTOR" allowedRoles={['INSTRUCTOR']}>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border-4 border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
           <div>

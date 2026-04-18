@@ -19,7 +19,7 @@ export default function InstructorVideosPage() {
   }
 
   return (
-    <MainLayout role={appUser?.role} kycStatus={(appUser as any)?.instructorProfile?.kycStatus}>
+    <MainLayout role={appUser?.role} kycStatus={(appUser as any)?.instructorProfile?.kycStatus} allowedRoles={['INSTRUCTOR']}>
       <InstructorVideoManager />
     </MainLayout>
   );

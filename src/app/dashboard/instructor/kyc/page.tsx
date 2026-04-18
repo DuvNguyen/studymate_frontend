@@ -181,7 +181,7 @@ export default function KycPage() {
   );
 
   return (
-    <MainLayout role="INSTRUCTOR" kycStatus={kycData.kycStatus || "UNSUBMITTED"}>
+    <MainLayout role="INSTRUCTOR" kycStatus={kycData.kycStatus || "UNSUBMITTED"} allowedRoles={['USER', 'INSTRUCTOR', 'ADMIN', 'STAFF']}>
       <div className="max-w-4xl mx-auto space-y-6 py-4">
 
         {/* Header */}

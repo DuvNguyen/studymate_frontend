@@ -29,6 +29,18 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [apiReady, setApiReady] = useState(false);
 
+  const onProgressRef = useRef(onProgress);
+  const onEndRef = useRef(onEnd);
+
+  // Update refs when props change
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+  }, [onProgress]);
+
+  useEffect(() => {
+    onEndRef.current = onEnd;
+  }, [onEnd]);
+
   // Load YouTube IFrame API
   useEffect(() => {
     if (window.YT) {
@@ -50,8 +62,12 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   useEffect(() => {
     if (!apiReady || !videoId || !containerRef.current) return;
 
-    if (playerRef.current) {
-      playerRef.current.destroy();
+    if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+      try {
+        playerRef.current.destroy();
+      } catch (err) {
+        console.warn('Error destroying player:', err);
+      }
     }
 
     playerRef.current = new window.YT.Player(containerRef.current, {
@@ -80,7 +96,7 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
           
           // 0 is ENDED
           if (event.data === 0) {
-            onEnd?.();
+            onEndRef.current?.();
           }
         },
       },
@@ -88,11 +104,15 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
     return () => {
       stopTracking();
-      if (playerRef.current) {
-        playerRef.current.destroy();
+      if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+        try {
+          playerRef.current.destroy();
+        } catch (err) {
+          // Ignore
+        }
       }
     };
-  }, [apiReady, videoId, onEnd]);
+  }, [apiReady, videoId]); // Only re-init if apiReady or videoId changes
 
   const startTracking = () => {
     if (intervalRef.current) return;
@@ -101,7 +121,7 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         const currentTime = Math.floor(playerRef.current.getCurrentTime());
         const duration = Math.floor(playerRef.current.getDuration());
         if (duration > 0) {
-          onProgress?.(currentTime, duration);
+          onProgressRef.current?.(currentTime, duration);
         }
       }
     }, 10000); // Track every 10 seconds

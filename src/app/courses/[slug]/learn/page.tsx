@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
@@ -28,6 +29,7 @@ import {
   ChevronLeft,
   Trash2,
   Pencil,
+  FileQuestion,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -465,10 +467,50 @@ export default function LearnPage() {
                             </button>
                           );
                         })}
+
+                        {/* Section Quiz */}
+                        {section.quiz && (
+                          <Link
+                            href={`/courses/${slug}/test/${section.quiz.id}`}
+                            className="w-full p-4 flex items-center justify-between transition-all border-2 border-black bg-emerald-50 hover:bg-emerald-400 hover:translate-x-1 hover:translate-y-[-2px] hover:shadow-[-4px_2px_0px_0px_rgba(0,0,0,1)] group"
+                          >
+                             <div className="flex items-center gap-4 flex-1 min-w-0">
+                                <div className="w-8 h-8 border-2 border-black bg-white flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white transition-colors">
+                                   <FileQuestion size={16} />
+                                </div>
+                                <span className="text-[12px] font-black text-left uppercase leading-tight truncate text-black">
+                                   BÀI KIỂM TRA: {section.quiz.title}
+                                </span>
+                             </div>
+                             <div className="flex flex-col items-end shrink-0 ml-4">
+                                <span className="text-[10px] font-black uppercase text-black">EXAM</span>
+                                <span className="text-[12px] font-black italic text-black">
+                                   {section.quiz.numQuestions} Qs
+                                </span>
+                             </div>
+                          </Link>
+                        )}
                       </div>
                     )}
                   </div>
                 ))}
+                
+                {/* Final Exam Section in Sidebar */}
+                {course.finalQuiz && (
+                  <div className="p-4 border-b-4 border-black bg-rose-50">
+                    <Link
+                      href={`/courses/${slug}/test/${course.finalQuiz.id}`}
+                      className="w-full p-6 border-4 border-black bg-black text-white hover:bg-rose-600 transition-all flex flex-col gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 group"
+                    >
+                       <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Final Assessment</span>
+                          <FileQuestion size={24} className="text-white group-hover:rotate-12 transition-transform" />
+                       </div>
+                       <h3 className="text-xl font-black uppercase italic tracking-tighter leading-none">{course.finalQuiz.title}</h3>
+                       <p className="text-[10px] font-bold italic text-white/70">YÊU CẦU: ĐẠT {course.finalQuiz.passingScore}% ĐỂ NHẬN CHỨNG CHỈ</p>
+                    </Link>
+                  </div>
+                )}
               </div>
               
               {/* Footer Stamp */}

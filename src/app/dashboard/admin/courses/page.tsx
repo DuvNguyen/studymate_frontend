@@ -19,7 +19,7 @@ export default function AdminCoursesPage() {
   }
 
   return (
-    <MainLayout role={appUser?.role}>
+    <MainLayout role={appUser?.role} allowedRoles={['ADMIN', 'STAFF']}>
       <CourseModerationQueue />
     </MainLayout>
   );

@@ -36,6 +36,12 @@ function IconCart() {
 function IconProfile() {
   return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
 }
+function IconWallet() {
+  return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>;
+}
+function IconReconcile() {
+  return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+}
 
 const ROLE_CONFIG: Record<string, { label: string; color: string }> = {
   ADMIN:      { label: 'Admin',      color: 'bg-red-500 text-white' },
@@ -58,7 +64,7 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/dashboard/instructor/kyc',    label: 'Hồ sơ giảng viên', icon: <IconProfile /> },
     { href: '/dashboard/instructor/courses',label: 'Khóa học của tôi', icon: <IconCourses /> },
     { href: '/dashboard/instructor/videos', label: 'Quản lý Video',    icon: <IconMyLearning /> },
-    { href: '/dashboard/instructor/revenue',label: 'Doanh thu',        icon: <IconDashboard /> },
+    { href: '/dashboard/instructor/wallet', label: 'Ví',               icon: <IconWallet /> },
     { href: '/dashboard/profile',           label: 'Hồ sơ',            icon: <IconProfile /> },
   ],
   STAFF: [
@@ -66,6 +72,8 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/dashboard/admin/kyc',         label: 'Duyệt KYC',      icon: <IconUsers /> },
     { href: '/dashboard/admin/courses',     label: 'Duyệt khóa học', icon: <IconCourses /> },
     { href: '/dashboard/admin/videos', label: 'Duyệt Video',    icon: <IconMyLearning /> },
+    { href: '/dashboard/admin/payouts',     label: 'Duyệt rút tiền', icon: <IconWallet /> },
+    { href: '/dashboard/admin/reconciliation', label: 'Đối soát',     icon: <IconReconcile /> },
     { href: '/dashboard/admin/refunds',     label: 'Hoàn tiền',      icon: <IconDashboard /> },
     { href: '/dashboard/profile', label: 'Hồ sơ',          icon: <IconProfile /> },
   ],
@@ -73,8 +81,10 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/dashboard',         label: 'Tổng quan',   icon: <IconDashboard /> },
     { href: '/dashboard/admin/users',       label: 'Người dùng',  icon: <IconUsers /> },
     { href: '/dashboard/admin/courses',     label: 'Khóa học',    icon: <IconCourses /> },
-    { href: '/dashboard/admin/videos', label: 'Kiểm duyệt Video', icon: <IconMyLearning /> },
     { href: '/dashboard/admin/kyc',         label: 'Duyệt KYC',   icon: <IconUsers /> },
+    { href: '/dashboard/admin/videos', label: 'Kiểm duyệt Video', icon: <IconMyLearning /> },
+    { href: '/dashboard/admin/payouts',     label: 'Duyệt rút tiền', icon: <IconWallet /> },
+    { href: '/dashboard/admin/reconciliation', label: 'Đối soát',     icon: <IconReconcile /> },
     { href: '/dashboard/admin/finance',     label: 'Tài chính',   icon: <IconDashboard /> },
     { href: '/dashboard/profile', label: 'Hồ sơ',       icon: <IconProfile /> },
   ],
@@ -87,9 +97,10 @@ interface MainLayoutProps {
   children: React.ReactNode;
   role?: string;
   kycStatus?: string | null;
+  allowedRoles?: string[];
 }
 
-export default function MainLayout({ children, role = 'STUDENT', kycStatus = null }: MainLayoutProps) {
+export default function MainLayout({ children, role = 'STUDENT', kycStatus = null, allowedRoles }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
   const { user } = useUser();
@@ -104,8 +115,10 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
     : navItems;
   const roleCfg = ROLE_CONFIG[role] ?? ROLE_CONFIG['STUDENT'];
 
+  const isUnauthorized = allowedRoles && !allowedRoles.includes(role);
+
   return (
-    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+    <div className="flex flex-col h-screen bg-white overflow-hidden">
       {/* Shared Navbar from homepage - Fixed at top */}
       <Navbar />
 
@@ -114,7 +127,7 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
         <aside
           className={`
             ${sidebarOpen ? 'w-56' : 'w-14'}
-            bg-gray-900 text-white flex flex-col
+            bg-black text-white flex flex-col
             transition-all duration-200 ease-in-out flex-shrink-0
             border-r-2 border-black
           `}
@@ -146,8 +159,8 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
                   flex items-center gap-3 px-3 py-2.5 mx-2 rounded-sm text-xs font-bold uppercase tracking-wide
                   transition-all duration-150
                   ${isActive
-                    ? 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]'
-                    : 'text-gray-100 hover:bg-gray-800 hover:text-white'
+                    ? 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]'
+                    : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
                   }
                 `}
               >
@@ -186,7 +199,7 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 flex flex-col">
+        <main className="flex-1 overflow-y-auto bg-white flex flex-col">
           <div className="flex-1 p-6 flex flex-col">
             {(!isKycRoute && (isLockedInstructor || isPendingUserRole)) ? (
               <div className="flex-1 flex items-center justify-center">
@@ -208,6 +221,27 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
                      {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Kiểm tra trạng thái'}
                    </Link>
                 </div>
+              </div>
+            ) : isUnauthorized ? (
+              <div className="flex-1 flex items-center justify-center">
+                 <div className="bg-white border-8 border-black p-12 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] max-w-2xl text-center space-y-8 rotate-1">
+                    <div className="w-24 h-24 mx-auto bg-rose-500 border-4 border-black flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] -rotate-6">
+                       <span className="text-5xl font-black text-white px-2">403</span>
+                    </div>
+                    <div>
+                      <h2 className="text-4xl font-black uppercase text-black tracking-tighter italic">Truy cập bị từ chối</h2>
+                      <p className="text-xs font-black uppercase tracking-[0.2em] opacity-40 mt-2">RBAC_POLICY_VIOLATION</p>
+                    </div>
+                    <p className="text-lg font-bold text-black leading-relaxed">
+                       BẠN KHÔNG CÓ QUYỀN TRUY CẬP VÀO KHU VỰC NÀY. VUI LÒNG LIÊN HỆ QUẢN TRỊ VIÊN NẾU BẠN CỨ NGỠ ĐÂY LÀ MỘT SAI SÓT.
+                    </p>
+                    <div className="flex flex-col gap-4">
+                      <Link href="/dashboard" className="px-8 py-4 bg-black text-white font-black uppercase tracking-widest border-2 border-black hover:bg-yellow-400 hover:text-black hover:-translate-y-1 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                        Quay lại Tổng quan
+                      </Link>
+                      <p className="text-[10px] font-black opacity-30">ERR_CODE: SM-AUTH-403-FORBIDDEN</p>
+                    </div>
+                 </div>
               </div>
             ) : (
               children

@@ -46,7 +46,7 @@ export function useLessonProgress(enrollmentId?: number) {
     fetchProgress();
   }, [fetchProgress]);
 
-  const upsertProgress = async (lessonId: number, watchedDuration: number, completed?: boolean) => {
+  const upsertProgress = useCallback(async (lessonId: number, watchedDuration: number, completed?: boolean) => {
     try {
       const token = await getToken();
       const res = await fetch(`${API_BASE}/lesson-progress`, {
@@ -69,7 +69,7 @@ export function useLessonProgress(enrollmentId?: number) {
     } catch (err) {
       console.error('Error updating progress:', err);
     }
-  };
+  }, [getToken]);
 
   return { progressMap, loading, upsertProgress, refreshProgress: fetchProgress };
 }
