@@ -41,8 +41,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const result = await res.json();
       
       if (!res.ok) {
-        console.error('[CartContext] Fetch cart failed:', result);
-        throw new Error(result.message || 'Failed to fetch cart');
+        console.warn('[CartContext] Fetch cart failed:', result);
+        setError(result.message || 'Failed to fetch cart');
+        return;
       }
       
       console.log('[CartContext] Fetched cart data:', result.data);

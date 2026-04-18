@@ -10,6 +10,9 @@ export interface CurrentUser {
   roleId: number;
   status: string;
   kycStatus: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
   avatarUrl: string | null;
   clerkUserId: string;
   firstName: string | null;

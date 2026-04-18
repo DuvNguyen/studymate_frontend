@@ -6,6 +6,10 @@ import { useParams, useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { toast } from 'react-hot-toast';
 import VideoPickerModal from '@/components/instructor/VideoPickerModal';
+import QuestionBankManager from '@/components/instructor/QuestionBankManager';
+import QuizSettingsModal from '@/components/instructor/QuizSettingsModal';
+import { BookOpen, FileQuestion, Settings2, Plus, Trash2, Layout, PlayCircle, BookPlus, Search } from 'lucide-react';
+import { Button } from '@/components/Button';
 
 export default function CourseBuilderPage() {
   const { id } = useParams();
@@ -40,6 +44,12 @@ export default function CourseBuilderPage() {
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [editCoursePreviewVideo, setEditCoursePreviewVideo] = useState<any>(null);
+
+  // Quiz states
+  const [isBankManagerOpen, setIsBankManagerOpen] = useState(false);
+  const [isQuizSettingsOpen, setIsQuizSettingsOpen] = useState(false);
+  const [quizToEdit, setQuizToEdit] = useState<any>(null);
+  const [sectionIdForQuiz, setSectionIdForQuiz] = useState<number | null>(null);
 
 
   useEffect(() => {
@@ -412,6 +422,13 @@ export default function CourseBuilderPage() {
                 Đang chờ duyệt
               </div>
             )}
+            
+            <button 
+              onClick={() => setIsBankManagerOpen(true)}
+              className="bg-zinc-800 border-2 border-black px-6 py-3 font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white hover:bg-black transition-all flex items-center gap-2"
+            >
+              <BookOpen size={20} /> QUẢN LÝ NGÂN HÀNG CÂU HỎI
+            </button>
           </div>
         </div>
 
@@ -587,6 +604,44 @@ export default function CourseBuilderPage() {
                 )}
               </div>
 
+              {/* Quiz section integration */}
+              <div className="mt-4 pt-4 border-t-2 border-black border-dashed">
+                {section.quiz ? (
+                  <div className="bg-emerald-50 border-2 border-black p-4 flex justify-between items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-emerald-400 p-2 border-2 border-black">
+                        <FileQuestion size={20} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase opacity-60">Bài kiểm tra chương</p>
+                        <h4 className="font-black uppercase text-sm">{section.quiz.title}</h4>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setQuizToEdit(section.quiz);
+                        setSectionIdForQuiz(section.id);
+                        setIsQuizSettingsOpen(true);
+                      }}
+                      className="bg-white border-2 border-black px-4 py-1 text-[10px] font-black uppercase hover:bg-yellow-400 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
+                    >
+                      CHỈNH SỬA
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setQuizToEdit(null);
+                      setSectionIdForQuiz(section.id);
+                      setIsQuizSettingsOpen(true);
+                    }}
+                    className="w-full bg-emerald-100 border-2 border-black border-dashed py-2 font-black uppercase text-[10px] hover:bg-emerald-200 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus size={14} /> THÊM BÀI KIỂM TRA CHƯƠNG
+                  </button>
+                )}
+              </div>
+
               {addingLessonToSectionId !== section.id && (
                 <button 
                   onClick={() => setAddingLessonToSectionId(section.id)}
@@ -628,6 +683,56 @@ export default function CourseBuilderPage() {
               + THÊM CHƯƠNG MỚI
             </button>
           )}
+
+          {/* Final Quiz Section */}
+          <div className="mt-12 border-t-8 border-black pt-12 space-y-6">
+            <h2 className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+               <Settings2 size={32} /> BÀI KIỂM TRA CUỐI KHÓA
+            </h2>
+            <p className="font-bold text-sm bg-yellow-50 border-2 border-black p-4 max-w-2xl italic">
+               LƯU Ý: ĐÂY LÀ ĐIỀU KIỆN BẮT BUỘC ĐỂ HỌC VIÊN HOÀN THÀNH KHÓA HỌC. HỌC VIÊN ĐƯỢC LÀM TỐI ĐA 2 LẦN.
+            </p>
+
+            {course?.finalQuiz ? (
+              <div className="bg-emerald-400 border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center group">
+                 <div className="flex items-center gap-6">
+                    <div className="bg-white p-4 border-4 border-black">
+                       <FileQuestion size={40} />
+                    </div>
+                    <div>
+                       <h3 className="text-2xl font-black uppercase">{course.finalQuiz.title}</h3>
+                       <div className="flex gap-4 mt-2">
+                          <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 italic">Thời gian: {course.finalQuiz.timeLimit}p</span>
+                          <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 italic">Số câu hỏi: {course.finalQuiz.numQuestions}</span>
+                          <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 italic">Điểm đạt: {course.finalQuiz.passingScore}%</span>
+                       </div>
+                    </div>
+                 </div>
+                 <Button 
+                   onClick={() => {
+                     setQuizToEdit(course.finalQuiz);
+                     setSectionIdForQuiz(null);
+                     setIsQuizSettingsOpen(true);
+                   }}
+                   className="bg-white text-black hover:bg-yellow-400 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-16 px-8 text-lg font-black"
+                 >
+                    CÀI ĐẶT
+                 </Button>
+              </div>
+            ) : (
+              <div className="bg-gray-100 border-4 border-black border-dashed p-12 text-center group cursor-pointer hover:bg-emerald-50 transition-all"
+                   onClick={() => {
+                     setQuizToEdit(null);
+                     setSectionIdForQuiz(null);
+                     setIsQuizSettingsOpen(true);
+                   }}
+              >
+                 <Plus className="mx-auto mb-4 group-hover:scale-125 transition-transform" size={48} />
+                 <h3 className="text-xl font-black uppercase">CHƯA CÓ BÀI KIỂM TRA CUỐI KHÓA</h3>
+                 <p className="font-bold italic opacity-50">Nhấp vào đây để thêm bài kiểm tra rèn luyện kiến thức tổng hợp</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -645,6 +750,20 @@ export default function CourseBuilderPage() {
           setPickerOpen(false);
         }} 
       />
+
+      {isBankManagerOpen && (
+        <QuestionBankManager courseId={Number(id)} onClose={() => setIsBankManagerOpen(false)} />
+      )}
+
+      {isQuizSettingsOpen && (
+        <QuizSettingsModal 
+          courseId={Number(id)}
+          sectionId={sectionIdForQuiz}
+          quiz={quizToEdit}
+          onClose={() => setIsQuizSettingsOpen(false)}
+          onSaved={fetchCourseDetail}
+        />
+      )}
     </MainLayout>
   );
 }

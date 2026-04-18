@@ -161,7 +161,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <MainLayout role={appUser?.role}>
+    <MainLayout role={appUser?.role} allowedRoles={['ADMIN', 'STAFF']}>
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Quản lý</p>
