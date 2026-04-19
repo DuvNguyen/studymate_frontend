@@ -18,6 +18,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
   const [loading, setLoading] = useState(true);
   const [isAddingBank, setIsAddingBank] = useState(false);
   const [newBankName, setNewBankName] = useState('');
+  const [showGuide, setShowGuide] = useState(false);
 
   // Question editing state
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
@@ -159,17 +160,16 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
       <div className="bg-white border-4 border-black w-full max-w-5xl h-[90vh] flex flex-col shadow-[16px_16px_0px_0px_rgba(0,0,0,1)]">
         {/* Header */}
         <div className="p-6 border-b-4 border-black flex justify-between items-center bg-yellow-400">
-           <h2 className="text-3xl font-black uppercase tracking-tighter italic">Quản lý Ngân hàng câu hỏi</h2>
-           <button onClick={onClose} className="bg-white border-4 border-black p-2 hover:bg-black hover:text-white transition-all">
+           <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic text-black">Quản lý Ngân hàng câu hỏi</h2>
+           <button onClick={onClose} className="bg-white border-2 md:border-4 border-black p-2 hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-px active:translate-y-px">
              <X size={24} />
            </button>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          {/* Sidebar - Banks List */}
-          <div className="w-80 border-r-4 border-black overflow-y-auto p-4 space-y-4 bg-gray-50">
+          <div className="w-80 border-r-4 border-black overflow-y-auto p-4 space-y-4 bg-gray-50 flex flex-col">
              <div className="flex justify-between items-center mb-4">
-                <span className="font-black uppercase text-xs">Danh sách Ngân hàng</span>
+                <span className="font-black uppercase text-xs text-black">Danh sách Ngân hàng</span>
                 <button 
                   onClick={() => setIsAddingBank(true)}
                   className="bg-black text-white p-1 border-2 border-black hover:bg-emerald-400 hover:text-black transition-all"
@@ -266,13 +266,13 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                 </select>
                              </div>
                              <div>
-                                <label className="block text-xs font-black uppercase mb-1">Điểm số</label>
-                                <input type="number" defaultValue="1" disabled className="w-full border-4 border-black p-3 font-black bg-gray-100 italic" title="Mặc định 1 điểm" />
+                                <label className="block text-xs font-black uppercase mb-1 text-black">Điểm số</label>
+                                <input type="number" defaultValue="1" disabled className="w-full border-4 border-black p-3 font-black bg-gray-100 italic text-black" title="Mặc định 1 điểm" />
                              </div>
                           </div>
 
                           <div className="space-y-3">
-                             <label className="block text-xs font-black uppercase mb-1">Các lựa chọn đáp án</label>
+                             <label className="block text-xs font-black uppercase mb-1 text-black">Các lựa chọn đáp án</label>
                              {options.map((opt, idx) => (
                                <div key={idx} className="flex gap-3">
                                   <button 
@@ -287,7 +287,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                     }}
                                     className={`w-12 h-12 flex items-center justify-center border-4 border-black transition-all ${opt.isCorrect ? 'bg-emerald-400 shadow-none translate-y-px' : 'bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
                                   >
-                                     {opt.isCorrect ? <CheckCircle2 /> : <Circle />}
+                                     {opt.isCorrect ? <CheckCircle2 className="text-black" /> : <Circle className="text-black" />}
                                   </button>
                                   <input 
                                     type="text" 
@@ -297,13 +297,13 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                       newOpts[idx].text = e.target.value;
                                       setOptions(newOpts);
                                     }}
-                                    className="flex-1 border-4 border-black p-3 font-bold outline-none focus:bg-white"
+                                    className="flex-1 border-4 border-black p-3 font-bold outline-none focus:bg-white text-black placeholder:text-black/40"
                                     placeholder={`Đáp án ${idx + 1}`}
                                   />
                                   {options.length > 2 && (
                                     <button 
                                       onClick={() => setOptions(options.filter((_, i) => i !== idx))}
-                                      className="bg-rose-100 border-4 border-black p-2 hover:bg-rose-500 hover:text-white transition-all"
+                                      className="bg-rose-100 border-4 border-black p-2 hover:bg-rose-500 hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
                                     >
                                        <Trash2 size={20} />
                                     </button>
@@ -313,7 +313,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                              {questionType === 'MCQ' && (
                                <button 
                                  onClick={() => setOptions([...options, { text: '', isCorrect: false }])}
-                                 className="text-xs font-black uppercase underline hover:text-emerald-600 transition-colors"
+                                 className="text-xs font-black uppercase underline hover:text-emerald-600 transition-colors text-black"
                                >
                                  + Thêm lựa chọn
                                </button>
@@ -362,8 +362,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                {q.options?.map((opt: any) => (
-                                 <div key={opt.id} className={`p-3 border-2 border-black flex items-center justify-between ${opt.isCorrect ? 'bg-emerald-100 border-emerald-600 border-[3px]' : 'bg-white opacity-60'}`}>
-                                    <span className="font-bold text-sm">{opt.optionText}</span>
+                                 <div key={opt.id} className={`p-3 border-2 border-black flex items-center justify-between ${opt.isCorrect ? 'bg-emerald-100 border-emerald-600 border-[3px]' : 'bg-gray-50 border-gray-200'}`}>
+                                    <span className="font-bold text-sm text-black">{opt.optionText}</span>
                                     {opt.isCorrect && <CheckCircle2 size={14} className="text-emerald-600" />}
                                  </div>
                                ))}
@@ -380,13 +380,51 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                   )}
                </div>
              ) : (
-               <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
-                  <Edit3 size={64} className="mb-4" />
-                  <h3 className="text-2xl font-black uppercase">Chọn một ngân hàng câu hỏi để bắt đầu</h3>
-                  <p className="font-bold italic mt-2">Hoặc tạo ngân hàng mới ở thanh bên trái</p>
+               <div className="h-full flex flex-col items-center justify-center text-center p-12 relative group">
+                  <div className="w-32 h-32 bg-yellow-400 border-4 border-black flex items-center justify-center mb-6 rotate-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] group-hover:rotate-0 transition-transform">
+                     <Edit3 size={64} className="text-black" />
+                  </div>
+                  <h3 className="text-3xl font-black uppercase text-black italic tracking-tighter leading-none mb-4">Chọn một ngân hàng câu hỏi</h3>
+                  <p className="font-black italic text-black bg-white border-2 border-black px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">Hoặc tạo ngân hàng mới ở thanh bên trái để bắt đầu</p>
                </div>
              )}
           </div>
+        </div>
+
+        {/* Floating Help Button */}
+        <div className="absolute bottom-6 right-6 flex flex-col items-end gap-3 pointer-events-none">
+           {showGuide && (
+             <div className="bg-black text-white p-6 border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,0.5)] max-w-xs animate-in slide-in-from-bottom-4 pointer-events-auto">
+                <div className="flex justify-between items-center mb-4 border-b border-white pb-2">
+                   <span className="font-black uppercase tracking-widest text-[10px]">Hướng dẫn sử dụng</span>
+                   <button onClick={() => setShowGuide(false)}><X size={14} /></button>
+                </div>
+                <ul className="text-xs font-bold space-y-3 italic">
+                   <li className="flex gap-2">
+                     <span className="text-emerald-400">1.</span>
+                     <span>Tạo Ngân hàng: Nhấn (+) ở bên trái để theo nhóm chủ đề.</span>
+                   </li>
+                   <li className="flex gap-2">
+                     <span className="text-emerald-400">2.</span>
+                     <span>Thêm câu hỏi: Chọn ngân hàng và nhấn "THÊM CÂU HỎI".</span>
+                   </li>
+                   <li className="flex gap-2">
+                     <span className="text-emerald-400">3.</span>
+                     <span>Đáp án: Nhấp vòng tròn để đánh dấu đáp án ĐÚNG.</span>
+                   </li>
+                   <li className="flex gap-2">
+                     <span className="text-emerald-400">4.</span>
+                     <span>Sử dụng: Quay lại trang Builder để nhập câu hỏi vào bài kiểm tra.</span>
+                   </li>
+                </ul>
+             </div>
+           )}
+           <button 
+             onClick={() => setShowGuide(!showGuide)}
+             className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center border-4 border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] hover:bg-emerald-400 hover:text-black transition-all pointer-events-auto hover:scale-110 active:scale-95"
+           >
+             <span className="text-2xl font-black italic">!</span>
+           </button>
         </div>
       </div>
     </div>

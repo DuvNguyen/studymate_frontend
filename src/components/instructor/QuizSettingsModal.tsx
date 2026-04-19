@@ -90,25 +90,25 @@ export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, 
           <X size={24} />
         </button>
         
-        <h2 className="text-2xl font-black uppercase italic mb-6 border-b-4 border-black pb-4">CÀI ĐẶT BÀI KIỂM TRA</h2>
+        <h2 className="text-3xl font-black uppercase italic mb-8 border-b-8 border-black pb-4 text-black tracking-tighter">CÀI ĐẶT BÀI KIỂM TRA</h2>
         
         <div className="space-y-6">
            <div>
-              <label className="block text-[10px] font-black uppercase mb-1">Tiêu đề bài kiểm tra</label>
+              <label className="block text-xs font-black uppercase mb-2 text-black">Tiêu đề bài kiểm tra</label>
               <input 
                 type="text" 
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="w-full border-4 border-black p-3 font-bold bg-zinc-50 outline-none focus:bg-yellow-50"
+                 className="w-full border-4 border-black p-4 font-black text-black text-xl outline-none bg-white focus:bg-yellow-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
               />
            </div>
 
            <div>
-              <label className="block text-[10px] font-black uppercase mb-1">Chọn Ngân hàng câu hỏi</label>
+              <label className="block text-xs font-black uppercase mb-2 text-black">Chọn Ngân hàng câu hỏi</label>
               <select 
                 value={bankId}
                 onChange={e => setBankId(Number(e.target.value))}
-                className="w-full border-4 border-black p-3 font-bold bg-zinc-50 outline-none"
+                className="w-full border-4 border-black p-4 font-black bg-white outline-none text-black text-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
               >
                  <option value="" disabled>-- CHỌN NGÂN HÀNG --</option>
                  {banks.map(bank => (
@@ -120,31 +120,31 @@ export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, 
 
            <div className="grid grid-cols-2 gap-4">
               <div>
-                 <label className="flex items-center gap-2 text-[10px] font-black uppercase mb-1">
+                 <label className="flex items-center gap-2 text-xs font-black uppercase mb-2 text-black">
                    <Clock size={14} /> Thời gian (phút)
                  </label>
                  <input 
                    type="number" 
                    value={timeLimit}
                    onChange={e => setTimeLimit(Number(e.target.value))}
-                   className="w-full border-4 border-black p-3 font-bold outline-none"
+                   className="w-full border-4 border-black p-4 font-black text-black text-xl outline-none bg-white focus:bg-yellow-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                  />
               </div>
               <div>
-                 <label className="flex items-center gap-2 text-[10px] font-black uppercase mb-1">
+                 <label className="flex items-center gap-2 text-xs font-black uppercase mb-2 text-black">
                    <ListChecks size={14} /> Số câu hỏi
                  </label>
                  <input 
                    type="number" 
                    value={numQuestions}
                    onChange={e => setNumQuestions(Number(e.target.value))}
-                   className="w-full border-4 border-black p-3 font-bold outline-none"
+                   className="w-full border-4 border-black p-4 font-black text-black text-xl outline-none bg-white focus:bg-yellow-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                  />
               </div>
            </div>
 
            <div>
-              <label className="flex items-center gap-2 text-[10px] font-black uppercase mb-1">
+              <label className="block text-xs font-black uppercase mb-2 text-black transition-colors">
                 <Target size={14} /> Điểm đạt (%)
               </label>
               <div className="flex items-center gap-4">
@@ -157,7 +157,7 @@ export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, 
                   onChange={e => setPassingScore(Number(e.target.value))}
                   className="flex-1 accent-black h-2 bg-gray-200"
                 />
-                <span className="w-16 border-4 border-black p-2 text-center font-black bg-yellow-400">{passingScore}%</span>
+                <span className="w-24 border-4 border-black p-4 text-center font-black bg-yellow-400 text-black text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">{passingScore}%</span>
               </div>
            </div>
 

@@ -61,8 +61,8 @@ export default function VideoPickerModal({ isOpen, onClose, onSelect }: VideoPic
               <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin" />
             </div>
           ) : videos.length === 0 ? (
-            <div className="text-center p-8 text-black/50 font-black uppercase tracking-widest text-lg border-2 border-black border-dashed">
-              Không có video nào được duyệt.
+            <div className="text-center p-12 text-black font-black uppercase tracking-widest text-xl border-4 border-black border-dashed bg-white">
+              KHÔNG CÓ VIDEO NÀO ĐƯỢC DUYỆT TRÊN HỆ THỐNG.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -82,15 +82,15 @@ export default function VideoPickerModal({ isOpen, onClose, onSelect }: VideoPic
                         className="w-full h-full pointer-events-none"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center font-black text-black/30">NO PREVIEW</div>
+                      <div className="w-full h-full flex items-center justify-center font-black text-black bg-gray-200">SIGNAL LOST: NO PREVIEW</div>
                     )}
                   </div>
-                  <h3 className="font-bold text-black line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                  <h3 className="font-black text-black line-clamp-2 leading-tight uppercase tracking-tighter group-hover:text-yellow-600 transition-colors">
                     {video.title || `Video #${video.id}`}
                   </h3>
-                  <div className="mt-2 flex gap-2">
-                    <span className="text-[10px] bg-green-200 border border-black font-black px-2 py-1 uppercase">{video.status}</span>
-                    <span className="text-[10px] bg-gray-200 border border-black font-black px-2 py-1">{Math.floor((video.durationSecs || 0)/60)}:{(video.durationSecs || 0)%60}</span>
+                  <div className="mt-3 flex gap-2">
+                    <span className="text-xs bg-emerald-400 border-2 border-black font-black px-2 py-0.5 uppercase text-black italic">ĐÃ DUYỆT</span>
+                    <span className="text-xs bg-black text-white border-2 border-black font-black px-2 py-0.5 italic">{Math.floor((video.durationSecs || 0)/60)}:{(video.durationSecs || 0)%60}</span>
                   </div>
                 </div>
               ))}
