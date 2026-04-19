@@ -4,6 +4,7 @@ import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useCart } from '../contexts/CartContext';
+import { NotificationBell } from './NotificationBell';
 
 export function NavbarUserMenu() {
   const { user, loading } = useCurrentUser();
@@ -46,7 +47,11 @@ export function NavbarUserMenu() {
         )}
       </Link>
 
-      <Link 
+      {/* Chuông thông báo */}
+      <NotificationBell />
+
+      <Link
+ 
         href="/dashboard" 
         className="text-xs font-black uppercase tracking-widest text-black hover:bg-amber-300 px-3 py-2 border-2 border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hidden sm:block"
       >

@@ -15,6 +15,8 @@ import { useWishlist } from '@/hooks/useWishlist';
 import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 import Link from 'next/link';
 import LoadingScreen from '@/components/LoadingScreen';
+import ReviewSection from '@/components/ReviewSection';
+import { useCoupons } from '@/hooks/useCoupons';
 
 function VideoPreviewModal({ 
   isOpen, 
@@ -78,6 +80,11 @@ function CourseDetailContent() {
   const { user, loading: userLoading } = useCurrentUser();
   const { signOut } = useClerk();
   const { enrollments, loading: enrollLoading } = useEnrolledCourses();
+
+  // Coupon state
+  const { validateCoupon, validating } = useCoupons();
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
 
   const isEnrolled = useMemo(() => {
     if (!course || !enrollments) return false;
@@ -455,6 +462,8 @@ function CourseDetailContent() {
 
           </div>
 
+
+
           {/* Sidebar Area (Add to Cart) */}
           <div className="md:w-1/3 relative">
             <div className="hidden md:block absolute -top-80 right-0 w-full z-20">
@@ -562,19 +571,49 @@ function CourseDetailContent() {
 
                   <p className="text-xs text-center text-gray-500 font-bold mb-6">30-Day Money-Back Guarantee<br/>Full Lifetime Access</p>
 
-                  <div className="flex justify-between items-center text-sm font-bold text-black border-t-2 border-dashed border-gray-300 pt-4">
-                    <button className="hover:underline">Share</button>
-                    <button className="hover:underline">Gift this course</button>
-                    <button className="hover:underline">Apply Coupon</button>
-                  </div>
-
-                  {/* Apply Coupon Dummy View */}
+                  {/* Apply Coupon — Real API */}
                   <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300">
-                     <p className="text-xs text-gray-500 mb-2"><b>KEEPLEARNING</b> is applied</p>
-                     <div className="flex gap-2">
-                       <input type="text" placeholder="Enter Coupon" className="flex-1 border border-black px-2 py-1 text-sm outline-none" />
-                       <button className="bg-black text-white font-bold px-3 py-1 text-sm">Apply</button>
-                     </div>
+                    <p className="text-xs font-black uppercase tracking-widest mb-2">Mã giảm giá</p>
+                    {appliedDiscount > 0 ? (
+                      <div className="flex items-center justify-between bg-emerald-50 border-2 border-emerald-500 px-3 py-2">
+                        <div>
+                          <p className="text-xs font-black text-emerald-700">{couponCode.toUpperCase()} ✓</p>
+                          <p className="text-[10px] font-bold text-emerald-600">
+                            Giảm ₫{appliedDiscount.toLocaleString('vi-VN')}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => { setAppliedDiscount(0); setCouponCode(''); }}
+                          className="text-sm font-black text-red-500 hover:text-red-700"
+                        >✕</button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="Nhập mã giảm giá"
+                          className="flex-1 border-2 border-black px-3 py-1.5 text-sm font-bold outline-none focus:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-shadow"
+                        />
+                        <button
+                          disabled={validating || !couponCode.trim()}
+                          onClick={async () => {
+                            if (!course) return;
+                            try {
+                              const result = await validateCoupon(couponCode, Number(course.price));
+                              setAppliedDiscount(result.discountAmount);
+                              toast.success(`Áp dụng thành công! Giảm ₫${result.discountAmount.toLocaleString('vi-VN')}`);
+                            } catch (e: any) {
+                              toast.error(e.message);
+                            }
+                          }}
+                          className="bg-black text-white font-black text-xs px-3 py-1.5 border-2 border-black hover:bg-amber-400 hover:text-black disabled:opacity-50 transition-colors"
+                        >
+                          {validating ? '...' : 'Áp dụng'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -605,6 +644,11 @@ function CourseDetailContent() {
           </div>
         </div>
       </div>
+      
+      {/* Full-width Reviews Section at the bottom */}
+      {course.id && (
+        <ReviewSection courseId={course.id} isEnrolled={isEnrolled} />
+      )}
       
       <VideoPreviewModal 
         isOpen={isModalOpen} 

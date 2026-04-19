@@ -21,6 +21,7 @@ export interface Transaction {
   status: string;
   locked_until: string | null;
   released_at: string | null;
+  balance_after: number;
   created_at: string;
   order_item?: {
     course?: {
