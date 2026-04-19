@@ -301,8 +301,8 @@ export default function CourseBuilderPage() {
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-black mb-1">Xây dựng khóa học</p>
-              <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none mb-4">{course?.title}</h1>
+              <p className="text-xs font-black uppercase tracking-widest text-black mb-2">Xây dựng khóa học</p>
+              <h1 className="text-2xl font-black text-black uppercase tracking-tight leading-none mb-4">{course?.title}</h1>
               <div className="flex items-center gap-4 mb-4">
                 <p className="text-sm font-black text-black border-l-4 border-black pl-3 py-1 bg-yellow-50 inline-block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   Trạng thái: <span className="uppercase text-black">{course?.status}</span>
@@ -343,7 +343,7 @@ export default function CourseBuilderPage() {
                         >
                           {thumbnailPreview || editThumbnailUrl ? 'ĐỔI ẢNH' : '+ TẢI ẢNH LÊN'}
                         </label>
-                        <span className="text-[10px] font-black text-black uppercase italic">Hoặc dán URL:</span>
+                        <span className="text-xs font-black text-black uppercase italic">Hoặc dán URL:</span>
                       </div>
                       <input
                         type="text"
@@ -449,19 +449,19 @@ export default function CourseBuilderPage() {
                   </div>
                 ) : (
                   <>
-                    <h2 className="text-xl font-black text-black uppercase">
+                    <h2 className="text-lg font-black text-black uppercase">
                       Chương {index + 1}: {section.title}
                     </h2>
                     <div className="flex gap-2">
                       <button 
                         onClick={() => { setEditingSectionId(section.id); setEditSectionTitle(section.title); }}
-                        className="bg-yellow-300 border-2 border-black px-3 py-1 text-[10px] font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
+                        className="bg-yellow-400 border-2 border-black px-4 py-2 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-500 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
                       >
                         SỬA
                       </button>
                       <button 
                         onClick={() => handleDeleteSection(section.id)}
-                        className="bg-red-500 border-2 border-black px-3 py-1 text-[10px] font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:shadow-none active:translate-x-px active:translate-y-px"
+                        className="bg-red-500 border-2 border-black px-4 py-2 text-xs font-black uppercase text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:shadow-none active:translate-x-px active:translate-y-px"
                       >
                         XÓA
                       </button>
@@ -510,8 +510,8 @@ export default function CourseBuilderPage() {
                       <div className="flex justify-between items-center">
                         <div className="flex flex-col gap-1">
                           <div>
-                            <span className="font-black text-sm uppercase mr-2 text-black">Bài {lIndex + 1}:</span>
-                            <span className="font-bold text-sm text-black">{lesson.title}</span>
+                             <span className="font-black text-base uppercase mr-2 text-black">Bài {lIndex + 1}:</span>
+                             <span className="font-bold text-base text-black">{lesson.title}</span>
                           </div>
                           <div className="flex items-center gap-2 mt-1">
                             {lesson.isPreview && <span className="bg-yellow-300 text-black border border-black font-black text-[10px] px-2 py-1 uppercase inline-block shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">Học thử</span>}
@@ -530,13 +530,13 @@ export default function CourseBuilderPage() {
                               setEditLessonIsPreview(lesson.isPreview);
                               setEditSelectedVideo(lesson.video ? { id: lesson.video.id, title: lesson.video.title } : null); 
                             }} 
-                            className="bg-yellow-300 border-2 border-black px-3 py-1 text-[10px] font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
+                            className="bg-yellow-400 border-2 border-black px-4 py-2 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-500 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
                           >
                             SỬA
                           </button>
                           <button 
                             onClick={() => handleDeleteLesson(lesson.id)} 
-                            className="bg-red-500 border-2 border-black px-3 py-1 text-[10px] font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
+                            className="bg-red-500 border-2 border-black px-4 py-2 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:shadow-none active:translate-x-px active:translate-y-px transition-all"
                           >
                             XÓA
                           </button>
@@ -604,52 +604,55 @@ export default function CourseBuilderPage() {
                 )}
               </div>
 
-              {/* Quiz section integration */}
-              <div className="mt-4 pt-4 border-t-2 border-black border-dashed">
-                {section.quiz ? (
-                  <div className="bg-emerald-50 border-2 border-black p-4 flex justify-between items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-emerald-400 p-2 border-2 border-black">
-                        <FileQuestion size={20} />
+              <div className="flex gap-4 mt-6">
+                <div className="flex-1">
+                  {section.quiz ? (
+                    <div className="bg-emerald-50 border-2 border-black p-4 flex justify-between items-center h-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-emerald-400 p-2 border-2 border-black">
+                          <FileQuestion size={18} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase opacity-60 leading-none mb-1">Kiểm tra chương</p>
+                          <h4 className="font-black uppercase text-[11px] line-clamp-1">{section.quiz.title}</h4>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase opacity-60">Bài kiểm tra chương</p>
-                        <h4 className="font-black uppercase text-sm">{section.quiz.title}</h4>
-                      </div>
+                      <button 
+                        onClick={() => {
+                          setQuizToEdit(section.quiz);
+                          setSectionIdForQuiz(section.id);
+                          setIsQuizSettingsOpen(true);
+                        }}
+                        className="bg-white border-2 border-black px-3 py-1 text-[10px] font-black uppercase hover:bg-yellow-400 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none whitespace-nowrap"
+                      >
+                        SỬA
+                      </button>
                     </div>
+                  ) : (
                     <button 
                       onClick={() => {
-                        setQuizToEdit(section.quiz);
+                        setQuizToEdit(null);
                         setSectionIdForQuiz(section.id);
                         setIsQuizSettingsOpen(true);
                       }}
-                      className="bg-white border-2 border-black px-4 py-1 text-[10px] font-black uppercase hover:bg-yellow-400 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
+                      className="w-full bg-emerald-400 border-2 border-black py-3 font-black uppercase text-xs hover:bg-emerald-500 transition-all flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-px active:translate-x-px active:shadow-none text-black h-full"
                     >
-                      CHỈNH SỬA
+                      <Plus size={16} /> BÀI KIỂM TRA CHƯƠNG
                     </button>
-                  </div>
-                ) : (
-                  <button 
-                    onClick={() => {
-                      setQuizToEdit(null);
-                      setSectionIdForQuiz(section.id);
-                      setIsQuizSettingsOpen(true);
-                    }}
-                    className="w-full bg-emerald-100 border-2 border-black border-dashed py-2 font-black uppercase text-[10px] hover:bg-emerald-200 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Plus size={14} /> THÊM BÀI KIỂM TRA CHƯƠNG
-                  </button>
-                )}
-              </div>
+                  )}
+                </div>
 
-              {addingLessonToSectionId !== section.id && (
-                <button 
-                  onClick={() => setAddingLessonToSectionId(section.id)}
-                  className="w-full bg-yellow-300 border-2 border-black py-3 font-black uppercase tracking-widest text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:translate-y-px hover:translate-x-px hover:shadow-none transition-all"
-                >
-                  + THÊM BÀI HỌC
-                </button>
-              )}
+                <div className="flex-1">
+                  {addingLessonToSectionId !== section.id && (
+                    <button 
+                      onClick={() => setAddingLessonToSectionId(section.id)}
+                      className="w-full h-full bg-yellow-300 border-2 border-black py-3 font-black uppercase text-xs tracking-wider text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:translate-y-px hover:translate-x-px hover:shadow-none transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus size={16} /> BÀI HỌC MỚI
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
 
@@ -678,7 +681,7 @@ export default function CourseBuilderPage() {
           ) : (
             <button 
               onClick={() => setIsAddingSection(true)}
-              className="w-full bg-gray-100 border-2 border-black border-dashed p-6 text-center font-black uppercase tracking-widest text-black hover:bg-gray-200 transition-colors"
+              className="w-full bg-yellow-400 border-4 border-black p-5 text-center font-black uppercase tracking-widest text-black hover:bg-yellow-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all text-sm"
             >
               + THÊM CHƯƠNG MỚI
             </button>
@@ -686,10 +689,10 @@ export default function CourseBuilderPage() {
 
           {/* Final Quiz Section */}
           <div className="mt-12 border-t-8 border-black pt-12 space-y-6">
-            <h2 className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-               <Settings2 size={32} /> BÀI KIỂM TRA CUỐI KHÓA
+            <h2 className="text-4xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-black border-b-8 border-black pb-4">
+               <Settings2 size={40} className="text-black" /> BÀI KIỂM TRA CUỐI KHÓA
             </h2>
-            <p className="font-bold text-sm bg-yellow-50 border-2 border-black p-4 max-w-2xl italic">
+            <p className="font-black text-lg bg-yellow-400 border-4 border-black p-6 max-w-3xl italic text-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-10">
                LƯU Ý: ĐÂY LÀ ĐIỀU KIỆN BẮT BUỘC ĐỂ HỌC VIÊN HOÀN THÀNH KHÓA HỌC. HỌC VIÊN ĐƯỢC LÀM TỐI ĐA 2 LẦN.
             </p>
 
@@ -702,9 +705,9 @@ export default function CourseBuilderPage() {
                     <div>
                        <h3 className="text-2xl font-black uppercase">{course.finalQuiz.title}</h3>
                        <div className="flex gap-4 mt-2">
-                          <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 italic">Thời gian: {course.finalQuiz.timeLimit}p</span>
-                          <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 italic">Số câu hỏi: {course.finalQuiz.numQuestions}</span>
-                          <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 italic">Điểm đạt: {course.finalQuiz.passingScore}%</span>
+                           <span className="text-xs font-black uppercase bg-black text-white px-3 py-1 italic shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">Thời gian: {course.finalQuiz.timeLimit}p</span>
+                           <span className="text-xs font-black uppercase bg-black text-white px-3 py-1 italic shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">Số câu hỏi: {course.finalQuiz.numQuestions}</span>
+                           <span className="text-xs font-black uppercase bg-black text-white px-3 py-1 italic shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">Điểm đạt: {course.finalQuiz.passingScore}%</span>
                        </div>
                     </div>
                  </div>
@@ -720,16 +723,16 @@ export default function CourseBuilderPage() {
                  </Button>
               </div>
             ) : (
-              <div className="bg-gray-100 border-4 border-black border-dashed p-12 text-center group cursor-pointer hover:bg-emerald-50 transition-all"
+              <div className="bg-white border-8 border-black border-dashed p-16 text-center group cursor-pointer hover:bg-emerald-400 transition-all shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] active:translate-x-2 active:translate-y-2 active:shadow-none"
                    onClick={() => {
                      setQuizToEdit(null);
                      setSectionIdForQuiz(null);
                      setIsQuizSettingsOpen(true);
                    }}
               >
-                 <Plus className="mx-auto mb-4 group-hover:scale-125 transition-transform" size={48} />
-                 <h3 className="text-xl font-black uppercase">CHƯA CÓ BÀI KIỂM TRA CUỐI KHÓA</h3>
-                 <p className="font-bold italic opacity-50">Nhấp vào đây để thêm bài kiểm tra rèn luyện kiến thức tổng hợp</p>
+                 <Plus className="mx-auto mb-8 group-hover:rotate-90 transition-transform text-black" size={80} />
+                 <h3 className="text-3xl font-black uppercase text-black italic tracking-tighter">CHƯA CÓ BÀI KIỂM TRA CUỐI KHÓA</h3>
+                 <p className="text-xl font-black italic text-black mt-4 border-t-2 border-black pt-4 inline-block uppercase">Nhấp vào đây để thêm bài kiểm tra rèn luyện kiến thức tổng hợp</p>
               </div>
             )}
           </div>

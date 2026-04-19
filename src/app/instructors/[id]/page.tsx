@@ -124,8 +124,8 @@ export default function InstructorPortfolioPage() {
             <div className="lg:col-span-2 space-y-12">
                {/* Bio */}
                <section>
-                 <h2 className="text-3xl font-black uppercase mb-6 flex items-center gap-3 text-black">
-                   <div className="w-2 h-8 bg-black"></div>
+                 <h2 className="text-3xl font-black uppercase mb-6 flex items-center gap-3 text-white">
+                   <div className="w-2 h-8 bg-yellow-400 border-2 border-black"></div>
                    Về giảng viên
                  </h2>
                  <div className="bg-white border-4 border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
