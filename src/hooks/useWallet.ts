@@ -80,16 +80,25 @@ export function useWallet() {
     }
   }, [session]);
 
-  const fetchTransactions = useCallback(async () => {
+  const [transactionMeta, setTransactionMeta] = useState({ total: 0, totalPages: 1, page: 1 });
+
+  const fetchTransactions = useCallback(async (page: number = 1, limit: number = 10) => {
     if (!session) return;
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/me/transactions`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/me/transactions?page=${page}&limit=${limit}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Không thể lấy lịch sử giao dịch');
       const json = await res.json();
-      setTransactions(json.data || json);
+      const content = json.data || json;
+      
+      const items = Array.isArray(content) ? content : (content.items || []);
+      const total = content.total || items.length;
+      const totalPages = content.totalPages || Math.ceil(total / limit);
+
+      setTransactions(items);
+      setTransactionMeta({ total, totalPages, page });
     } catch (err: any) {
       setError(err.message);
     }
@@ -218,6 +227,7 @@ export function useWallet() {
   return {
     wallet,
     transactions,
+    transactionMeta,
     payouts,
     loading,
     error,

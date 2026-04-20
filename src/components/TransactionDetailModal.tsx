@@ -27,6 +27,40 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
     return date.toLocaleDateString('vi-VN');
   };
 
+  const getTransactionSource = (tx: any) => {
+    switch (tx.transaction_type) {
+      case 'PURCHASE':
+        return tx.order_item?.order?.student?.profile?.fullName || 'Học viên';
+      case 'EARNING':
+        return 'StudyMate Platform';
+      case 'PLATFORM_FEE':
+        return 'Course Booking';
+      case 'WITHDRAWAL':
+        return tx.wallet?.user?.profile?.fullName || 'Giảng viên';
+      case 'REFUND':
+        return 'StudyMate Platform';
+      default:
+        return 'Hệ thống';
+    }
+  };
+
+  const getTransactionDest = (tx: any) => {
+    switch (tx.transaction_type) {
+      case 'PURCHASE':
+        return 'StudyMate Platform';
+      case 'EARNING':
+        return tx.wallet?.user?.profile?.fullName || 'Giảng viên';
+      case 'PLATFORM_FEE':
+        return 'Hệ thống (Commission)';
+      case 'WITHDRAWAL':
+        return 'Bank Account';
+      case 'REFUND':
+        return tx.wallet?.user?.profile?.fullName || 'Người dùng';
+      default:
+        return 'Ví người dùng';
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
@@ -60,18 +94,32 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-               <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(168,85,247,1)]">
-                  <div className="flex items-center gap-2 mb-2 text-black font-black">
-                     <User size={14} />
-                     <span className="text-[10px] font-black uppercase leading-none">Đối tượng</span>
-                  </div>
-                  <p className="font-black text-black text-sm uppercase leading-tight">
-                     {transaction.wallet?.user?.profile?.fullName || 'Hệ thống'}
-                  </p>
-                  <p className="text-[10px] font-black text-black/70 uppercase truncate mt-1 italic">
-                    ID: {transaction.wallet?.user_id?.slice(-8) || 'SYSTEM'}...
-                  </p>
-               </div>
+                <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(168,85,247,1)]">
+                   <div className="flex items-center gap-2 mb-2 text-black font-black">
+                      <User size={14} />
+                      <span className="text-[10px] font-black uppercase leading-none">Luồng tiền</span>
+                   </div>
+                   <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                         <span className="text-[8px] font-black bg-black text-white px-1 py-0.5">TỪ</span>
+                         <span className="font-black text-black text-[11px] uppercase truncate">{getTransactionSource(transaction)}</span>
+                      </div>
+                      <ArrowRightLeft size={10} className="text-black/40 ml-2" />
+                      <div className="flex items-center gap-2">
+                         <span className="text-[8px] font-black bg-black text-white px-1 py-0.5">ĐẾN</span>
+                         <span className="font-black text-black text-[11px] uppercase truncate">{getTransactionDest(transaction)}</span>
+                      </div>
+                   </div>
+                   <div className="mt-3 pt-2 border-t border-black/10">
+                      <p className="text-[8px] font-black text-black/50 uppercase">Người thụ hưởng (Wallet Owner)</p>
+                      <p className="font-black text-black text-[10px] uppercase truncate">
+                         {transaction.wallet?.user?.profile?.fullName || (transaction.wallet?.user_id === 1 ? 'SYSTEM' : `USER ${transaction.wallet?.user_id}`)}
+                      </p>
+                      <p className="text-[9px] font-black text-black/40 italic">
+                         UID: {String(transaction.wallet?.user_id).padStart(4, '0')}
+                      </p>
+                   </div>
+                </div>
                <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(59,130,246,1)]">
                   <div className="flex items-center gap-2 mb-2 text-black font-black">
                      <Calendar size={14} />
@@ -121,7 +169,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
              <div className="flex flex-col items-end">
                 <span className="text-[10px] font-black uppercase text-white/60 mb-1">Số dư sau GD</span>
                 <span className="text-lg font-mono font-black text-white italic tracking-tighter">
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(transaction.balance_after || 0)}
+                  {transaction.wallet?.user_id === 1 ? '***' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(transaction.balance_after || 0)}
                 </span>
              </div>
           </div>

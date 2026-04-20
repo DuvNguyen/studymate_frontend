@@ -36,10 +36,10 @@ export default function InstructorWalletPage() {
   useEffect(() => {
     if (currentUser?.role === 'INSTRUCTOR') {
       fetchWallet();
-      fetchTransactions();
+      fetchTransactions(page, limit);
       fetchMyPayouts();
     }
-  }, [currentUser, fetchWallet, fetchTransactions, fetchMyPayouts]);
+  }, [currentUser, fetchWallet, fetchTransactions, fetchMyPayouts, page, limit]);
 
   const filteredTransactions = transactions.filter(tx => {
     if (!startDate || !endDate) return true;
@@ -47,7 +47,7 @@ export default function InstructorWalletPage() {
     return txDate >= startDate && txDate <= endDate;
   });
 
-  const paginatedTransactions = filteredTransactions.slice((page - 1) * limit, page * limit);
+  const paginatedTransactions = filteredTransactions;
 
   const getTypeBadge = (type: string) => {
     const base = "border-2 border-black px-2 py-0.5 text-[10px] font-black uppercase";
@@ -140,6 +140,11 @@ export default function InstructorWalletPage() {
                        ))}
                     </div>
                  )}
+              </div>
+
+              <div className="flex justify-between items-center bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                 <span className="text-[10px] font-black uppercase">Sổ cái chi tiết</span>
+                 <Activity size={16} />
               </div>
            </div>
 

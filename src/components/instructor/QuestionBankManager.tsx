@@ -19,13 +19,17 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
   const [isAddingBank, setIsAddingBank] = useState(false);
   const [newBankName, setNewBankName] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   // Question editing state
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
   const [questionText, setQuestionText] = useState('');
   const [questionType, setQuestionType] = useState('MCQ');
+  const [difficulty, setDifficulty] = useState('EASY');
   const [options, setOptions] = useState<{ text: string; isCorrect: boolean }[]>([
+    { text: '', isCorrect: false },
+    { text: '', isCorrect: false },
     { text: '', isCorrect: false },
     { text: '', isCorrect: false },
   ]);
@@ -76,6 +80,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
   };
 
   const fetchBankDetail = async (bankId: number) => {
+    setIsDetailLoading(true);
     try {
       const token = await getToken();
       const res = await fetch(`http://localhost:3001/api/v1/instructor/question-banks/${bankId}`, {
@@ -87,6 +92,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
       }
     } catch (e) {
       toast.error('Lỗi khi tải chi tiết');
+    } finally {
+      setIsDetailLoading(false);
     }
   };
 
@@ -120,7 +127,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
         },
         body: JSON.stringify({
           questionText,
-          questionType,
+          questionType: 'MCQ',
+          difficulty,
           options: options.map(o => ({ optionText: o.text, isCorrect: o.isCorrect }))
         })
       });
@@ -130,7 +138,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
         setIsAddingQuestion(false);
         setEditingQuestion(null);
         setQuestionText('');
-        setOptions([{ text: '', isCorrect: false }, { text: '', isCorrect: false }]);
+        setDifficulty('EASY');
+        setOptions([{ text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }]);
         fetchBankDetail(selectedBank.id);
       }
     } catch (e) {
@@ -196,17 +205,21 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
              )}
 
              <div className="space-y-2">
-               {banks.map(bank => (
-                 <button
-                   key={bank.id}
-                   onClick={() => fetchBankDetail(bank.id)}
-                   className={`w-full text-left p-3 border-2 border-black font-black uppercase text-sm transition-all ${
-                     selectedBank?.id === bank.id ? 'bg-black text-white translate-x-1 shadow-none' : 'bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                   }`}
-                 >
-                   {bank.name}
-                 </button>
-               ))}
+               {loading ? (
+                 <div className="flex justify-center p-4"><div className="w-6 h-6 border-2 border-black border-t-transparent animate-spin"></div></div>
+               ) : (
+                 banks.map(bank => (
+                   <button
+                     key={bank.id}
+                     onClick={() => fetchBankDetail(bank.id)}
+                     className={`w-full text-left p-3 border-2 border-black font-black uppercase text-sm transition-all ${
+                       selectedBank?.id === bank.id ? 'bg-black text-white translate-x-1 shadow-none' : 'bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                     }`}
+                   >
+                     {bank.title}
+                   </button>
+                 ))
+               )}
                {!loading && banks.length === 0 && <p className="text-[10px] font-bold text-center uppercase opacity-50 pt-8">Chưa có ngân hàng nào</p>}
              </div>
           </div>
@@ -218,7 +231,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                   <div className="flex justify-between items-end border-b-4 border-black pb-4">
                      <div>
                         <span className="text-[10px] font-black uppercase opacity-60">Đang chọn:</span>
-                        <h3 className="text-2xl font-black uppercase">{selectedBank.name}</h3>
+                        <h3 className="text-2xl font-black uppercase">{selectedBank.title}</h3>
                      </div>
                      {!isAddingQuestion && (
                        <Button 
@@ -226,7 +239,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                            setIsAddingQuestion(true);
                            setEditingQuestion(null);
                            setQuestionText('');
-                           setOptions([{ text: '', isCorrect: false }, { text: '', isCorrect: false }]);
+                           setDifficulty('EASY');
+                           setOptions([{ text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }]);
                          }}
                          className="bg-emerald-400 hover:bg-emerald-500 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                        >
@@ -254,22 +268,23 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                           </div>
 
                           <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="block text-xs font-black uppercase mb-1">Loại câu hỏi</label>
-                                <select 
-                                  value={questionType}
-                                  onChange={e => setQuestionType(e.target.value)}
-                                  className="w-full border-4 border-black p-3 font-black outline-none"
-                                >
-                                   <option value="MCQ">Trắc nghiệm (MCQ)</option>
-                                   <option value="TRUE_FALSE">Đúng / Sai</option>
-                                </select>
-                             </div>
-                             <div>
-                                <label className="block text-xs font-black uppercase mb-1 text-black">Điểm số</label>
-                                <input type="number" defaultValue="1" disabled className="w-full border-4 border-black p-3 font-black bg-gray-100 italic text-black" title="Mặc định 1 điểm" />
-                             </div>
-                          </div>
+                              <div>
+                                 <label className="block text-xs font-black uppercase mb-1">Độ khó</label>
+                                 <select 
+                                   value={difficulty}
+                                   onChange={e => setDifficulty(e.target.value)}
+                                   className="w-full border-4 border-black p-3 font-black outline-none"
+                                 >
+                                    <option value="EASY">DỄ (EASY)</option>
+                                    <option value="MEDIUM">VỪA (MEDIUM)</option>
+                                    <option value="HARD">KHÓ (HARD)</option>
+                                 </select>
+                              </div>
+                              <div>
+                                 <label className="block text-xs font-black uppercase mb-1 text-black">Điểm số</label>
+                                 <input type="number" defaultValue="1" disabled className="w-full border-4 border-black p-3 font-black bg-gray-100 italic text-black" title="Mặc định 1 điểm" />
+                              </div>
+                           </div>
 
                           <div className="space-y-3">
                              <label className="block text-xs font-black uppercase mb-1 text-black">Các lựa chọn đáp án</label>
@@ -278,11 +293,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                   <button 
                                     onClick={() => {
                                       const newOpts = [...options];
-                                      if (questionType === 'TRUE_FALSE') {
-                                        newOpts.forEach((o, i) => o.isCorrect = i === idx);
-                                      } else {
-                                        newOpts[idx].isCorrect = !newOpts[idx].isCorrect;
-                                      }
+                                      newOpts[idx].isCorrect = !newOpts[idx].isCorrect;
                                       setOptions(newOpts);
                                     }}
                                     className={`w-12 h-12 flex items-center justify-center border-4 border-black transition-all ${opt.isCorrect ? 'bg-emerald-400 shadow-none translate-y-px' : 'bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
@@ -310,14 +321,12 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                   )}
                                </div>
                              ))}
-                             {questionType === 'MCQ' && (
                                <button 
                                  onClick={() => setOptions([...options, { text: '', isCorrect: false }])}
                                  className="text-xs font-black uppercase underline hover:text-emerald-600 transition-colors text-black"
                                >
                                  + Thêm lựa chọn
                                </button>
-                             )}
                           </div>
                        </div>
 
@@ -325,9 +334,13 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                           <Button onClick={handleSaveQuestion} className="flex-1 bg-black text-white hover:bg-emerald-400 hover:text-black border-4 border-black h-16 text-xl">
                              <Save className="mr-2" /> {editingQuestion ? 'CẬP NHẬT' : 'LƯU CÂU HỎI'}
                           </Button>
-                          <Button onClick={() => setIsAddingQuestion(false)} className="bg-white text-black hover:bg-gray-100 border-4 border-black w-32 h-16">
-                             HỦY
-                          </Button>
+                          <Button 
+                             variant="outline"
+                             onClick={() => setIsAddingQuestion(false)} 
+                             className="text-black hover:bg-yellow-400 border-4 border-black w-32 h-16 font-black"
+                           >
+                              HỦY
+                           </Button>
                        </div>
                     </div>
                   ) : (
@@ -336,7 +349,14 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                          <div key={q.id} className="border-4 border-black p-6 hover:bg-gray-50 transition-colors group">
                             <div className="flex justify-between items-start mb-4">
                                <div className="flex-1">
-                                  <span className="text-[10px] font-black bg-black text-white px-2 py-0.5 mb-2 inline-block">CÂU HỎI {idx + 1}</span>
+                                   <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-[10px] font-black bg-black text-white px-2 py-0.5">CÂU HỎI {idx + 1}</span>
+                                      <span className={`text-[10px] font-black border-2 border-black px-2 py-0.5 ${
+                                        q.difficulty === 'EASY' ? 'bg-emerald-400' : q.difficulty === 'MEDIUM' ? 'bg-yellow-400' : 'bg-rose-400'
+                                      }`}>
+                                        {q.difficulty || 'EASY'}
+                                      </span>
+                                   </div>
                                   <p className="text-xl font-bold text-black">{q.questionText}</p>
                                </div>
                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -344,7 +364,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                     onClick={() => {
                                       setEditingQuestion(q);
                                       setQuestionText(q.questionText);
-                                      setQuestionType(q.questionType);
+                                      setQuestionType('MCQ');
+                                      setDifficulty(q.difficulty || 'EASY');
                                       setOptions(q.options.map((o: any) => ({ text: o.optionText, isCorrect: o.isCorrect })));
                                       setIsAddingQuestion(true);
                                     }}
@@ -370,12 +391,21 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                             </div>
                          </div>
                        ))}
-                       {selectedBank.questions?.length === 0 && (
-                         <div className="text-center py-20 border-4 border-black border-dashed opacity-40">
-                            <h5 className="font-black uppercase text-xl">Chưa có câu hỏi nào trong ngân hàng này</h5>
-                            <p className="text-sm font-bold mt-2 italic">Hãy bắt đầu thêm câu hỏi để làm bài kiểm tra</p>
-                         </div>
-                       )}
+                      {selectedBank.questions?.length === 0 && (
+                        <div className="text-center py-20 border-4 border-black border-dashed opacity-40">
+                           <h5 className="font-black uppercase text-xl">Chưa có câu hỏi nào trong ngân hàng này</h5>
+                           <p className="text-sm font-bold mt-2 italic">Hãy bắt đầu thêm câu hỏi để làm bài kiểm tra</p>
+                        </div>
+                      )}
+                      
+                      {isDetailLoading && (
+                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-10">
+                           <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 border-4 border-black border-t-transparent animate-spin mb-4"></div>
+                              <span className="font-black uppercase text-xs italic">Đang tải dữ liệu...</span>
+                           </div>
+                        </div>
+                      )}
                     </div>
                   )}
                </div>
