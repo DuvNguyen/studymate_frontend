@@ -55,6 +55,8 @@ export default function InstructorWalletPage() {
       case 'EARNING': return <span className={`${base} bg-emerald-100 text-black`}>THU NHẬP</span>;
       case 'WITHDRAWAL': return <span className={`${base} bg-rose-100 text-black`}>RÚT TIỀN</span>;
       case 'REFUND': return <span className={`${base} bg-yellow-100 text-black`}>HOÀN TIỀN</span>;
+      case 'PURCHASE': return <span className={`${base} bg-blue-100 text-black`}>MUA HÀNG</span>;
+      case 'PLATFORM_FEE': return <span className={`${base} bg-purple-100 text-black`}>PHÍ SÀN</span>;
       default: return <span className={`${base} bg-zinc-100 text-black`}>{type}</span>;
     }
   };
@@ -62,10 +64,12 @@ export default function InstructorWalletPage() {
   const getStatusBadge = (status: string) => {
     const base = "border-2 border-black px-2 py-0.5 text-[10px] font-black uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)]";
     switch (status) {
-      case 'LOCKED': return <span className={`${base} bg-zinc-200 text-black`}>LOCKED</span>;
-      case 'AVAILABLE': return <span className={`${base} bg-emerald-400 text-black`}>AVAILABLE</span>;
+      case 'LOCKED': return <span className={`${base} bg-zinc-200 text-black`}>LOCKED (KHÓA)</span>;
+      case 'AVAILABLE': return <span className={`${base} bg-emerald-400 text-black font-black`}>AVAILABLE</span>;
+      case 'RELEASED': return <span className={`${base} bg-emerald-100 text-black`}>RELEASED</span>;
       case 'CANCELLED': return <span className={`${base} bg-rose-500 text-white`}>CANCELLED</span>;
       case 'PENDING': return <span className={`${base} bg-amber-400 text-black italic`}>PENDING</span>;
+      case 'COMPLETED': return <span className={`${base} bg-emerald-500 text-white`}>COMPLETED</span>;
       default: return <span className={`${base} bg-zinc-100 text-black`}>{status}</span>;
     }
   };
@@ -194,14 +198,27 @@ export default function InstructorWalletPage() {
                                 </td>
                                 <td className="p-4 border-r-4 border-black">
                                    <p className="font-black text-black uppercase text-xs line-clamp-2 leading-tight">
-                                      {tx.transaction_type === 'EARNING' ? `BÁN KHÓA HỌC: ${tx.order_item?.course?.title || 'KHÓA HỌC'}` : tx.transaction_type}
+                                      {tx.transaction_type === 'EARNING' 
+                                         ? `BÁN KHÓA HỌC: ${tx.order_item?.course?.title || 'KHÓA HỌC'}` 
+                                         : tx.transaction_type === 'WITHDRAWAL'
+                                         ? 'YÊU CẦU RÚT TIỀN'
+                                         : tx.transaction_type === 'REFUND'
+                                         ? 'HOÀN TIỀN GIAO DỊCH'
+                                         : tx.transaction_type}
                                    </p>
                                    <div className="mt-2">
                                       {getTypeBadge(tx.transaction_type)}
                                    </div>
                                 </td>
-                                <td className={`p-4 border-r-4 border-black text-right font-black italic text-base tabular-nums whitespace-nowrap ${tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                                   {tx.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN').format(tx.amount)}
+                                <td className="p-4 border-r-4 border-black text-right font-black italic text-base tabular-nums whitespace-nowrap">
+                                   <div className={`flex flex-col items-end ${tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                      <span>{tx.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN').format(tx.amount)}</span>
+                                      {tx.transaction_type === 'EARNING' && tx.order_item && (
+                                        <span className="text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-1 mt-1 not-italic">
+                                          {(1 - tx.order_item.commission_rate) * 100}% SHARE
+                                        </span>
+                                      )}
+                                   </div>
                                 </td>
                                 <td className="p-4 border-r-4 border-black text-center whitespace-nowrap">
                                    {getStatusBadge(tx.status)}

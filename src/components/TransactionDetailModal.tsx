@@ -17,6 +17,8 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
       case 'AVAILABLE': return 'text-emerald-700 bg-emerald-100 border-emerald-500';
       case 'LOCKED': return 'text-amber-700 bg-amber-100 border-amber-500';
       case 'CANCELLED': return 'text-rose-700 bg-rose-100 border-rose-500';
+      case 'RELEASED': return 'text-blue-700 bg-blue-100 border-blue-500';
+      case 'COMPLETED': return 'text-emerald-500 bg-black border-white';
       default: return 'text-black bg-zinc-100 border-black';
     }
   };
@@ -144,18 +146,26 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
                      {transaction.transaction_type}
                   </p>
                </div>
-               <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(251,191,36,1)]">
-                  <div className="flex items-center gap-2 mb-2 text-black font-black">
-                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="1" x2="12" y2="23" />
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                     </svg>
-                     <span className="text-[10px] font-black uppercase leading-none">Biến động</span>
-                  </div>
-                  <p className={`font-black text-xl ${transaction.amount > 0 ? 'text-emerald-700' : 'text-rose-600'} tabular-nums tracking-tighter`}>
-                    {transaction.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(transaction.amount)}
-                  </p>
-               </div>
+                <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(251,191,36,1)]">
+                   <div className="flex items-center gap-2 mb-2 text-black font-black">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                         <line x1="12" y1="1" x2="12" y2="23" />
+                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                      <span className="text-[10px] font-black uppercase leading-none">Biến động</span>
+                   </div>
+                   <p className={`font-black text-xl ${transaction.amount > 0 ? 'text-emerald-700' : 'text-rose-600'} tabular-nums tracking-tighter`}>
+                     {transaction.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(transaction.amount)}
+                   </p>
+                   {transaction.transaction_type === 'EARNING' && transaction.order_item && (
+                     <div className="mt-2 pt-2 border-t border-black/10">
+                        <p className="text-[8px] font-black text-black/50 uppercase italic">Tỷ lệ sau phí (Net share)</p>
+                        <p className="text-sm font-black text-emerald-600">
+                          {((1 - transaction.order_item.commission_rate) * 100).toFixed(0)}%
+                        </p>
+                     </div>
+                   )}
+                </div>
             </div>
           </div>
 

@@ -7,8 +7,10 @@ import Navbar from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { useRouter } from 'next/navigation';
 import PublicLayout from '@/components/PublicLayout';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export default function CartPage() {
+  const { user, loading: userLoading } = useCurrentUser();
   const { cart, loading, removeFromCart, checkout, checkoutLoading } = useCart();
   const router = useRouter();
 
@@ -23,6 +25,37 @@ export default function CartPage() {
 
   const totalAmount = cart?.cart_items?.reduce((sum: number, item: any) => sum + Number(item.final_price), 0) || 0;
   const itemCount = cart?.cart_items?.length || 0;
+
+  // Nếu đang tải user thì hiện loading nhẹ
+  if (userLoading) return null;
+
+  // Nếu đã đăng nhập mà không phải STUDENT thì hiện 403
+  if (user && user.role !== 'STUDENT') {
+    return (
+      <PublicLayout>
+        <div className="flex-1 flex items-center justify-center py-20 px-4">
+          <div className="bg-white border-8 border-black p-12 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] max-w-2xl text-center space-y-8 rotate-1">
+            <div className="w-24 h-24 mx-auto bg-rose-500 border-4 border-black flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] -rotate-6">
+              <span className="text-5xl font-black text-white px-2">403</span>
+            </div>
+            <div>
+              <h2 className="text-4xl font-black uppercase text-black tracking-tighter italic">Truy cập bị từ chối</h2>
+              <p className="text-xs font-black uppercase tracking-[0.2em] opacity-40 mt-2">RBAC_POLICY_VIOLATION</p>
+            </div>
+            <p className="text-lg font-bold text-black leading-relaxed">
+               BẠN KHÔNG CÓ QUYỀN TRUY CẬP VÀO GIỎ HÀNG. CHỈ HỌC VIÊN MỚI CÓ THỂ THỰC HIỆN MUA KHÓA HỌC.
+            </p>
+            <div className="flex flex-col gap-4">
+              <Link href="/" className="px-8 py-4 bg-black text-white font-black uppercase tracking-widest border-2 border-black hover:bg-yellow-400 hover:text-black hover:-translate-y-1 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                Quay lại Trang chủ
+              </Link>
+              <p className="text-[10px] font-black opacity-30">ERR_CODE: SM-AUTH-403-FORBIDDEN</p>
+            </div>
+          </div>
+        </div>
+      </PublicLayout>
+    );
+  }
 
   return (
     <PublicLayout>

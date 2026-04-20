@@ -33,19 +33,21 @@ export function NavbarUserMenu() {
 
   return (
     <div className="flex items-center gap-4">
-      {/* Nút Cart */}
-      <Link href="/cart" className="relative group">
-        <div className="w-9 h-9 border-2 border-black flex items-center justify-center bg-white group-hover:bg-amber-300 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
-          <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        </div>
-        {cartItemCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 border-2 border-black flex items-center justify-center text-[10px] leading-none font-black text-white">
-            {cartItemCount}
-          </span>
-        )}
-      </Link>
+      {/* Nút Cart - Chỉ cho STUDENT */}
+      {user.role === 'STUDENT' && (
+        <Link href="/cart" className="relative group">
+          <div className="w-9 h-9 border-2 border-black flex items-center justify-center bg-white group-hover:bg-amber-300 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+            <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          {cartItemCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 border-2 border-black flex items-center justify-center text-[10px] leading-none font-black text-white">
+              {cartItemCount}
+            </span>
+          )}
+        </Link>
+      )}
 
       {/* Chuông thông báo */}
       <NotificationBell />

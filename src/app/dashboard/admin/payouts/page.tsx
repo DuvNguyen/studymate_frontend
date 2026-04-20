@@ -10,12 +10,12 @@ import { useRouter } from 'next/navigation';
 export default function AdminPayoutsPage() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const router = useRouter();
-  const { payouts, loading, fetchAllPayouts, processPayout, exportPayouts } = useWallet();
+  const { payouts, loading, fetchAllPayouts, processPayout, exportPayouts, exportPayoutsCsv } = useWallet();
   const [filterStatus, setFilterStatus] = useState<string>('PENDING');
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [adminNote, setAdminNote] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<'XLSX' | 'CSV' | null>(null);
 
   // Action modal state
   const [actionModal, setActionModal] = useState<{
@@ -67,13 +67,24 @@ export default function AdminPayoutsPage() {
   };
 
   const handleExport = async () => {
-    setExporting(true);
+    setExporting('XLSX');
     try {
       await exportPayouts(Array.from(selectedIds));
     } catch (err: any) {
       alert(err.message);
     } finally {
-      setExporting(false);
+      setExporting(null);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    setExporting('CSV');
+    try {
+      await exportPayoutsCsv(Array.from(selectedIds));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -259,13 +270,22 @@ export default function AdminPayoutsPage() {
               Bỏ chọn tất cả
             </button>
           </div>
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="bg-emerald-400 text-black border-4 border-black px-8 py-3 font-black text-sm uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
-          >
-            {exporting ? 'ĐANG XUẤT...' : `XUẤT DANH SÁCH CHI TRẢ (${selectedIds.size} yêu cầu)`}
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={handleExport}
+              disabled={exporting !== null}
+              className="bg-white text-black border-4 border-black px-6 py-3 font-black text-sm uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
+            >
+              {exporting === 'XLSX' ? 'ĐANG XUẤT...' : 'XUẤT XLSX'}
+            </button>
+            <button
+              onClick={handleExportCsv}
+              disabled={exporting !== null}
+              className="bg-emerald-400 text-black border-4 border-black px-8 py-3 font-black text-sm uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
+            >
+              {exporting === 'CSV' ? 'ĐANG XUẤT...' : `XUẤT CSV CHO ĐỐI SOÁT (${selectedIds.size})`}
+            </button>
+          </div>
         </div>
       )}
 

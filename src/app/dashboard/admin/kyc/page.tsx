@@ -10,7 +10,7 @@ export default function AdminKycPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
+  const [activeTab, setActiveTab] = useState<'PENDING' | 'PENDING_UPDATE' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
   const { session } = useClerk();
   const { user: appUser, loading: appLoading } = useCurrentUser();
 
@@ -107,10 +107,10 @@ export default function AdminKycPage() {
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-2 pb-2 overflow-x-auto">
           {[
-            { id: 'PENDING', label: 'CHỜ DUYỆT' },
+            { id: 'PENDING', label: 'DUYỆT MỚI' },
+            { id: 'PENDING_UPDATE', label: 'CẬP NHẬT' },
             { id: 'APPROVED', label: 'ĐÃ DUYỆT' },
             { id: 'REJECTED', label: 'TỪ CHỐI' },
             { id: 'ALL', label: 'TẤT CẢ' }
@@ -141,11 +141,23 @@ export default function AdminKycPage() {
                       {u.fullName || u.email}
                       <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
                         u.instructorProfile?.kycStatus === 'PENDING' ? 'bg-amber-300 text-black' :
+                        u.instructorProfile?.kycStatus === 'PENDING_UPDATE' ? 'bg-indigo-300 text-black' :
                         u.instructorProfile?.kycStatus === 'APPROVED' ? 'bg-emerald-300 text-black' :
                         u.instructorProfile?.kycStatus === 'REJECTED' ? 'bg-red-300 text-black' : 'bg-gray-100 text-black'
                       }`}>
-                        {u.instructorProfile?.kycStatus}
+                        {u.instructorProfile?.kycStatus === 'PENDING' ? 'Duyệt KYC' : 
+                         u.instructorProfile?.kycStatus === 'PENDING_UPDATE' ? 'Cập nhật KYC' : 
+                         u.instructorProfile?.kycStatus}
                       </span>
+                      {u.role === 'USER' ? (
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 border border-black bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          Duyệt tài khoản giảng viên
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 border border-black bg-violet-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          Bổ sung KYC
+                        </span>
+                      )}
                     </h3>
                     <p className="text-sm font-medium text-gray-500 mb-4">{u.email}</p>
                     
@@ -169,21 +181,21 @@ export default function AdminKycPage() {
                   </div>
 
                   <div className="flex flex-col gap-3 w-full md:w-40 border-t-2 border-black md:border-t-0 md:border-l-2 md:pl-6 pt-4 md:pt-0">
-                    {u.instructorProfile?.kycStatus === 'PENDING' && (
+                    {(u.instructorProfile?.kycStatus === 'PENDING' || u.instructorProfile?.kycStatus === 'PENDING_UPDATE') && (
                       <>
                         <button 
                           onClick={() => handleAction(u.id, 'APPROVED')}
                           disabled={actionLoading === u.id}
                           className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-emerald-400 text-black hover:bg-emerald-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {actionLoading === u.id ? '...' : 'Phê Duyệt'}
+                          {actionLoading === u.id ? '...' : (u.instructorProfile?.kycStatus === 'PENDING' ? 'Phê Duyệt' : 'Duyệt Cập Nhật')}
                         </button>
                         <button 
                           onClick={() => handleAction(u.id, 'REJECTED')}
                           disabled={actionLoading === u.id}
                           className="w-full inline-flex items-center justify-center font-black uppercase tracking-wider text-xs px-4 py-3 transition-colors border-2 border-black bg-red-400 text-black hover:bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {actionLoading === u.id ? '...' : 'Từ chối'}
+                          {actionLoading === u.id ? '...' : (u.instructorProfile?.kycStatus === 'PENDING' ? 'Từ chối' : 'Từ chối cập nhật')}
                         </button>
                       </>
                     )}
@@ -209,60 +221,85 @@ export default function AdminKycPage() {
 
                 {expandedId === u.id && (
                   <div className="bg-white border-x-2 border-b-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 pt-8 mt-[-10px] grid grid-cols-1 md:grid-cols-2 gap-8 relative z-0 animate-in slide-in-from-top-2 fade-in duration-200">
-                    <div>
-                      <h4 className="font-black text-xs uppercase tracking-widest mb-3 border-b-2 border-black pb-2 inline-block text-black">Thông tin Thanh toán</h4>
-                      <ul className="text-sm space-y-3 font-medium">
-                        <li>
-                          <span className="text-gray-700 font-bold uppercase tracking-wider text-[10px] block mb-0.5">Ngân hàng</span> 
-                          <strong className="text-black font-black text-base">{u.instructorProfile?.bankName}</strong>
-                        </li>
-                        <li>
-                          <span className="text-gray-700 font-bold uppercase tracking-wider text-[10px] block mb-0.5">Chủ thẻ</span> 
-                          <strong className="uppercase text-black font-black text-base">{u.instructorProfile?.bankAccountName}</strong>
-                        </li>
-                        <li>
-                          <span className="text-gray-700 font-bold uppercase tracking-wider text-[10px] block mb-0.5">Số TK</span> 
-                          <strong className="font-mono text-lg bg-yellow-200 text-black px-2 py-0.5 border-2 border-black font-black">{u.instructorProfile?.bankAccountNumber}</strong>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-black text-xs uppercase tracking-widest mb-3 border-b-2 border-black pb-2 inline-block text-black">Danh hiệu nổi bật</h4>
-                      {u.instructorProfile?.certificates?.length > 0 ? (
-                        <ul className="text-sm list-disc pl-4 space-y-2 font-bold text-black bg-gray-50 border-2 border-black p-4">
-                          {u.instructorProfile.certificates.map((c: string, idx: number) => <li key={idx} className="ml-2">{c}</li>)}
-                        </ul>
-                      ) : <span className="text-xs text-gray-700 font-bold italic">Chưa cập nhật</span>}
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <h4 className="font-black text-xs uppercase tracking-widest mb-3 text-black">Tài liệu định danh (CMND/CCCD)</h4>
-                      {u.instructorProfile?.idCardUrl ? (
-                        <a href={u.instructorProfile.idCardUrl} target="_blank" rel="noreferrer" className="inline-block border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform bg-white/50 p-2">
-                          <img src={u.instructorProfile.idCardUrl} alt="ID Card" className="h-64 w-auto object-contain border border-gray-200" />
-                        </a>
-                      ) : <span className="text-xs text-gray-700 font-bold italic bg-gray-100 px-2 py-1 border border-dashed border-gray-400">Không có ảnh định danh</span>}
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <h4 className="font-black text-xs uppercase tracking-widest mb-3 text-black">Văn bằng & Chứng chỉ đính kèm</h4>
-                      <div className="flex flex-wrap gap-5">
-                        {u.instructorProfile?.documents?.length > 0 ? (
-                          u.instructorProfile.documents.map((doc: any, j: number) => (
-                            <div key={j} className="border-2 border-black p-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full md:w-auto">
-                              <p className="text-[10px] font-black uppercase text-white bg-black inline-block px-2 py-0.5 mb-2">{doc.documentType}</p>
-                              <p className="text-base font-black mb-3 text-black border-dashed border-b border-gray-400 pb-1">{doc.title}</p>
-                              {doc.fileUrl ? (
-                                <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="block border-2 border-black hover:-translate-y-1 transition-transform cursor-zoom-in bg-gray-50 p-1">
-                                  <img src={doc.fileUrl} alt={doc.title} className="h-40 w-auto object-cover" />
-                                </a>
-                              ) : <span className="text-xs italic text-gray-700">Chưa upload file</span>}
-                            </div>
-                          ))
-                        ) : <span className="text-xs text-gray-700 font-bold italic bg-gray-100 px-2 py-1 border border-dashed border-gray-400">Không có bằng cấp đính kèm</span>}
+                    {u.instructorProfile?.kycStatus === 'PENDING_UPDATE' && (
+                      <div className="md:col-span-2 bg-blue-50 border-2 border-dashed border-blue-400 p-4 mb-4">
+                        <p className="text-xs font-black text-blue-700 uppercase tracking-widest mb-1">💡 Đang xem dữ liệu yêu cầu cập nhật</p>
+                        <p className="text-[10px] font-bold text-blue-600">Những thông tin dưới đây là dữ liệu mới do giảng viên vừa gửi lên.</p>
                       </div>
-                    </div>
+                    )}
+                    {(() => {
+                      const profile = u.instructorProfile;
+                      const hasPending = profile?.kycStatus === 'PENDING_UPDATE' && profile?.pendingData;
+                      const data = hasPending ? profile.pendingData : profile;
+
+                      return (
+                        <>
+                          <div>
+                            <h4 className="font-black text-xs uppercase tracking-widest mb-3 border-b-2 border-black pb-2 inline-block text-black">Thông tin Thanh toán</h4>
+                            <ul className="text-sm space-y-3 font-medium">
+                              <li>
+                                <span className="text-gray-700 font-bold uppercase tracking-wider text-[10px] block mb-0.5">Ngân hàng</span> 
+                                <strong className="text-black font-black text-base">{data?.bankName}</strong>
+                              </li>
+                              <li>
+                                <span className="text-gray-700 font-bold uppercase tracking-wider text-[10px] block mb-0.5">Chủ thẻ</span> 
+                                <strong className="uppercase text-black font-black text-base">{data?.bankAccountName}</strong>
+                              </li>
+                              <li>
+                                <span className="text-gray-700 font-bold uppercase tracking-wider text-[10px] block mb-0.5">Số TK</span> 
+                                <strong className="font-mono text-lg bg-yellow-200 text-black px-2 py-0.5 border-2 border-black font-black">{data?.bankAccountNumber}</strong>
+                              </li>
+                            </ul>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-black text-xs uppercase tracking-widest mb-3 border-b-2 border-black pb-2 inline-block text-black">Danh hiệu nổi bật</h4>
+                            {data?.certificates?.length > 0 ? (
+                              <ul className="text-sm space-y-3 font-bold text-black bg-gray-50 border-2 border-black p-4">
+                                {data.certificates.map((c: any, idx: number) => (
+                                  <li key={idx} className="flex flex-col gap-1">
+                                    <span className="text-black">• {typeof c === 'string' ? c : c.title}</span>
+                                    {typeof c === 'object' && c?.fileUrl && (
+                                      <a href={c.fileUrl} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-600 underline ml-3 hover:text-indigo-800">
+                                        Xem minh chứng (PDF/Ảnh)
+                                      </a>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : <span className="text-xs text-gray-700 font-bold italic">Chưa cập nhật</span>}
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <h4 className="font-black text-xs uppercase tracking-widest mb-3 text-black">Tài liệu định danh (CMND/CCCD)</h4>
+                            {data?.idCardUrl ? (
+                              <a href={data.idCardUrl} target="_blank" rel="noreferrer" className="inline-block border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform bg-white/50 p-2">
+                                <img src={data.idCardUrl} alt="ID Card" className="h-64 w-auto object-contain border border-gray-200" />
+                              </a>
+                            ) : <span className="text-xs text-gray-700 font-bold italic bg-gray-100 px-2 py-1 border border-dashed border-gray-400">Không có ảnh định danh</span>}
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <h4 className="font-black text-xs uppercase tracking-widest mb-3 text-black">Văn bằng & Chứng chỉ đính kèm</h4>
+                            <div className="flex flex-wrap gap-5">
+                              {data?.documents?.length > 0 ? (
+                                data.documents.map((doc: any, j: number) => (
+                                  <div key={j} className="border-2 border-black p-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full md:w-auto">
+                                    <p className="text-[10px] font-black uppercase text-white bg-black inline-block px-2 py-0.5 mb-2">{doc.documentType}</p>
+                                    <p className="text-base font-black mb-3 text-black border-dashed border-b border-gray-400 pb-1">{doc.title}</p>
+                                    {doc.fileUrl ? (
+                                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="block border-2 border-black hover:-translate-y-1 transition-transform cursor-zoom-in bg-gray-50 p-1">
+                                        <img src={doc.fileUrl} alt={doc.title} className="h-40 w-auto object-cover" />
+                                      </a>
+                                    ) : <span className="text-xs italic text-gray-700">Chưa upload file</span>}
+                                  </div>
+                                ))
+                              ) : <span className="text-xs text-gray-700 font-bold italic bg-gray-100 px-2 py-1 border border-dashed border-gray-400">Không có bằng cấp đính kèm</span>}
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

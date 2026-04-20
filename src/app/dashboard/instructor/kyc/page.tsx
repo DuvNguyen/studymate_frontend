@@ -10,6 +10,7 @@ export default function KycPage() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   
   const [kycData, setKycData] = useState({
     idCardUrl: '',
@@ -18,14 +19,16 @@ export default function KycPage() {
     bankName: '',
     kycStatus: '',
     rejectionReason: '',
-    certificates: [] as string[],
+    certificates: [] as { title: string; fileUrl?: string }[],
     documents: [] as { documentType: string; title: string; fileUrl: string }[],
   });
 
-  const [selectedFiles, setSelectedFiles] = useState<{ idCard?: File; documents: { [key: number]: File } }>({ documents: {} });
-  const [previewUrls, setPreviewUrls] = useState<{ idCard?: string; documents: { [key: number]: string } }>({ documents: {} });
+  const [selectedFiles, setSelectedFiles] = useState<{ idCard?: File; documents: { [key: number]: File }; certificates: { [key: number]: File } }>({ documents: {}, certificates: {} });
+  const [previewUrls, setPreviewUrls] = useState<{ idCard?: string; documents: { [key: number]: string }; certificates: { [key: number]: string } }>({ documents: {}, certificates: {} });
 
-  const isLocked = kycData.kycStatus === 'PENDING' || kycData.kycStatus === 'APPROVED';
+  // Cho phép chỉnh sửa nếu trạng thái là APPROVED (để bổ sung bằng cấp)
+  // Chỉ khóa khi đang chờ duyệt (PENDING)
+  const isLocked = kycData.kycStatus === 'PENDING';
 
   useEffect(() => { fetchKycData(); }, []);
 
@@ -38,7 +41,7 @@ export default function KycPage() {
       });
       if (res.ok) {
         const { data } = await res.json();
-        setKycData({
+        const baseData = {
           idCardUrl: data.idCardUrl || '',
           bankAccountName: data.bankAccountName || '',
           bankAccountNumber: data.bankAccountNumber || '',
@@ -47,7 +50,30 @@ export default function KycPage() {
           rejectionReason: data.rejectionReason || '',
           certificates: data.certificates || [],
           documents: data.documents || [],
-        });
+        };
+
+        // Nếu có pendingData (đang chờ duyệt cập nhật), hiển thị dữ liệu đang chờ đó cho giảng viên thấy
+        if (data.pendingData) {
+          const p = data.pendingData;
+          setKycData({
+            ...baseData,
+            idCardUrl: p.idCardUrl ?? baseData.idCardUrl,
+            bankAccountName: p.bankAccountName ?? baseData.bankAccountName,
+            bankAccountNumber: p.bankAccountNumber ?? baseData.bankAccountNumber,
+            bankName: p.bankName ?? baseData.bankName,
+            // Đảm bảo certificates được map đúng format mới
+            certificates: (p.certificates || baseData.certificates).map((c: any) => 
+              typeof c === 'string' ? { title: c, fileUrl: '' } : c
+            ),
+            documents: p.documents ?? baseData.documents,
+          });
+        } else {
+          // Xử lý dữ liệu cũ (là string) sang format mới (object)
+          const formattedCertificates = baseData.certificates.map((c: any) => 
+            typeof c === 'string' ? { title: c, fileUrl: '' } : c
+          );
+          setKycData({ ...baseData, certificates: formattedCertificates });
+        }
       }
     } catch { toast.error('Không thể tải dữ liệu KYC'); }
     finally { setIsLoading(false); }
@@ -63,10 +89,10 @@ export default function KycPage() {
   };
   const handleCertificateChange = (index: number, value: string) => {
     const c = [...kycData.certificates];
-    c[index] = value;
+    c[index] = { ...c[index], title: value };
     setKycData({ ...kycData, certificates: c });
   };
-  const addCertificate = () => setKycData({ ...kycData, certificates: [...kycData.certificates, ''] });
+  const addCertificate = () => setKycData({ ...kycData, certificates: [...kycData.certificates, { title: '', fileUrl: '' }] });
   const removeCertificate = (i: number) => setKycData({ ...kycData, certificates: kycData.certificates.filter((_, idx) => idx !== i) });
   const addDocument = () => setKycData({ ...kycData, documents: [...kycData.documents, { documentType: 'CERTIFICATE', title: '', fileUrl: '' }] });
   const removeDocument = (i: number) => {
@@ -106,6 +132,22 @@ export default function KycPage() {
     });
   };
 
+  const handleCertificateFileSelect = (index: number, file: File) => {
+    setSelectedFiles(prev => ({ ...prev, certificates: { ...prev.certificates, [index]: file } }));
+    setPreviewUrls(prev => {
+      if (prev.certificates[index]) URL.revokeObjectURL(prev.certificates[index]);
+      return { ...prev, certificates: { ...prev.certificates, [index]: URL.createObjectURL(file) } };
+    });
+  };
+
+  const removeCertificateFile = (index: number) => {
+    setSelectedFiles(prev => { const next = { ...prev.certificates }; delete next[index]; return { ...prev, certificates: next }; });
+    setPreviewUrls(prev => {
+      if (prev.certificates[index]) URL.revokeObjectURL(prev.certificates[index]);
+      const next = { ...prev.certificates }; delete next[index]; return { ...prev, certificates: next };
+    });
+  };
+
   const uploadFileToServer = async (file: File) => {
     const token = await getToken();
     const formData = new FormData();
@@ -125,16 +167,24 @@ export default function KycPage() {
     setIsSubmitting(true);
     try {
       let finalIdCardUrl = kycData.idCardUrl;
-      const finalDocuments = [...kycData.documents];
 
       if (selectedFiles.idCard) {
         finalIdCardUrl = await uploadFileToServer(selectedFiles.idCard);
       }
 
+      const finalDocuments = [...kycData.documents];
       for (const [indexStr, file] of Object.entries(selectedFiles.documents)) {
         const idx = Number(indexStr);
         const url = await uploadFileToServer(file);
         finalDocuments[idx].fileUrl = url;
+      }
+
+      // Upload certificates
+      const finalCertificates = [...kycData.certificates];
+      for (const [indexStr, file] of Object.entries(selectedFiles.certificates)) {
+        const idx = Number(indexStr);
+        const url = await uploadFileToServer(file);
+        finalCertificates[idx].fileUrl = url;
       }
 
       const { kycStatus, rejectionReason, ...basePayload } = kycData;
@@ -142,6 +192,7 @@ export default function KycPage() {
         ...basePayload,
         idCardUrl: finalIdCardUrl,
         documents: finalDocuments,
+        certificates: finalCertificates,
       };
 
       const token = await getToken();
@@ -151,7 +202,8 @@ export default function KycPage() {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
-        toast.success('Nộp hồ sơ thành công! Đang chờ duyệt.');
+        toast.success('Hồ sơ đã được gửi! Đang chờ quản trị viên duyệt.');
+        setIsEditing(false);
         fetchKycData();
       } else {
         const err = await res.json().catch(() => null);
@@ -198,22 +250,46 @@ export default function KycPage() {
 
         {/* Status Banners */}
         <div className="space-y-3">
-          {kycData.kycStatus === 'PENDING' && (
+          {(kycData.kycStatus === 'PENDING' || kycData.kycStatus === 'PENDING_UPDATE') && (
             <div className="flex items-center gap-4 p-4 bg-amber-50 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-amber-900">
               <span className="text-xl">⏳</span>
               <div>
-                <p className="text-xs font-black uppercase tracking-wider">Hồ sơ đang chờ phê duyệt</p>
+                <p className="text-xs font-black uppercase tracking-wider">
+                  {kycData.kycStatus === 'PENDING' ? 'Hồ sơ đang chờ phê duyệt' : 'Đang chờ duyệt cập nhật'}
+                </p>
                 <p className="text-xs font-medium mt-0.5 opacity-80">Mọi chỉnh sửa đã bị khóa. Quản trị viên đang xem xét hồ sơ.</p>
               </div>
             </div>
           )}
           {kycData.kycStatus === 'APPROVED' && (
-            <div className="flex items-center gap-4 p-4 bg-emerald-50 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-emerald-900">
-              <span className="text-xl">!</span>
-              <div>
-                <p className="text-xs font-black uppercase tracking-wider">Xác minh thành công</p>
-                <p className="text-xs font-medium mt-0.5 opacity-80">Bạn đã có quyền tạo chương trình học và nhận thanh toán.</p>
+            <div className="flex items-center justify-between gap-4 p-4 bg-emerald-50 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-emerald-900 font-bold">
+              <div className="flex items-center gap-4">
+                <span className="text-xl">!</span>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider">Xác minh thành công</p>
+                  <p className="text-xs font-medium mt-0.5 opacity-80">Hồ sơ của bạn đã được duyệt. Bạn có quyền tạo khóa học.</p>
+                </div>
               </div>
+              {!isEditing ? (
+                <button 
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="bg-black text-white px-4 py-2 text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-colors shadow-[2px_2px_0px_0px_rgba(34,197,94,1)] active:translate-y-0.5"
+                >
+                  Sửa hồ sơ
+                </button>
+              ) : (
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    fetchKycData(); // Reset data
+                  }}
+                  className="bg-white text-black border-2 border-black px-4 py-2 text-xs font-black uppercase tracking-widest hover:bg-gray-100 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
+                >
+                  Hủy chỉnh sửa
+                </button>
+              )}
             </div>
           )}
           {kycData.kycStatus === 'REJECTED' && (
@@ -413,19 +489,60 @@ export default function KycPage() {
                 </div>
               )}
               {kycData.certificates.map((cert, index) => (
-                <div key={index} className="flex gap-3 items-center">
-                  <input required disabled={isLocked} type="text"
-                    placeholder="Ví dụ: IELTS 8.0, 5 năm kinh nghiệm ReactJS..."
-                    value={cert} onChange={(e) => handleCertificateChange(index, e.target.value)}
-                    className="flex-1 px-3 py-2.5 bg-white border-2 border-black outline-none font-bold text-sm text-gray-900 placeholder:text-gray-400"
-                  />
-                  {!isLocked && (
-                    <button type="button" onClick={() => removeCertificate(index)}
-                      className="p-2 text-red-700 hover:bg-red-50 border-2 border-black transition-colors flex-shrink-0"
-                    >
-                      <TrashIcon />
-                    </button>
-                  )}
+                <div key={index} className="flex flex-col gap-2 p-3 bg-gray-50 border-2 border-black">
+                  <div className="flex gap-3 items-center">
+                    <input required disabled={isLocked} type="text"
+                      placeholder="Ví dụ: IELTS 8.0, 5 năm kinh nghiệm ReactJS..."
+                      value={cert.title} onChange={(e) => handleCertificateChange(index, e.target.value)}
+                      className="flex-1 px-3 py-2.5 bg-white border-2 border-black outline-none font-bold text-sm text-gray-900 placeholder:text-gray-400"
+                    />
+                    {!isLocked && (
+                      <button type="button" onClick={() => removeCertificate(index)}
+                        className="p-2 text-red-700 hover:bg-red-50 border-2 border-black transition-colors flex-shrink-0"
+                      >
+                        <TrashIcon />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Certificate Proof Upload */}
+                  <div className="flex flex-col gap-2 pl-2">
+                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Tài liệu minh chứng (PDF/Ảnh)</p>
+                    {!isLocked && (
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="file"
+                          id={`certFile-${index}`}
+                          className="hidden"
+                          accept=".pdf,image/*"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) handleCertificateFileSelect(index, e.target.files[0]);
+                            e.target.value = '';
+                          }}
+                        />
+                        <label
+                          htmlFor={`certFile-${index}`}
+                          className="cursor-pointer px-3 py-1.5 bg-black text-white border-2 border-black font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 active:translate-y-[1px] transition-all"
+                        >
+                          {previewUrls.certificates[index] || cert.fileUrl ? 'ĐỔI FILE' : 'TẢI FILE MINH CHỨNG'}
+                        </label>
+                      </div>
+                    )}
+                    {previewUrls.certificates[index] ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 border border-emerald-200">ĐÃ CHỌN FILE MỚI</span>
+                        <button type="button" onClick={() => removeCertificateFile(index)} className="text-[10px] font-black text-red-600 underline">Xóa</button>
+                      </div>
+                    ) : (
+                      cert.fileUrl ? (
+                         <a href={cert.fileUrl} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-indigo-600 underline truncate max-w-full">
+                          Xem file minh chứng cũ
+                        </a>
+                      ) : (
+                        isLocked && <span className="text-[10px] font-bold text-gray-400">Không có file minh chứng</span>
+                      )
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

@@ -255,20 +255,23 @@ function CourseDetailContent() {
   // Trạng thái Lỗi hoặc Không tìm thấy
   const isNotFound = error === 'NOT_FOUND' || (!course && !loading);
 
-  if (error || !course) {
+  if (error || !course || course.status === 'ARCHIVED') {
+    const isArchived = course?.status === 'ARCHIVED';
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center">
-          <div className="w-16 h-16 bg-red-100 border-4 border-black flex items-center justify-center mx-auto mb-6 -rotate-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <span className="text-3xl font-black text-red-600">{isNotFound ? '?' : '!'}</span>
+          <div className={`w-16 h-16 ${isArchived ? 'bg-amber-100' : 'bg-red-100'} border-4 border-black flex items-center justify-center mx-auto mb-6 -rotate-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}>
+            <span className={`text-3xl font-black ${isArchived ? 'text-amber-600' : 'text-red-600'}`}>{isArchived ? '📦' : (isNotFound ? '?' : '!')}</span>
           </div>
           <h2 className="text-2xl font-black uppercase text-black mb-4">
-            {isNotFound ? 'Oops! Không tìm thấy' : 'Lỗi hệ thống'}
+            {isArchived ? 'Khóa học được lưu trữ' : (isNotFound ? 'Oops! Không tìm thấy' : 'Lỗi hệ thống')}
           </h2>
           <p className="text-sm font-bold text-gray-600 mb-8 border-l-4 border-black pl-4 py-2 bg-gray-50 text-left">
-            {isNotFound 
-              ? 'Khóa học này không tồn tại hoặc đã được gỡ xuống. Vui lòng kiểm tra lại đường dẫn.' 
-              : `Đã có lỗi xảy ra: ${error || 'Lỗi không xác định'}`}
+            {isArchived 
+              ? 'Khóa học này hiện đã được giảng viên lưu trữ và không còn nhận học viên mới. Nếu bạn đã mua khóa học, vui lòng vào Dashboard để xem chi tiết.'
+              : (isNotFound 
+                  ? 'Khóa học này không tồn tại hoặc đã được gỡ xuống. Vui lòng kiểm tra lại đường dẫn.' 
+                  : `Đã có lỗi xảy ra: ${error || 'Lỗi không xác định'}`)}
           </p>
           <button 
             onClick={() => window.location.href = '/courses'}

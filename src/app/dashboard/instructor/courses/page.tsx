@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { toast } from 'react-hot-toast';
 import { useCategories } from '@/hooks/useCategories';
-import { BookPlus, Search, Layout, PlayCircle, Trash2, Plus } from 'lucide-react';
+import { BookPlus, Search, Layout, PlayCircle, FolderArchive, FolderOpen, Plus } from 'lucide-react';
 import Image from 'next/image';
 import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/Button';
@@ -86,19 +86,21 @@ export default function InstructorCoursesPage() {
     setTriggerFetch(prev => prev + 1);
   };
 
-  const handleArchiveCourse = async (courseId: number) => {
-    if (!confirm('Bạn có chắc chắn muốn lưu trữ khóa học này không? (Khóa học sẽ bị ẩn khỏi gian hàng chung)')) return;
+  const handleArchiveCourse = async (courseId: number, isArchived: boolean) => {
+    const action = isArchived ? 'mở lưu trữ' : 'lưu trữ';
+    if (!confirm(`Bạn có chắc chắn muốn ${action} khóa học này không?`)) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${courseId}`, {
-        method: 'DELETE',
+      const endpoint = isArchived ? 'unarchive' : 'archive';
+      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${courseId}/${endpoint}`, {
+        method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
-        toast.success('Đã lưu trữ khóa học');
+        toast.success(`Đã ${action} khóa học`);
         fetchCourses();
       } else {
-        toast.error('Lỗi khi lưu trữ khóa học');
+        toast.error(`Lỗi khi ${action} khóa học`);
       }
     } catch (e) {
       toast.error('Lỗi kết nối');
@@ -303,10 +305,19 @@ export default function InstructorCoursesPage() {
                         XÂY DỰNG
                       </Button>
                       <Button 
-                        className="w-16 h-16 p-0 bg-rose-500 hover:bg-rose-600 text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                        onClick={() => handleArchiveCourse(course.id)}
+                        className={`w-16 h-16 p-0 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all ${
+                          course.status === 'ARCHIVED' 
+                          ? 'bg-emerald-400 hover:bg-emerald-500 text-black' 
+                          : 'bg-rose-500 hover:bg-yellow-400 text-black'
+                        }`}
+                        onClick={() => handleArchiveCourse(course.id, course.status === 'ARCHIVED')}
+                        title={course.status === 'ARCHIVED' ? 'Mở lưu trữ' : 'Lưu trữ'}
                       >
-                        <Trash2 className="w-6 h-6 m-auto text-black" />
+                        {course.status === 'ARCHIVED' ? (
+                          <FolderOpen className="w-8 h-8 m-auto" />
+                        ) : (
+                          <FolderArchive className="w-8 h-8 m-auto" />
+                        )}
                       </Button>
                    </div>
                 </div>
