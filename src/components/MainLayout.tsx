@@ -42,6 +42,9 @@ function IconWallet() {
 function IconReconcile() {
   return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
 }
+function IconAnalytics() {
+  return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
+}
 
 const ROLE_CONFIG: Record<string, { label: string; color: string }> = {
   ADMIN:      { label: 'Admin',      color: 'bg-red-500 text-white' },
@@ -77,6 +80,7 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/dashboard/admin/payouts',     label: 'Duyệt rút tiền', icon: <IconWallet /> },
     { href: '/dashboard/admin/refunds',     label: 'Hoàn tiền',      icon: <IconDashboard /> },
     { href: '/dashboard/admin/ledger',      label: 'Sổ cái tổng',    icon: <IconReconcile /> },
+    { href: '/dashboard/admin/analytics',   label: 'Thống kê',       icon: <IconAnalytics /> },
     { href: '/dashboard/profile', label: 'Hồ sơ',          icon: <IconProfile /> },
   ],
   ADMIN: [
@@ -88,6 +92,7 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/dashboard/admin/payouts',     label: 'Duyệt rút tiền', icon: <IconWallet /> },
     { href: '/dashboard/admin/refunds',     label: 'Hoàn tiền',      icon: <IconDashboard /> },
     { href: '/dashboard/admin/ledger',      label: 'Sổ cái tổng',    icon: <IconReconcile /> },
+    { href: '/dashboard/admin/analytics',   label: 'Thống kê doanh thu', icon: <IconAnalytics /> },
     { href: '/dashboard/profile', label: 'Hồ sơ',       icon: <IconProfile /> },
   ],
   USER: [
@@ -100,9 +105,16 @@ interface MainLayoutProps {
   role?: string;
   kycStatus?: string | null;
   allowedRoles?: string[];
+  loading?: boolean;
 }
 
-export default function MainLayout({ children, role = 'STUDENT', kycStatus = null, allowedRoles }: MainLayoutProps) {
+export default function MainLayout({ 
+  children, 
+  role = 'STUDENT', 
+  kycStatus = null, 
+  allowedRoles,
+  loading = false
+}: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
   const { user } = useUser();
@@ -224,7 +236,7 @@ export default function MainLayout({ children, role = 'STUDENT', kycStatus = nul
                    </Link>
                 </div>
               </div>
-            ) : isUnauthorized ? (
+            ) : (isUnauthorized && !loading) ? (
               <div className="flex-1 flex items-center justify-center">
                  <div className="bg-white border-8 border-black p-12 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] max-w-2xl text-center space-y-8 rotate-1">
                     <div className="w-24 h-24 mx-auto bg-rose-500 border-4 border-black flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] -rotate-6">

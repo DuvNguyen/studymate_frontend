@@ -275,9 +275,9 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                    onChange={e => setDifficulty(e.target.value)}
                                    className="w-full border-4 border-black p-3 font-black outline-none"
                                  >
-                                    <option value="EASY">DỄ (EASY)</option>
-                                    <option value="MEDIUM">VỪA (MEDIUM)</option>
-                                    <option value="HARD">KHÓ (HARD)</option>
+                                    <option value="EASY">DỄ</option>
+                                    <option value="MEDIUM">VỪA</option>
+                                    <option value="HARD">KHÓ</option>
                                  </select>
                               </div>
                               <div>

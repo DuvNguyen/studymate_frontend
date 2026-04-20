@@ -23,7 +23,7 @@ import {
   History
 } from 'lucide-react';
 
-function AttemptHistoryModal({ attempts, onClose }: { attempts: any[]; onClose: () => void }) {
+function AttemptHistoryModal({ attempts, onClose, onReview }: { attempts: any[]; onClose: () => void; onReview: (id: number) => void }) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
       <div className="bg-white border-4 border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full relative">
@@ -41,6 +41,7 @@ function AttemptHistoryModal({ attempts, onClose }: { attempts: any[]; onClose: 
                 <th className="p-4 text-left font-black uppercase text-xs">Ngày làm</th>
                 <th className="p-4 text-center font-black uppercase text-xs">Điểm số</th>
                 <th className="p-4 text-center font-black uppercase text-xs">Kết quả</th>
+                <th className="p-4 text-center font-black uppercase text-xs">Xem</th>
               </tr>
             </thead>
             <tbody className="font-bold text-black border-4 border-black">
@@ -52,6 +53,15 @@ function AttemptHistoryModal({ attempts, onClose }: { attempts: any[]; onClose: 
                     <span className={`px-3 py-1 border-2 border-black text-[10px] font-black uppercase ${att.isPassed ? 'bg-emerald-400' : 'bg-rose-500'}`}>
                       {att.isPassed ? 'ĐẠT' : 'TRƯỢT'}
                     </span>
+                  </td>
+                  <td className="p-4 text-center">
+                    <button 
+                      onClick={() => onReview(att.id)}
+                      title="Xem lại bài làm"
+                      className="group bg-yellow-400 text-black p-2 border-2 border-black hover:bg-black hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none hover:rotate-12"
+                    >
+                       <Eye size={16} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -131,6 +141,35 @@ export default function QuizPlayerPage() {
       }
     } catch (e) {
       console.error('Lỗi khi tải lịch sử:', e);
+    }
+  };
+
+  const handleHistoryReview = async (id: number) => {
+    setShowHistory(false);
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`http://localhost:3001/api/v1/quizzes/attempts/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        const detail = data.data || data;
+        
+        setAttempt(detail);
+        setAnswers(detail.answers || {});
+        setResult(detail);
+        setStatus('RESULT');
+        setShowReview(true);
+        setActiveQuestionIdx(0);
+      } else {
+        toast.error('Không thể tải chi tiết bài làm');
+      }
+    } catch (e) {
+      toast.error('Lỗi kết nối');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -295,7 +334,13 @@ export default function QuizPlayerPage() {
               </button>
            </div>
         </div>
-        {showHistory && <AttemptHistoryModal attempts={pastAttempts} onClose={() => setShowHistory(false)} />}
+        {showHistory && (
+           <AttemptHistoryModal 
+             attempts={pastAttempts} 
+             onClose={() => setShowHistory(false)} 
+             onReview={handleHistoryReview}
+           />
+         )}
       </MainLayout>
     );
   }
@@ -391,8 +436,16 @@ export default function QuizPlayerPage() {
 
               <div className="space-y-4 w-full max-w-lg">
                  <Button 
+                   onClick={() => setShowReview(true)}
+                   className="w-full bg-yellow-400 text-black hover:bg-black hover:text-white border-4 border-black h-16 text-xl font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2"
+                 >
+                    <Eye size={24} /> XEM ĐÁP ÁN CHI TIẾT
+                 </Button>
+
+                 <Button 
                    onClick={() => router.push(`/courses/${slug}/learn`)}
-                   className="w-full bg-black text-white hover:bg-yellow-400 hover:text-black border-4 border-black h-16 text-xl font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                   variant="outline"
+                   className="w-full bg-white text-black hover:bg-gray-100 border-4 border-black h-16 text-xl font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                  >
                     TRỞ LẠI KHÓA HỌC
                  </Button>
