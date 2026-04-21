@@ -12,6 +12,10 @@ interface CartContextType {
   removeFromCart: (itemId: number) => Promise<void>;
   checkout: () => Promise<{ success: boolean; order?: any; error?: string }>;
   checkoutLoading: boolean;
+  appliedCoupon: string | null;
+  discountAmount: number;
+  applyCoupon: (code: string, manualSubtotal?: number) => Promise<{ success: boolean; error?: string }>;
+  removeCoupon: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -22,6 +26,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   const fetchCart = useCallback(async () => {
     if (!isSignedIn) return;
@@ -33,7 +40,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         console.warn('[CartContext] No token available, skipping fetch');
         return;
       }
-      const res = await fetch('http://localhost:3001/api/v1/carts', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/carts`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store'
       });
@@ -61,15 +68,50 @@ export function CartProvider({ children }: { children: ReactNode }) {
       fetchCart();
     } else {
       setCart(null);
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
     }
   }, [isSignedIn, fetchCart]);
+
+  const applyCoupon = async (code: string, manualSubtotal?: number) => {
+    let subtotal: number;
+    
+    if (manualSubtotal !== undefined) {
+      subtotal = manualSubtotal;
+    } else {
+      if (!cart || cart.cart_items.length === 0) return { success: false, error: 'Giỏ hàng trống' };
+      subtotal = cart.cart_items.reduce((acc: number, item: any) => acc + Number(item.course?.price || 0), 0);
+    }
+    
+    if (isNaN(subtotal)) return { success: false, error: 'Không thể xác định số tiền đơn hàng' };
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/validate?code=${code}&subtotal=${subtotal}`);
+      const result = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(result.message || 'Mã giảm giá không hợp lệ');
+      }
+      
+      setAppliedCoupon(code);
+      setDiscountAmount(result.data?.discountAmount || result.discountAmount || 0);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+  };
 
   const addToCart = async (courseId: number) => {
     try {
       const token = await getToken();
       if (!token) throw new Error('Vui lòng đăng nhập để thêm vào giỏ hàng');
 
-      const res = await fetch('http://localhost:3001/api/v1/carts', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/carts`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -98,9 +140,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const token = await getToken();
       if (!token) throw new Error('Vui lòng đăng nhập để thanh toán');
 
-      const res = await fetch('http://localhost:3001/api/v1/orders/checkout', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/checkout`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ couponCode: appliedCoupon })
       });
 
       const result = await res.json();
@@ -111,6 +157,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       // Cart is clear in backend, fetch empty cart
       await fetchCart();
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
       return { success: true, order: result.data };
     } catch (err: any) {
       console.error('[CartContext] Error in checkout:', err.message);
@@ -125,7 +173,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const token = await getToken();
       if (!token) return;
 
-      const res = await fetch(`http://localhost:3001/api/v1/carts/${itemId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/carts/${itemId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -142,7 +190,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <CartContext.Provider value={{ cart, loading, error, fetchCart, addToCart, removeFromCart, checkout, checkoutLoading }}>
+    <CartContext.Provider value={{ 
+      cart, loading, error, fetchCart, addToCart, removeFromCart, checkout, checkoutLoading,
+      appliedCoupon, discountAmount, applyCoupon, removeCoupon 
+    }}>
       {children}
     </CartContext.Provider>
   );

@@ -60,7 +60,7 @@ export default function InstructorPortfolioPage() {
             </button>
 
             <div className="md:flex gap-10 items-end">
-              <div className="relative w-48 h-48 md:w-64 md:h-64 border-8 border-black bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] mb-8 md:mb-0">
+              <div className="relative w-48 h-48 md:w-64 md:h-64 border-8 border-black bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] mb-8 md:mb-0 flex-shrink-0">
                 {instructor.avatarUrl ? (
                   <Image 
                     src={instructor.avatarUrl} 
@@ -107,7 +107,10 @@ export default function InstructorPortfolioPage() {
                   <p>Hệ thống StudyMate</p>
                   <p>Hỗ trợ học viên 24/7</p>
                 </div>
-                 <Button className="w-full mt-6 bg-black text-white hover:bg-yellow-400">
+                 <Button 
+                   className="w-full mt-6 bg-black text-white hover:bg-yellow-400"
+                   onClick={() => window.open('https://zalo.me/0987834129', '_blank')}
+                 >
                    GỬI TIN NHẮN
                  </Button>
               </div>

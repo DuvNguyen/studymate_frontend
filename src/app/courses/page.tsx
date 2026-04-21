@@ -1,7 +1,8 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import useDebounce from '@/hooks/useDebounce';
 import { useCourses, CourseFilters } from '@/hooks/useCourses';
 import { useCategories } from '@/hooks/useCategories';
 import CoursesGrid from '@/components/CoursesGrid';
@@ -19,12 +20,32 @@ const LEVEL_OPTIONS = [
 function CoursesPageContent() {
   const searchParams = useSearchParams();
   const categorySlug = searchParams.get('category') ?? undefined;
+  const urlSearch = searchParams.get('search') ?? '';
 
   const { categories } = useCategories();
   const [level, setLevel] = useState('');
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState(urlSearch);
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const debouncedSearchInput = useDebounce(searchInput, 500);
   const [page, setPage] = useState(1);
+
+  // Update search when debounced input changes
+  useEffect(() => {
+    // Only update if it's different to avoid unnecessary resets
+    if (debouncedSearchInput !== search) {
+      setSearch(debouncedSearchInput);
+      setPage(1);
+    }
+  }, [debouncedSearchInput, search]);
+
+  // Sync state with URL if it changes (e.g. from Navbar)
+  useEffect(() => {
+    const currentUrlSearch = searchParams.get('search') ?? '';
+    if (currentUrlSearch !== searchInput) {
+      setSearchInput(currentUrlSearch);
+      setSearch(currentUrlSearch);
+    }
+  }, [searchParams]);
 
   const filters: CourseFilters = {
     categorySlug,
@@ -83,6 +104,19 @@ function CoursesPageContent() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 mt-6">
+        {search && (
+          <div className="mb-2">
+            <h2 className="text-xl font-black text-black uppercase">
+              Kết quả cho: <span className="text-amber-500">&quot;{search}&quot;</span>
+            </h2>
+            <p className="text-xs font-bold text-gray-500 uppercase">
+              Tìm thấy {meta?.total || 0} kết quả phù hợp
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">

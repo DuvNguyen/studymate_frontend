@@ -69,6 +69,26 @@ export default function LearnPage() {
   const [qaSearch, setQaSearch] = useState('');
   const [newQuestion, setNewQuestion] = useState('');
   const [isAsking, setIsAsking] = useState(false);
+  
+  const granularProgress = useMemo(() => {
+    if (!allLessons || allLessons.length === 0) return 0;
+    
+    let totalValue = 0;
+    allLessons.forEach(lesson => {
+      const prog = progressMap[lesson.id];
+      if (prog?.completed) {
+        totalValue += 1;
+      } else if (prog?.watched_duration && lesson.durationSecs) {
+        // Add partial completion (capped at 0.99 to avoid jumping to 100% without 'completed' flag)
+        totalValue += Math.min(prog.watched_duration / lesson.durationSecs, 0.99);
+      }
+    });
+    
+    // Fallback to backend enrollment percent if frontend calculation is lower 
+    // (ensures we don't show less than what the server already confirmed)
+    const calculated = Math.floor((totalValue / allLessons.length) * 100);
+    return Math.max(calculated, enrollment?.progress_percent || 0);
+  }, [allLessons, progressMap, enrollment?.progress_percent]);
 
   // Set initial active lesson
   useEffect(() => {
@@ -225,7 +245,7 @@ export default function LearnPage() {
                   <div className="flex items-center gap-4">
                     <span className="text-[10px] font-black px-2 py-1 bg-black text-white uppercase tracking-widest">MISSION IN PROGRESS</span>
                     <span className="text-[10px] font-black px-2 py-1 bg-emerald-400 border-2 border-black text-black uppercase tracking-widest">
-                      {enrollment?.progress_percent}% COMPLETED
+                      {granularProgress}% COMPLETED
                     </span>
                   </div>
                 </div>
@@ -235,10 +255,10 @@ export default function LearnPage() {
               <div className="flex items-center gap-4">
                 <div className="w-48 h-8 bg-gray-100 border-4 border-black relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                   <div 
-                    className="h-full bg-emerald-400 border-right-4 border-black transition-all duration-1000" 
-                    style={{ width: `${enrollment?.progress_percent}%` }}
+                    className="h-full bg-emerald-400 border-right-4 border-black transition-all duration-500" 
+                    style={{ width: `${granularProgress}%` }}
                   />
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-black uppercase tracking-[0.2em] drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">PROGRESS GAUGE</span>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-black uppercase tracking-[0.2em] drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">MISSION PROGRESS: {granularProgress}%</span>
                 </div>
               </div>
             </div>
@@ -572,132 +592,145 @@ function DiscussionItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(discussion.content);
 
+  // Handle deleted state gracefully as requested
+  if (discussion.is_deleted) {
+    return (
+      <div className={`mt-2 mb-4 italic text-[11px] font-black text-black/40 border-l-4 border-black/10 pl-6 py-2 animate-in fade-in ${level > 0 ? 'ml-12' : ''}`}>
+        Bình luận đã bị xóa
+      </div>
+    );
+  }
+
   return (
-    <div className={`space-y-6 animate-in slide-in-from-left-4 duration-300 ${level > 0 ? 'ml-12 border-l-4 border-black pl-8 mt-6' : ''}`}>
-      <div className={`p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 ${discussion.is_best_answer ? 'bg-emerald-50' : 'bg-white'}`}>
-        <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-black border-dotted">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-black border-4 border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+    <div className={`space-y-4 animate-in slide-in-from-left-2 duration-300 ${level > 0 ? 'ml-12 border-l-4 border-black/10 pl-6 mt-4' : ''}`}>
+      <div className="flex gap-4 group">
+        {/* Avatar Area */}
+        <div className="flex-shrink-0">
+           <div className="w-10 h-10 bg-black border-2 border-black overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {discussion.user.avatarUrl ? (
                 <img src={discussion.user.avatarUrl} alt={discussion.user.fullName} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-yellow-400 flex items-center justify-center font-black italic">USER</div>
+                <div className="w-full h-full bg-yellow-400 flex items-center justify-center font-black text-[10px] italic">USER</div>
+              )}
+              {discussion.is_best_answer && (
+                <div className="absolute -bottom-1 -right-1 bg-emerald-400 border border-black p-0.5 rounded-full">
+                  <Award size={10} />
+                </div>
+              )}
+           </div>
+        </div>
+
+        {/* Content Area - Facebook Style Bubble */}
+        <div className="flex-1 min-w-0">
+          <div className={`relative inline-block max-w-full md:max-w-[90%] px-5 py-3 rounded-2xl transition-all ${discussion.is_best_answer ? 'bg-emerald-100' : 'bg-gray-100'}`}>
+            <div className="flex items-center gap-2 mb-1 pr-12">
+              <span className="text-xs font-black text-black uppercase tracking-tight truncate">
+                {discussion.user.fullName || 'ANONYMOUS'}
+              </span>
+              <span className="text-[8px] font-black px-1.5 py-0.5 bg-black text-white rounded-sm uppercase shrink-0">
+                {discussion.user.role?.roleName || 'STUDENT'}
+              </span>
+              {discussion.is_edited && (
+                <span className="text-[8px] font-black text-emerald-600 uppercase italic shrink-0"> (ĐÃ SỬA)</span>
               )}
             </div>
-            <div>
-              <p className="text-lg font-black text-black leading-none mb-1 uppercase tracking-tighter">{discussion.user.fullName || 'ANONYMOUS'}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black px-1 bg-black text-white border border-black uppercase">{discussion.user.role?.roleName || 'STUDENT'}</span>
-                <p className="text-[10px] font-black text-black uppercase tracking-widest">{new Date(discussion.created_at).toLocaleString()}</p>
-                {discussion.is_edited && (
-                  <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter italic"> (ĐÃ CHỈNH SỬA)</span>
-                )}
-              </div>
+
+            <div className="text-sm font-bold text-black leading-relaxed whitespace-pre-line">
+              {isEditing ? (
+                <div className="space-y-3 mt-2 min-w-[200px] md:min-w-[400px]">
+                  <textarea 
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full h-24 p-3 border-2 border-black font-black text-xs text-black focus:outline-none focus:bg-gray-50 resize-none rounded-lg"
+                  />
+                  <div className="flex justify-end gap-3">
+                    <button onClick={() => setIsEditing(false)} className="text-[10px] font-black uppercase underline">Hủy</button>
+                    <button 
+                      onClick={async () => {
+                        await onUpdate(discussion.id, editContent);
+                        setIsEditing(false);
+                      }}
+                      className="text-[10px] font-black uppercase text-emerald-600 underline"
+                    >
+                      Lưu thay đổi
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                discussion.content
+              )}
+            </div>
+
+            {/* Quick Actions for Owner/Admin */}
+            <div className="absolute top-2 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 rounded-lg p-1.5 min-h-[30px] items-center">
+               {!discussion.is_deleted && (currentUser?.id === discussion.user.id || ['ADMIN', 'STAFF', 'INSTRUCTOR'].includes(currentUser?.role?.roleName || '')) && (
+                  <>
+                    {currentUser?.id === discussion.user.id && !isEditing && (
+                      <button onClick={() => { setIsEditing(true); setEditContent(discussion.content); }} className="hover:text-amber-600 transition-colors"><Pencil size={12} /></button>
+                    )}
+                    <button onClick={() => onDelete(discussion.id)} className="hover:text-red-600 transition-colors"><Trash2 size={12} /></button>
+                  </>
+               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {!discussion.is_deleted && currentUser?.id === discussion.user.id && (
+
+          {/* Bottom Actions Area */}
+          {!discussion.is_deleted && (
+            <div className="flex items-center gap-4 mt-2 ml-2">
+              <span className="text-[9px] font-black text-black/40 uppercase tracking-widest">
+                {new Date(discussion.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              
               <button 
-                onClick={() => {
-                  setIsEditing(true);
-                  setEditContent(discussion.content);
-                }}
-                className="w-10 h-10 border-2 border-black flex items-center justify-center hover:bg-yellow-400 text-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
+                onClick={() => setShowReplyForm(!showReplyForm)}
+                className={`text-[10px] font-black uppercase tracking-tight hover:underline transition-colors ${showReplyForm ? 'text-black' : 'text-black/60'}`}
               >
-                <Pencil className="w-4 h-4" />
+                Trả lời
               </button>
-            )}
-            {!discussion.is_deleted && (currentUser?.id === discussion.user.id || ['ADMIN', 'STAFF', 'INSTRUCTOR'].includes(currentUser?.role?.roleName || '')) && (
+              
               <button 
-                onClick={() => onDelete(discussion.id)}
-                className="w-10 h-10 border-2 border-black flex items-center justify-center hover:bg-red-500 hover:text-white text-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
+                onClick={() => onMarkBest(discussion.id)}
+                className={`text-[10px] font-black uppercase tracking-tight hover:underline transition-colors ${discussion.is_best_answer ? 'text-emerald-600' : 'text-black/60'}`}
               >
-                <Trash2 className="w-4 h-4" />
+                {discussion.is_best_answer ? 'Đã hữu ích' : 'Hữu ích?'}
               </button>
-            )}
-            {discussion.is_best_answer && !discussion.is_deleted && (
-              <div className="bg-emerald-400 border-4 border-black text-black text-xs font-black px-4 py-2 flex items-center gap-2 uppercase tracking-tighter shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                <Award className="w-4 h-4" /> CÂU TRẢ LỜI ĐÚNG
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className={`text-md font-bold text-black leading-relaxed mb-8 whitespace-pre-line p-6 border-2 border-black ${discussion.is_deleted ? 'bg-gray-100 italic opacity-60' : 'bg-gray-50'}`}>
-          {isEditing ? (
-            <div className="space-y-4">
+            </div>
+          )}
+          
+          {/* Inline Reply Form */}
+          {showReplyForm && (
+            <div className="mt-4 border-l-4 border-black pl-4 py-2 animate-in slide-in-from-top-2">
               <textarea 
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="w-full h-32 p-4 border-2 border-black font-black text-sm text-black focus:outline-none focus:bg-white resize-none"
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                placeholder="Nhập phản hồi..."
+                className="w-full h-24 p-4 border-2 border-black font-bold text-xs text-black focus:outline-none focus:bg-yellow-50 mb-3 resize-none rounded-xl"
               />
               <div className="flex justify-end gap-4">
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>HỦY</Button>
+                <button onClick={() => setShowReplyForm(false)} className="text-[10px] font-black uppercase underline">Hủy</button>
                 <Button 
                   size="sm"
                   onClick={async () => {
-                    await onUpdate(discussion.id, editContent);
-                    setIsEditing(false);
+                    if (!replyContent.trim()) return;
+                    await onReply(replyContent);
+                    setReplyContent('');
+                    setShowReplyForm(false);
                   }}
+                  disabled={!replyContent.trim()}
+                  className="!h-9 !px-6 text-[10px]"
                 >
-                  LƯU THAY ĐỔI
+                  GỬI PHẢN HỒI
                 </Button>
               </div>
             </div>
-          ) : (
-            discussion.is_deleted ? discussion.content.replace(/_/g, '') : discussion.content
           )}
         </div>
-        
-        <div className="flex items-center gap-6">
-          {!discussion.is_deleted && (
-            <>
-              <button 
-                onClick={() => setShowReplyForm(!showReplyForm)}
-                className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2 bg-black text-white px-4 py-2 hover:bg-yellow-400 hover:text-black transition-colors"
-              >
-                <MessageSquare className="w-4 h-4" /> TRẢ LỜI
-              </button>
-              <button 
-                onClick={() => onMarkBest(discussion.id)}
-                className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 px-4 py-2 border-2 border-black transition-colors ${discussion.is_best_answer ? 'bg-emerald-400 text-black shadow-[4px_4px_0px_0px_rgba(34,197,94,1)]' : 'bg-white text-black hover:bg-emerald-50'}`}
-              >
-                <Award className="w-4 h-4 text-black" /> {discussion.is_best_answer ? 'HỦY ĐÁNH DẤU' : 'HỮU ÍCH'}
-              </button>
-            </>
-          )}
-        </div>
-
-        {showReplyForm && (
-          <div className="mt-8 pt-8 border-t-4 border-black border-double animate-in fade-in slide-in-from-top-4">
-            <textarea 
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="NHẬP PHẢN HỒI INTELLIGENCE CỦA BẠN..."
-              className="w-full h-32 p-4 border-4 border-black font-black text-sm text-black focus:outline-none focus:bg-yellow-50 mb-4 resize-none placeholder:text-black/10"
-            />
-            <div className="flex justify-end gap-4">
-              <Button variant="outline" size="sm" onClick={() => setShowReplyForm(false)}>HỦY</Button>
-              <Button 
-                size="sm"
-                onClick={async () => {
-                  if (!replyContent.trim()) return;
-                  await onReply(replyContent);
-                  setReplyContent('');
-                  setShowReplyForm(false);
-                }}
-                disabled={!replyContent.trim()}
-              >
-                GỬI PHẢN HỒI
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
+      {/* Children Recursion */}
       {discussion.children && discussion.children.length > 0 && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {discussion.children.map((child) => (
             <DiscussionItem 
               key={child.id} 

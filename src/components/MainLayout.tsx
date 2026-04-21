@@ -121,7 +121,7 @@ export default function MainLayout({
   const pathname = usePathname();
   const { user } = useUser();
 
-  const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== null && kycStatus !== 'APPROVED';
+  const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== null && kycStatus !== 'APPROVED' && kycStatus !== 'PENDING_UPDATE';
   const isPendingUserRole = role === 'USER';
   const isKycRoute = pathname.includes('/kyc');
 

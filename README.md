@@ -12,6 +12,7 @@ StudyMate là giao diện người dùng hiện đại của hệ thống quản
     - Dashboard quản lý riêng biệt cho từng loại người dùng.
     - Quy trình nộp tài liệu KYC cho Giảng viên trực quan (Preview ảnh, xóa linh hoạt).
     - Tích hợp Clerk để quản lý đăng nhập/đăng ký một cách bảo mật.
+    - **Tìm kiếm tức thì (Instant Search)**: Gợi ý kết quả ngay khi gõ, đồng bộ hóa trạng thái với URL parameters.
 
 ## 🚀 Công nghệ sử dụng
 

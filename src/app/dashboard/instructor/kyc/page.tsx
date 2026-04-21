@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
 import MainLayout from '@/components/MainLayout';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export default function KycPage() {
   const { getToken } = useAuth();
+  const { user: appUser, loading: appLoading } = useCurrentUser();
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,16 +21,20 @@ export default function KycPage() {
     bankName: '',
     kycStatus: '',
     rejectionReason: '',
-    certificates: [] as { title: string; fileUrl?: string }[],
-    documents: [] as { documentType: string; title: string; fileUrl: string }[],
+    certificates: [] as { id?: number; title: string; fileUrl?: string }[],
+    documents: [] as { id?: number; documentType: string; title: string; fileUrl: string }[],
   });
 
   const [selectedFiles, setSelectedFiles] = useState<{ idCard?: File; documents: { [key: number]: File }; certificates: { [key: number]: File } }>({ documents: {}, certificates: {} });
   const [previewUrls, setPreviewUrls] = useState<{ idCard?: string; documents: { [key: number]: string }; certificates: { [key: number]: string } }>({ documents: {}, certificates: {} });
 
-  // Cho phép chỉnh sửa nếu trạng thái là APPROVED (để bổ sung bằng cấp)
-  // Chỉ khóa khi đang chờ duyệt (PENDING)
-  const isLocked = kycData.kycStatus === 'PENDING';
+  // Khóa form nếu:
+  // 1. Đang chờ duyệt (PENDING/PENDING_UPDATE) -> Luôn khóa
+  // 2. Đã duyệt (APPROVED) nhưng chưa bấm nút "Sửa hồ sơ" (isEditing = false)
+  const isLocked = 
+    kycData.kycStatus === 'PENDING' || 
+    kycData.kycStatus === 'PENDING_UPDATE' ||
+    (kycData.kycStatus === 'APPROVED' && !isEditing);
 
   useEffect(() => { fetchKycData(); }, []);
 
@@ -152,12 +158,15 @@ export default function KycPage() {
     const token = await getToken();
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch('http://localhost:3001/api/v1/uploads/image', {
+    const res = await fetch('http://localhost:3001/api/v1/uploads', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData,
     });
-    if (!res.ok) throw new Error('Có lỗi xảy ra khi tải ảnh lên.');
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.message || 'Có lỗi xảy ra khi tải tệp lên.');
+    }
     const { data } = await res.json();
     return data.url;
   };
@@ -189,10 +198,21 @@ export default function KycPage() {
 
       const { kycStatus, rejectionReason, ...basePayload } = kycData;
       const payload = {
-        ...basePayload,
+        bankAccountName: kycData.bankAccountName,
+        bankAccountNumber: kycData.bankAccountNumber,
+        bankName: kycData.bankName,
         idCardUrl: finalIdCardUrl,
-        documents: finalDocuments,
-        certificates: finalCertificates,
+        documents: finalDocuments.map(d => ({
+          id: d.id || undefined,
+          documentType: d.documentType,
+          title: d.title,
+          fileUrl: d.fileUrl
+        })),
+        certificates: finalCertificates.map(c => ({
+          id: c.id || undefined,
+          title: c.title,
+          fileUrl: c.fileUrl
+        })),
       };
 
       const token = await getToken();
@@ -207,8 +227,9 @@ export default function KycPage() {
         fetchKycData();
       } else {
         const err = await res.json().catch(() => null);
-        const msg = err?.message ? (Array.isArray(err.message) ? err.message.join(', ') : err.message) : 'Nộp hồ sơ thất bại.';
-        toast.error(msg);
+        console.error('KYC Submit Error:', err);
+        const msg = err?.message ? (Array.isArray(err.message) ? err.message.join('; ') : err.message) : 'Nộp hồ sơ thất bại.';
+        toast.error(`Lỗi: ${msg}`);
       }
     } catch (e: any) {
       toast.error(e.message || 'Có lỗi xảy ra.');
@@ -223,7 +244,7 @@ export default function KycPage() {
     </svg>
   );
 
-  if (isLoading) return (
+  if (isLoading || appLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin rounded-none" />
@@ -233,7 +254,11 @@ export default function KycPage() {
   );
 
   return (
-    <MainLayout role="INSTRUCTOR" kycStatus={kycData.kycStatus || "UNSUBMITTED"} allowedRoles={['USER', 'INSTRUCTOR', 'ADMIN', 'STAFF']}>
+    <MainLayout 
+      role={appUser?.role} 
+      kycStatus={kycData.kycStatus || "UNSUBMITTED"} 
+      allowedRoles={['USER', 'INSTRUCTOR']}
+    >
       <div className="max-w-4xl mx-auto space-y-6 py-4">
 
         {/* Header */}
@@ -319,7 +344,7 @@ export default function KycPage() {
                 {!isLocked && (
                   <div className="flex items-center gap-2">
                     <input
-                      type="file" accept="image/*" id="idCardFile" className="hidden"
+                      type="file" accept=".pdf,image/*" id="idCardFile" className="hidden"
                       onChange={(e) => {
                         if (e.target.files?.[0]) handleIdCardSelect(e.target.files[0]);
                         e.target.value = '';
@@ -423,7 +448,7 @@ export default function KycPage() {
                     {!isLocked && (
                       <div className="flex items-center gap-2">
                         <input
-                          type="file" accept="image/*" id={`docFile-${index}`} className="hidden"
+                          type="file" accept=".pdf,image/*" id={`docFile-${index}`} className="hidden"
                           onChange={(e) => {
                             if (e.target.files?.[0]) handleDocumentFileSelect(index, e.target.files[0]);
                             e.target.value = '';

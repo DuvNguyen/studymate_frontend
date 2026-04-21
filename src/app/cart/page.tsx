@@ -8,22 +8,40 @@ import { Button } from '@/components/Button';
 import { useRouter } from 'next/navigation';
 import PublicLayout from '@/components/PublicLayout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 export default function CartPage() {
   const { user, loading: userLoading } = useCurrentUser();
-  const { cart, loading, removeFromCart, checkout, checkoutLoading } = useCart();
+  const { 
+    cart, loading, removeFromCart, checkout, checkoutLoading,
+    appliedCoupon, discountAmount, applyCoupon, removeCoupon
+  } = useCart();
   const router = useRouter();
+  const [couponInput, setCouponInput] = useState('');
 
   const handleCheckout = async () => {
     const result = await checkout();
     if (result.success && result.order) {
       router.push(`/checkout/pending?orderId=${result.order.id}`); 
     } else {
-      alert(result.error);
+      toast.error(result.error || 'Lỗi thanh toán');
     }
   };
 
-  const totalAmount = cart?.cart_items?.reduce((sum: number, item: any) => sum + Number(item.final_price), 0) || 0;
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    const result = await applyCoupon(couponInput.trim());
+    if (result.success) {
+      toast.success('Áp dụng mã giảm giá thành công!');
+      setCouponInput('');
+    } else {
+      toast.error(result.error || 'Mã giảm giá không hợp lệ');
+    }
+  };
+
+  const subtotal = cart?.cart_items?.reduce((sum: number, item: any) => sum + Number(item.course.price), 0) || 0;
+  const finalTotal = subtotal - discountAmount;
   const itemCount = cart?.cart_items?.length || 0;
 
   // Nếu đang tải user thì hiện loading nhẹ
@@ -103,7 +121,9 @@ export default function CartPage() {
                         <h3 className="font-black text-lg text-black uppercase leading-tight line-clamp-2 mb-1">
                           {item.course?.title || 'Khóa học'}
                         </h3>
-                        <p className="text-xs font-black text-gray-800">GIẢNG VIÊN: ĐANG CẬP NHẬT</p>
+                        <p className="text-xs font-black text-gray-800 uppercase italic">
+                          Giảng viên: {item.course?.instructor_name || 'STUDYMATE'}
+                        </p>
                       </div>
 
                       <div className="flex items-center gap-4 mt-4 sm:mt-0">
@@ -117,14 +137,9 @@ export default function CartPage() {
                     </div>
 
                     <div className="text-right sm:w-32 flex-shrink-0 flex flex-col justify-start">
-                      <div className="text-xl font-black text-amber-500">
-                        {Number(item.final_price).toLocaleString('vi-VN')} đ
+                      <div className="text-xl font-black text-black tabular-nums">
+                        {Number(item.course.price).toLocaleString('vi-VN')} đ
                       </div>
-                      {item.discount_amount > 0 && (
-                        <div className="text-sm font-black text-black line-through">
-                          {Number(item.original_price).toLocaleString('vi-VN')} đ
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -134,36 +149,77 @@ export default function CartPage() {
             {/* Right side: Checkout Panel */}
             <div className="w-full lg:w-80 flex-shrink-0">
               <div className="border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white sticky top-40">
-                <p className="text-lg font-black text-black mb-2 uppercase">Tổng tiền:</p>
-                <div className="text-4xl font-black text-black mb-6 break-words">
-                  {totalAmount.toLocaleString('vi-VN')} đ
+                <p className="text-xs font-black text-black/50 mb-2 uppercase tracking-widest">Chi tiết bảng tính:</p>
+                
+                <div className="space-y-3 mb-6 border-b-2 border-black pb-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-bold text-black/60 uppercase text-[10px]">Tạm tính:</span>
+                    <span className="font-black text-black tabular-nums">{subtotal.toLocaleString('vi-VN')} đ</span>
+                  </div>
+                  
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-bold text-emerald-600 uppercase text-[10px]">Mã giảm giá:</span>
+                      <span className="font-black text-emerald-600 tabular-nums">-{discountAmount.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-lg font-black text-black mb-1 uppercase">Tổng thanh toán:</p>
+                <div className="text-4xl font-black text-black mb-6 break-words tabular-nums">
+                  {finalTotal.toLocaleString('vi-VN')} đ
                 </div>
 
                 <Button 
                   size="lg" 
-                  className="w-full mb-4 py-4 text-lg bg-amber-400 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full mb-4 py-4 text-lg bg-black text-white hover:bg-yellow-400 hover:text-black border-2 border-black disabled:opacity-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none translate-x-[-2px] translate-y-[-2px] active:translate-x-0 active:translate-y-0 transition-all font-black uppercase"
                   onClick={handleCheckout}
                   disabled={checkoutLoading}
                 >
-                  {checkoutLoading ? 'ĐANG XỬ LÝ...' : 'THANH TOÁN NGAY'}
+                  {checkoutLoading ? 'ĐANG XỬ LÝ...' : 'THANH TOÁN NGAY →'}
                 </Button>
 
-                <p className="text-xs font-bold text-center text-black">
-                  Bạn sẽ chưa bị trừ tiền ở bước này
+                <p className="text-[10px] font-black text-center text-black/60 uppercase">
+                  Số tiền sẽ được thanh toán qua VNPay
                 </p>
 
                 <div className="mt-8 border-t-2 border-black pt-6">
-                  <p className="text-sm font-black text-black mb-2 uppercase">Mã giảm giá</p>
-                  <div className="flex">
-                    <input 
-                      type="text" 
-                      placeholder="NHẬP MÃ..." 
-                      className="flex-1 border-2 border-black border-r-0 px-3 py-2 text-sm font-black outline-none w-full min-w-0"
-                    />
-                    <button className="bg-black text-white px-4 py-2 font-black text-sm hover:bg-amber-400 hover:text-black transition-colors focus:ring-0">
-                      ÁP DỤNG
-                    </button>
-                  </div>
+                  <p className="text-xs font-black text-black mb-2 uppercase tracking-widest">Mã giảm giá</p>
+                  
+                  {appliedCoupon ? (
+                    <div className="bg-emerald-50 border-2 border-emerald-600 p-3 flex justify-between items-center group relative overflow-hidden">
+                       <div className="relative z-10">
+                          <p className="text-[10px] font-black text-emerald-600 uppercase">ĐÃ ÁP DỤNG</p>
+                          <p className="text-sm font-black text-emerald-700">{appliedCoupon}</p>
+                       </div>
+                       <button 
+                         onClick={removeCoupon}
+                         className="relative z-10 text-xs font-black text-rose-500 hover:text-rose-700 underline uppercase"
+                       >
+                         Gỡ bỏ
+                       </button>
+                       <div className="absolute top-0 right-0 p-1 opacity-10 group-hover:opacity-20 transition-opacity translate-x-2 -translate-y-2">
+                          <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                       </div>
+                    </div>
+                  ) : (
+                    <div className="flex">
+                      <input 
+                        type="text" 
+                        placeholder="NHẬP MÃ..." 
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                        className="flex-1 border-2 border-black border-r-0 px-3 py-2 text-sm font-black outline-none w-full min-w-0 placeholder:opacity-30"
+                      />
+                      <button 
+                        onClick={handleApplyCoupon}
+                        className="bg-black text-white px-4 py-2 font-black text-sm hover:bg-yellow-400 hover:text-black transition-colors focus:ring-0 uppercase whitespace-nowrap"
+                      >
+                        Áp dụng
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

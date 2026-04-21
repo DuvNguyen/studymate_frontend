@@ -16,7 +16,6 @@ import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 import Link from 'next/link';
 import LoadingScreen from '@/components/LoadingScreen';
 import ReviewSection from '@/components/ReviewSection';
-import { useCoupons } from '@/hooks/useCoupons';
 
 function VideoPreviewModal({ 
   isOpen, 
@@ -75,16 +74,14 @@ function CourseDetailContent() {
     setIsModalOpen(true);
   };
 
-  const { addToCart } = useCart();
+  const { addToCart, appliedCoupon, discountAmount, applyCoupon, removeCoupon } = useCart();
   const router = useRouter();
   const { user, loading: userLoading } = useCurrentUser();
   const { signOut } = useClerk();
   const { enrollments, loading: enrollLoading } = useEnrolledCourses();
 
-  // Coupon state
-  const { validateCoupon, validating } = useCoupons();
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  // Local input state for the coupon code
+  const [couponInput, setCouponInput] = useState('');
 
   const isEnrolled = useMemo(() => {
     if (!course || !enrollments) return false;
@@ -218,13 +215,24 @@ function CourseDetailContent() {
     }
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim() || !course) return;
+    const result = await applyCoupon(couponInput.trim(), Number(course.price));
+    if (result.success) {
+      toast.success('Áp dụng mã giảm giá thành công!');
+      setCouponInput('');
+    } else {
+      toast.error(result.error || 'Mã giảm giá không hợp lệ');
+    }
+  };
+
   const handleDirectEnroll = async () => {
     if (!course || !user) return;
     
     setIsEnrolling(true);
     try {
       const token = await (window as any).Clerk?.session?.getToken();
-      const res = await fetch('http://localhost:3001/api/v1/enrollments/direct', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/direct`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -513,8 +521,21 @@ function CourseDetailContent() {
 
                 <div className="p-6">
                   {/* Pricing and Cart */}
-                  <div className="text-3xl font-black mb-4">
-                    ₫{course.price.toLocaleString('vi-VN')}
+                  <div className="mb-4">
+                    {discountAmount > 0 ? (
+                      <div className="flex flex-col">
+                        <div className="text-sm font-bold text-gray-500 line-through">
+                          ₫{course.price.toLocaleString('vi-VN')}
+                        </div>
+                        <div className="text-3xl font-black text-emerald-600 tabular-nums">
+                          ₫{(Number(course.price) - discountAmount).toLocaleString('vi-VN')}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-3xl font-black tabular-nums">
+                        ₫{course.price.toLocaleString('vi-VN')}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-4 mb-4">
@@ -574,19 +595,19 @@ function CourseDetailContent() {
 
                   <p className="text-xs text-center text-gray-500 font-bold mb-6">30-Day Money-Back Guarantee<br/>Full Lifetime Access</p>
 
-                  {/* Apply Coupon — Real API */}
+                  {/* Apply Coupon — Integrated with CartContext */}
                   <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300">
                     <p className="text-xs font-black uppercase tracking-widest mb-2">Mã giảm giá</p>
-                    {appliedDiscount > 0 ? (
+                    {appliedCoupon ? (
                       <div className="flex items-center justify-between bg-emerald-50 border-2 border-emerald-500 px-3 py-2">
                         <div>
-                          <p className="text-xs font-black text-emerald-700">{couponCode.toUpperCase()} ✓</p>
+                          <p className="text-xs font-black text-emerald-700">{appliedCoupon.toUpperCase()} ✓</p>
                           <p className="text-[10px] font-bold text-emerald-600">
-                            Giảm ₫{appliedDiscount.toLocaleString('vi-VN')}
+                            Đã áp dụng giảm giá
                           </p>
                         </div>
                         <button
-                          onClick={() => { setAppliedDiscount(0); setCouponCode(''); }}
+                          onClick={removeCoupon}
                           className="text-sm font-black text-red-500 hover:text-red-700"
                         >✕</button>
                       </div>
@@ -594,26 +615,17 @@ function CourseDetailContent() {
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          value={couponCode}
-                          onChange={(e) => setCouponCode(e.target.value)}
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
                           placeholder="Nhập mã giảm giá"
                           className="flex-1 border-2 border-black px-3 py-1.5 text-sm font-bold outline-none focus:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-shadow"
                         />
                         <button
-                          disabled={validating || !couponCode.trim()}
-                          onClick={async () => {
-                            if (!course) return;
-                            try {
-                              const result = await validateCoupon(couponCode, Number(course.price));
-                              setAppliedDiscount(result.discountAmount);
-                              toast.success(`Áp dụng thành công! Giảm ₫${result.discountAmount.toLocaleString('vi-VN')}`);
-                            } catch (e: any) {
-                              toast.error(e.message);
-                            }
-                          }}
-                          className="bg-black text-white font-black text-xs px-3 py-1.5 border-2 border-black hover:bg-amber-400 hover:text-black disabled:opacity-50 transition-colors"
+                          onClick={handleApplyCoupon}
+                          className="bg-black text-white font-black text-xs px-3 py-1.5 border-2 border-black hover:bg-amber-400 hover:text-black transition-colors uppercase whitespace-nowrap"
                         >
-                          {validating ? '...' : 'Áp dụng'}
+                          Áp dụng
                         </button>
                       </div>
                     )}

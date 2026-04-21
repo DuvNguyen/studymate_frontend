@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import MainLayout from '@/components/MainLayout';
 import { Button } from '@/components/Button';
@@ -17,6 +17,8 @@ export default function PurchasesPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -50,17 +52,50 @@ export default function PurchasesPage() {
     fetchPurchases();
   }, [fetchPurchases]);
 
+  const filteredPurchases = useMemo(() => {
+    return purchases.filter(p => {
+      const matchesSearch = p.course.title.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      let matchesStatus = true;
+      if (statusFilter === 'ACTIVE') {
+        matchesStatus = p.is_active && !p.refund_request;
+      } else if (statusFilter === 'REFUND_PENDING') {
+        matchesStatus = p.refund_request?.status === 'PENDING';
+      } else if (statusFilter === 'REFUND_REJECTED') {
+        matchesStatus = p.refund_request?.status === 'REJECTED';
+      } else if (statusFilter === 'REFUND_DONE') {
+        matchesStatus = !p.is_active && (p.refund_request?.status === 'APPROVED' || !p.refund_request); // !is_active covers processed refunds
+      }
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [purchases, searchQuery, statusFilter]);
+
   const canRefund = (enrollment: any) => {
-    if (!enrollment.is_active) return false;
+    if (!enrollment.is_active || enrollment.refund_request) return { eligible: false };
     const now = new Date();
     const enrolledAt = new Date(enrollment.enrolled_at);
     const diffTime = Math.abs(now.getTime() - enrolledAt.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30 && enrollment.progress_percent <= 30;
+    
+    if (diffDays > 30) return { eligible: false, reason: 'Quá thời hạn 30 ngày' };
+    if (enrollment.progress_percent > 30) return { eligible: false, reason: 'Tiến độ học tập > 30%' };
+    
+    return { eligible: true };
   };
 
   const getStatusBadge = (enrollment: any) => {
-    const base = "border-2 border-black px-2 py-0.5 text-[10px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
+    const base = "border-2 border-black px-2 py-1 text-[9px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] inline-block min-w-[120px] leading-tight";
+    
+    if (enrollment.refund_request) {
+      if (enrollment.refund_request.status === 'PENDING') {
+        return <span className={`${base} bg-amber-400 text-black animate-pulse`}>ĐANG CHỜ HOÀN TIỀN</span>;
+      }
+      if (enrollment.refund_request.status === 'REJECTED') {
+        return <span className={`${base} bg-zinc-400 text-white`}>BỊ TỪ CHỐI HOÀN TIỀN</span>;
+      }
+    }
+
     if (enrollment.is_active) {
       return (
         <span className={`${base} bg-emerald-400 text-black`}>
@@ -70,7 +105,7 @@ export default function PurchasesPage() {
     }
     return (
       <span className={`${base} bg-rose-500 text-white`}>
-        ĐÃ HOÀN
+        ĐÃ HOÀN TIỀN
       </span>
     );
   };
@@ -99,6 +134,33 @@ export default function PurchasesPage() {
           </p>
         </div>
 
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="flex-1 relative group">
+                <input 
+                    type="text" 
+                    placeholder="TÌM KIẾM KHÓA HỌC..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-14 bg-white border-4 border-black px-6 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:shadow-none focus:translate-x-1 focus:translate-y-1 transition-all outline-none"
+                />
+            </div>
+            <div className="w-full md:w-72 relative">
+                <select 
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full h-14 bg-white border-4 border-black px-6 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none appearance-none cursor-pointer"
+                >
+                    <option value="ALL">TẤT CẢ TRẠNG THÁI</option>
+                    <option value="ACTIVE"> HOẠT ĐỘNG</option>
+                    <option value="REFUND_PENDING"> ĐANG CHỜ HOÀN TIỀN</option>
+                    <option value="REFUND_DONE"> ĐÃ HOÀN TIỀN</option>
+                    <option value="REFUND_REJECTED"> BỊ TỪ CHỐI HOÀN</option>
+                </select>
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none font-black text-xs">▼</div>
+            </div>
+        </div>
+
         {error && (
           <div className="bg-red-100 border-4 border-black p-6 mb-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-black font-black uppercase text-xs">
             {error}
@@ -112,19 +174,19 @@ export default function PurchasesPage() {
                 <th className="p-4 text-left border-r-2 border-white/20 w-36 uppercase">Mã Đơn / Ngày</th>
                 <th className="p-4 text-left border-r-2 border-white/20 uppercase">Thông tin khóa học</th>
                 <th className="p-4 text-right border-r-2 border-white/20 w-44 uppercase">Số Tiền (VND)</th>
-                <th className="p-4 text-center border-r-2 border-white/20 w-36 uppercase">Trạng Thái</th>
+                <th className="p-4 text-center border-r-2 border-white/20 w-44 uppercase">Trạng Thái</th>
                 <th className="p-4 text-center w-24 uppercase italic">Info</th>
               </tr>
             </thead>
             <tbody className="divide-y-4 divide-black text-[11px]">
-              {purchases.length === 0 ? (
+              {filteredPurchases.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-24 text-center font-black text-black uppercase italic text-3xl">
-                    Chưa có lịch sử giao dịch
+                    Không tìm thấy dữ liệu phù hợp
                   </td>
                 </tr>
               ) : (
-                purchases.map((purchase) => (
+                filteredPurchases.map((purchase) => (
                   <tr key={purchase.id} className="hover:bg-zinc-50 transition-colors group">
                     <td className="p-4 border-r-4 border-black font-mono font-black text-xs text-black">
                       #{purchase.order_item?.order?.order_number?.split('-').slice(-1)[0] || purchase.id}
@@ -185,7 +247,8 @@ export default function PurchasesPage() {
               status: selectedEnrollment.is_active ? 'COMPLETED' : 'REFUNDED',
               progress: selectedEnrollment.progress_percent,
               orderNumber: selectedEnrollment.order_item?.order?.order_number,
-              canRefund: canRefund(selectedEnrollment),
+              canRefund: canRefund(selectedEnrollment).eligible,
+              refundReason: canRefund(selectedEnrollment).reason,
               onRefund: () => {
                 setIsDetailModalOpen(false);
                 setIsRefundModalOpen(true);

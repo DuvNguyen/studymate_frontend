@@ -8,7 +8,7 @@ import MainLayout from '@/components/MainLayout';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { Pagination } from '@/components/Pagination';
 
-type Tab = 'STUDENT' | 'INSTRUCTOR' | 'STAFF' | 'ADMIN';
+type Tab = 'ALL' | 'STUDENT' | 'INSTRUCTOR' | 'STAFF' | 'ADMIN';
 
 interface BanModalState {
   open: boolean;
@@ -27,13 +27,23 @@ interface BanReasonModalState {
 }
 
 export default function AdminUsersPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('STUDENT');
+  const [activeTab, setActiveTab] = useState<Tab>('ALL');
   const [page, setPage] = useState(1);
   const { session } = useClerk();
   const { deleteUser, loading: isDeleting } = useDeleteUser();
   const [isActing, setIsActing] = useState(false);
   const { user: appUser, loading: appLoading } = useCurrentUser();
   const { users, meta, loading, fetchUsers, updateStatus } = useAdminUsers();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(1); // Reset về trang 1 khi search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const [banModal, setBanModal] = useState<BanModalState>({
     open: false,
@@ -53,9 +63,14 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     if (session) {
-      fetchUsers({ page, limit: 10, role: activeTab });
+      fetchUsers({ 
+        page, 
+        limit: 10, 
+        role: activeTab === 'ALL' ? undefined : activeTab, 
+        search: debouncedSearchTerm 
+      });
     }
-  }, [session, activeTab, page, fetchUsers]);
+  }, [session, activeTab, page, debouncedSearchTerm, fetchUsers]);
 
   const handleDelete = async (id: number, email: string) => {
     const confirm = window.confirm(`Bạn có CHẮC CHẮN muốn XÓA CỨNG người dùng [${email}] không?\n\nHành động này sẽ xóa dữ liệu trên Clerk và DB, KHÔNG THỂ KHÔI PHỤC!`);
@@ -143,9 +158,10 @@ export default function AdminUsersPage() {
     },
   };
 
-  const ACTION_BTN_BASE = "px-3 py-1.5 border border-black font-bold text-xs uppercase tracking-tight rounded-sm transition-all hover:-translate-y-[1px] hover:-translate-x-[1px] active:translate-y-[1px] active:translate-x-[1px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0";
+  const ACTION_BTN_BASE = "w-28 py-1.5 border border-black font-bold text-[10px] uppercase tracking-tight rounded-sm transition-all hover:-translate-y-[1px] hover:-translate-x-[1px] active:translate-y-[1px] active:translate-x-[1px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0 text-center flex items-center justify-center";
 
   const tabs: { value: Tab; label: string }[] = [
+    { value: 'ALL',        label: 'Tất cả' },
     { value: 'STUDENT',    label: 'Học viên' },
     { value: 'INSTRUCTOR', label: 'Giảng viên' },
     { value: 'STAFF',      label: 'Nhân viên (Staff)' },
@@ -166,6 +182,31 @@ export default function AdminUsersPage() {
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Quản lý</p>
           <h1 className="text-2xl font-black text-gray-900 uppercase">Quản lý Người dùng</h1>
+        </div>
+
+
+        {/* Search Bar */}
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex items-center gap-4">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo Email người dùng..."
+              className="w-full pl-10 pr-4 py-3 border-2 border-black font-bold text-sm focus:outline-none focus:bg-yellow-50 placeholder-black/30"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-black/50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+          </div>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="px-4 py-3 border-2 border-black bg-white font-black text-xs uppercase hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]"
+            >
+              Xóa
+            </button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -204,7 +245,7 @@ export default function AdminUsersPage() {
                       <th className="p-4 font-black uppercase text-[10px] tracking-widest">Vi phạm</th>
                     )}
                     <th className="p-4 font-black uppercase text-[10px] tracking-widest">Trạng thái</th>
-                    <th className="p-4 font-black uppercase text-[10px] tracking-widest text-center">Hành động</th>
+                    <th className="p-4 font-black uppercase text-[10px] tracking-widest text-right">Hành động</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y-2 divide-black">
@@ -252,31 +293,33 @@ export default function AdminUsersPage() {
                           </button>
                         </td>
 
-                        <td className="p-4 flex gap-2 justify-center items-center">
-                          {isBanned ? (
+                        <td className="p-4">
+                          <div className="flex gap-3 justify-end items-center">
+                            {isBanned ? (
+                              <button
+                                onClick={() => handleUnban(u.id, u.email)}
+                                disabled={isActing || u.role === 'ADMIN'}
+                                className={`${ACTION_BTN_BASE} bg-emerald-400 text-black`}
+                              >
+                                Bỏ đình chỉ
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => openBanModal(u.id, u.email)}
+                                disabled={isActing || u.role === 'ADMIN'}
+                                className={`${ACTION_BTN_BASE} bg-amber-400 text-black`}
+                              >
+                                Cấm 
+                              </button>
+                            )}
                             <button
-                              onClick={() => handleUnban(u.id, u.email)}
-                              disabled={isActing || u.role === 'ADMIN'}
-                              className={`${ACTION_BTN_BASE} bg-emerald-400 text-black`}
+                              onClick={() => handleDelete(u.id, u.email)}
+                              disabled={isDeleting || u.role === 'ADMIN'}
+                              className={`${ACTION_BTN_BASE} bg-red-400 text-black`}
                             >
-                              Bỏ đình chỉ
+                              {isDeleting ? '...' : 'Xóa CỨNG'}
                             </button>
-                          ) : (
-                            <button
-                              onClick={() => openBanModal(u.id, u.email)}
-                              disabled={isActing || u.role === 'ADMIN'}
-                              className={`${ACTION_BTN_BASE} bg-amber-400 text-black`}
-                            >
-                              Cấm 
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDelete(u.id, u.email)}
-                            disabled={isDeleting || u.role === 'ADMIN'}
-                            className={`${ACTION_BTN_BASE} bg-red-400 text-black`}
-                          >
-                            {isDeleting ? '...' : 'Xóa Cứng'}
-                          </button>
+                          </div>
                         </td>
                       </tr>
                     );
