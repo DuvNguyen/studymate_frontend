@@ -18,6 +18,7 @@ export default function InstructorWalletPage() {
   const {
     wallet,
     transactions,
+    transactionMeta,
     payouts,
     loading,
     fetchWallet,
@@ -31,15 +32,15 @@ export default function InstructorWalletPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(6);
 
   useEffect(() => {
     if (currentUser?.role === 'INSTRUCTOR') {
       fetchWallet();
-      fetchTransactions(page, limit);
+      fetchTransactions(1, 999);
       fetchMyPayouts();
     }
-  }, [currentUser, fetchWallet, fetchTransactions, fetchMyPayouts, page, limit]);
+  }, [currentUser?.id, fetchWallet, fetchTransactions, fetchMyPayouts]);
 
   const filteredTransactions = transactions.filter(tx => {
     if (!startDate || !endDate) return true;
@@ -47,7 +48,8 @@ export default function InstructorWalletPage() {
     return txDate >= startDate && txDate <= endDate;
   });
 
-  const paginatedTransactions = filteredTransactions;
+  const totalPages = Math.ceil(filteredTransactions.length / limit);
+  const paginatedTransactions = filteredTransactions.slice((page - 1) * limit, page * limit);
 
   const getTypeBadge = (type: string) => {
     const base = "border-2 border-black px-2 py-0.5 text-[10px] font-black uppercase";
@@ -237,6 +239,20 @@ export default function InstructorWalletPage() {
                     </tbody>
                  </table>
               </div>
+
+              {/* Pagination Section */}
+              {totalPages > 1 && (
+                <div className="flex justify-center">
+                  <Pagination 
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => {
+                      setPage(newPage);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  />
+                </div>
+              )}
            </div>
         </div>
 

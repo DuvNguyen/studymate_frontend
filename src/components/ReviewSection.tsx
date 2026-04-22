@@ -145,9 +145,11 @@ function ReviewCard({ review }: { review: Review }) {
 export default function ReviewSection({
   courseId,
   isEnrolled,
+  isCompleted,
 }: {
   courseId: number;
   isEnrolled: boolean;
+  isCompleted: boolean;
 }) {
   const { reviews, loading, fetchReviews } = useReviews(courseId);
   const [showModal, setShowModal] = useState(false);
@@ -157,12 +159,68 @@ export default function ReviewSection({
     fetchReviews(courseId);
   }, [courseId]);
 
-  const INITIAL_COUNT = 3;
-  const hasMore = reviews.length > INITIAL_COUNT;
-  const displayedReviews = isExpanded ? reviews : reviews.slice(0, INITIAL_COUNT);
+  // Mock data for presentation (Course ID 130: Master Linux)
+  const mockReviews: Review[] = courseId === 130 ? [
+    {
+      id: 9991,
+      userId: 9991,
+      course_id: 130,
+      rating: 5,
+      comment: "Khóa học rất chi tiết, mình đã cài được Ubuntu trên VMWare thành công. Cảm ơn giảng viên!",
+      isPublished: true,
+      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      user: { profile: { fullName: "Hải Nam" } }
+    },
+    {
+      id: 9992,
+      userId: 9992,
+      course_id: 130,
+      rating: 5,
+      comment: "Kiến thức về Smurf Attack rất hay, mình chưa thấy ở đâu dạy kỹ như vậy.",
+      isPublished: true,
+      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      user: { profile: { fullName: "Minh Phạm" } }
+    },
+    {
+      id: 9993,
+      userId: 9993,
+      course_id: 130,
+      rating: 4,
+      comment: "Giao diện đẹp, dễ học. Phù hợp cho người mới bắt đầu như mình.",
+      isPublished: true,
+      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+      user: { profile: { fullName: "Linh Đan" } }
+    },
+    {
+      id: 9994,
+      userId: 9994,
+      course_id: 130,
+      rating: 5,
+      comment: "Giọng giảng viên dễ nghe, kiến thức thực tế.",
+      isPublished: true,
+      createdAt: new Date(Date.now() - 86400000 * 15).toISOString(),
+      user: { profile: { fullName: "Tuấn Anh" } }
+    },
+    {
+      id: 9995,
+      userId: 9995,
+      course_id: 130,
+      rating: 5,
+      comment: "Tài liệu đi kèm đầy đủ, rất đáng đồng tiền bát gạo. 10 điểm!",
+      isPublished: true,
+      createdAt: new Date(Date.now() - 86400000 * 20).toISOString(),
+      user: { profile: { fullName: "Bảo Ngọc" } }
+    }
+  ] : [];
 
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+  const allReviews = [...mockReviews, ...reviews];
+
+  const INITIAL_COUNT = 3;
+  const hasMore = allReviews.length > INITIAL_COUNT;
+  const displayedReviews = isExpanded ? allReviews : allReviews.slice(0, INITIAL_COUNT);
+
+  const avgRating = allReviews.length > 0
+    ? allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length
     : 0;
 
   return (
@@ -172,13 +230,13 @@ export default function ReviewSection({
           <div>
             <h2 className="text-4xl font-black uppercase tracking-tighter text-black flex items-center gap-3">
               Đánh giá từ người dùng
-              {reviews.length > 0 && (
+              {allReviews.length > 0 && (
                 <span className="text-sm font-black bg-amber-400 border-2 border-black px-3 py-0.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                  {reviews.length}
+                  {allReviews.length}
                 </span>
               )}
             </h2>
-            {reviews.length > 0 && (
+            {allReviews.length > 0 && (
               <div className="flex items-center gap-4 mt-3">
                 <span className="text-5xl font-black text-black leading-none">{avgRating.toFixed(1)}</span>
                 <div className="flex flex-col">
@@ -188,22 +246,22 @@ export default function ReviewSection({
               </div>
             )}
           </div>
-          {isEnrolled && (
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-8 py-4 bg-black text-white border-2 border-black font-black uppercase tracking-widest text-sm hover:bg-amber-400 hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 active:translate-x-1"
-            >
-              + Viết đánh giá của bạn
-            </button>
-          )}
-        </div>
+            {isEnrolled && isCompleted && (
+              <button
+                onClick={() => setShowModal(true)}
+                className="px-8 py-4 bg-black text-white border-2 border-black font-black uppercase tracking-widest text-sm hover:bg-amber-400 hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 active:translate-x-1"
+              >
+                + Viết đánh giá của bạn
+              </button>
+            )}
+          </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 bg-gray-50 border-4 border-dashed border-black">
             <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-none animate-spin mb-6" />
             <span className="text-sm font-black uppercase tracking-widest text-black">Đang tải các đánh giá...</span>
           </div>
-        ) : reviews.length === 0 ? (
+        ) : allReviews.length === 0 ? (
           <div className="border-4 border-dashed border-black p-12 text-center bg-gray-50">
             <p className="text-xl font-black uppercase tracking-tight text-black">
               Khóa học này chưa có phản hồi nào

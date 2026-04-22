@@ -285,11 +285,11 @@ export default function AdminUsersPage() {
                                 });
                               }
                             }}
-                            className={`px-3 py-1 font-black text-[9px] uppercase tracking-wider ${statusCfg.cls} ${
+                            className={`w-24 py-1 flex justify-center items-center font-black text-[9px] uppercase tracking-wider ${statusCfg.cls} ${
                               isBanned ? 'cursor-pointer hover:scale-105 transition-transform' : 'cursor-default'
                             }`}
                           >
-                            {statusCfg.label}{isBanned ? ' ℹ️' : ''}
+                            {statusCfg.label}{isBanned ? ' !' : ''}
                           </button>
                         </td>
 

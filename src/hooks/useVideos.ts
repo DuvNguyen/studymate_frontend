@@ -209,3 +209,37 @@ export function useReviewVideo() {
 
   return { review, reviewing, error };
 }
+
+// ─── Hook: Xóa video (Giảng viên/Admin) ───
+export function useDeleteVideo() {
+  const { session } = useSession();
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const remove = async (id: number) => {
+    if (!session) throw new Error('Chưa đăng nhập');
+    setDeleting(true);
+    setError(null);
+    try {
+      const token = await session.getToken();
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.message || 'Lỗi khi xóa video');
+      }
+
+      return true;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return { remove, deleting, error };
+}
