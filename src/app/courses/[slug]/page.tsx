@@ -59,6 +59,23 @@ function VideoPreviewModal({
   );
 }
 
+function CourseDetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col pt-36 px-4 items-center">
+      <div className="w-full max-w-7xl animate-pulse flex flex-col gap-8 md:flex-row">
+        <div className="md:w-2/3 flex flex-col gap-4">
+          <div className="h-8 md:h-12 bg-gray-300 w-3/4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"></div>
+          <div className="h-6 bg-gray-300 w-1/2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"></div>
+          <div className="h-40 bg-gray-200 border-4 border-black mt-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"></div>
+        </div>
+        <div className="md:w-1/3 flex flex-col gap-4 mt-8 md:mt-0">
+          <div className="h-64 bg-gray-300 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CourseDetailContent() {
   const params = useParams();
   const slug = params.slug as string;
@@ -259,9 +276,8 @@ function CourseDetailContent() {
     }
   };
 
-  // Chờ cả dữ liệu khóa học và thông tin User (để xác định đúng role trước khi render UI)
-  if (loading || userLoading || enrollLoading) {
-    return <LoadingScreen />;
+  if (loading) {
+    return <CourseDetailSkeleton />;
   }
 
   // Trạng thái Lỗi hoặc Không tìm thấy
@@ -545,7 +561,9 @@ function CourseDetailContent() {
                   </div>
 
                   <div className="space-y-4 mb-4">
-                    {isEnrolled ? (
+                    {userLoading || enrollLoading ? (
+                      <div className="w-full h-14 bg-gray-200 border-4 border-black animate-pulse shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"></div>
+                    ) : isEnrolled ? (
                       <button 
                         onClick={() => router.push(`/courses/${course.slug}/learn`)}
                         className="w-full bg-emerald-400 hover:bg-emerald-500 text-black font-black py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center justify-center gap-2 uppercase italic tracking-tighter"
@@ -643,7 +661,9 @@ function CourseDetailContent() {
             {/* Mobile Buy Area (shows only on mobile, sticky bottom) */}
                 <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black p-4 z-50 flex items-center justify-between shadow-[0px_-4px_0px_0px_rgba(0,0,0,1)]">
                    <div className="text-xl font-black">₫{course.price.toLocaleString('vi-VN')}</div>
-                   {isEnrolled ? (
+                   {userLoading || enrollLoading ? (
+                     <div className="w-32 h-12 bg-gray-200 border-2 border-black animate-pulse"></div>
+                   ) : isEnrolled ? (
                       <button 
                         onClick={() => router.push(`/courses/${course.slug}/learn`)}
                         className="bg-emerald-400 text-black hover:bg-emerald-500 font-black px-8 py-3 uppercase italic tracking-tighter"

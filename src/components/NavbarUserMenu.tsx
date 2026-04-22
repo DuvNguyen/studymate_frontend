@@ -12,7 +12,15 @@ export function NavbarUserMenu() {
   const cartItemCount = cart?.cart_items?.length || 0;
 
   if (loading) {
-    return <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-none animate-spin"></div>;
+    return (
+      <div className="flex items-center gap-3 border-l-4 border-black pl-4">
+        <div className="flex flex-col items-end gap-1.5 opacity-50">
+          <div className="w-20 h-4 bg-gray-300 animate-pulse"></div>
+          <div className="w-12 h-3 bg-gray-300 border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] animate-pulse"></div>
+        </div>
+        <div className="w-9 h-9 bg-gray-300 border-2 border-black p-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] animate-pulse"></div>
+      </div>
+    );
   }
 
   if (!user) {

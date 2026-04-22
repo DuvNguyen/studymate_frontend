@@ -35,8 +35,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { session, isLoaded } = useSession();
   const { signOut } = useClerk();
   const [user, setUser] = useState<CurrentUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Restore from cache on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('currentUser_cache');
+      if (cached) {
+        setUser(JSON.parse(cached));
+        setLoading(false);
+      }
+    }
+  }, []);
 
   const fetchUser = async () => {
     if (!isLoaded) return;
@@ -47,7 +58,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setLoading(true);
+    if (!user) setLoading(true);
     try {
       const token = await session.getToken();
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
@@ -61,11 +72,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       const json = await res.json();
       setUser(json.data);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('currentUser_cache', JSON.stringify(json.data));
+      }
       setError(null);
     } catch (err: any) {
       setError(err.message);
       const errorMsg = err.message.toLocaleLowerCase();
       if (errorMsg.includes('khóa vĩnh viễn') || errorMsg.includes('đình chỉ')) {
+        if (typeof window !== 'undefined') localStorage.removeItem('currentUser_cache');
         signOut();
       }
     } finally {
