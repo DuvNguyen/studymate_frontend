@@ -15,12 +15,17 @@ export interface Discussion {
   id: number;
   course_id: number;
   lesson_id: number;
+  course?: { id: number; title: string; slug: string };
+  lesson?: { id: number; title: string };
   content: string;
   is_best_answer: boolean;
   is_edited: boolean;
   is_deleted: boolean;
   parent_id: number | null;
   user: UserMini;
+  upvotes: number;
+  downvotes: number;
+  userVote: number;
   created_at: string;
   updated_at: string;
   children: Discussion[];
@@ -102,6 +107,52 @@ export function useDiscussions(lessonId?: number) {
     }
   };
 
+  const voteDiscussion = async (id: number, value: number) => {
+    // Optimistic Update
+    const updateTree = (nodes: Discussion[]): Discussion[] => {
+      return nodes.map(node => {
+        if (node.id === id) {
+          const oldVote = node.userVote;
+          let newUpvotes = node.upvotes;
+          let newDownvotes = node.downvotes;
+
+          if (oldVote === 1) newUpvotes -= 1;
+          if (oldVote === -1) newDownvotes -= 1;
+          
+          if (value === 1) newUpvotes += 1;
+          if (value === -1) newDownvotes += 1;
+
+          return { ...node, userVote: value, upvotes: Math.max(0, newUpvotes), downvotes: Math.max(0, newDownvotes) };
+        }
+        if (node.children) {
+          return { ...node, children: updateTree(node.children) };
+        }
+        return node;
+      });
+    };
+
+    setDiscussions(prev => updateTree(prev));
+
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/discussions/${id}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ value }),
+      });
+      if (!res.ok) {
+        // Rollback on fail
+        await fetchDiscussions();
+      }
+    } catch (err) {
+      console.error('Error voting:', err);
+      await fetchDiscussions(); // Rollback
+    }
+  };
+
   const deleteDiscussion = async (id: number) => {
     if (!confirm('BẠN CÓ CHẮC CHẮN MUỐN XÓA THẢO LUẬN NÀY?')) return;
     try {
@@ -162,7 +213,8 @@ export function useDiscussions(lessonId?: number) {
     discussions, 
     loading, 
     addDiscussion, 
-    markBestAnswer, 
+    markBestAnswer,
+    voteDiscussion,
     deleteDiscussion,
     updateDiscussion,
     searchDiscussions, 

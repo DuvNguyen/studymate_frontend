@@ -37,10 +37,18 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setLoading(true);
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/me`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const res = await fetch(`${apiUrl}/notifications/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('Failed to fetch notifications');
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`Failed to fetch notifications: ${res.status} ${res.statusText}`, errorText);
+        setLoading(false);
+        return;
+      }
+
       const json = await res.json();
       const data: Notification[] = json.data || json;
       setNotifications(data);

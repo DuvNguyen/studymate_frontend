@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import { Search, Filter, ArrowUpRight, ArrowDownLeft, Activity, HelpCircle, ArrowRight } from 'lucide-react';
 import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { Pagination } from '@/components/Pagination';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function AdminLedgerPage() {
   const { getToken, isLoaded } = useAuth();
@@ -192,7 +193,15 @@ export default function AdminLedgerPage() {
         </div>
 
         {/* Ledger Table - Compact */}
-        <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
+           {loading && items.length > 0 && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center animate-in fade-in duration-200">
+                 <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-4">
+                    <LoadingSpinner size="lg" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-black">Đang cập nhật sổ cái...</p>
+                 </div>
+              </div>
+           )}
            <table className="w-full border-collapse">
               <thead>
                  <tr className="bg-black text-white text-[11px] font-black uppercase tracking-widest italic border-b-4 border-black">

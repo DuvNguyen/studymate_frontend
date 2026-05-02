@@ -45,6 +45,9 @@ function IconReconcile() {
 function IconAnalytics() {
   return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
 }
+function IconMessage() {
+  return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>;
+}
 
 const ROLE_CONFIG: Record<string, { label: string; color: string }> = {
   ADMIN:      { label: 'Admin',      color: 'bg-red-500 text-white' },
@@ -68,6 +71,7 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
     { href: '/dashboard/instructor/kyc',    label: 'Hồ sơ giảng viên', icon: <IconProfile /> },
     { href: '/dashboard/instructor/courses',label: 'Khóa học của tôi', icon: <IconCourses /> },
     { href: '/dashboard/instructor/videos', label: 'Quản lý Video',    icon: <IconMyLearning /> },
+    { href: '/dashboard/instructor/discussions', label: 'Thảo luận',   icon: <IconMessage /> },
     { href: '/dashboard/instructor/coupons',label: 'Mã giảm giá',      icon: <IconCart /> },
     { href: '/dashboard/instructor/wallet', label: 'Ví',               icon: <IconWallet /> },
     { href: '/dashboard/profile',           label: 'Hồ sơ',            icon: <IconProfile /> },

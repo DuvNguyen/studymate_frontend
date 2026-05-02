@@ -305,6 +305,12 @@ export default function InstructorCoursesPage() {
                         XÂY DỰNG
                       </Button>
                       <Button 
+                          className="flex-1 md:w-32 bg-amber-400 hover:bg-white h-16 text-black font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                          onClick={() => router.push(`/courses/${course.slug}/instructor-view`)}
+                        >
+                          XEM TRƯỚC
+                      </Button>
+                      <Button 
                         className={`w-16 h-16 p-0 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all ${
                           course.status === 'ARCHIVED' 
                           ? 'bg-emerald-400 hover:bg-emerald-500 text-black' 
