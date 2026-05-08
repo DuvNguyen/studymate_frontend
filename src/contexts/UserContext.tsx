@@ -38,11 +38,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch user data automatically when session changes
-  useEffect(() => {
-    // Không dùng localStorage cache nữa để tránh lỗi lệch data khi switch account
-  }, []);
-
   const fetchUser = async () => {
     if (!isLoaded) return;
     if (!session) {
@@ -52,7 +47,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!user) setLoading(true);
+    setLoading(true);
+
     try {
       const token = await session.getToken();
       const timestamp = new Date().getTime();

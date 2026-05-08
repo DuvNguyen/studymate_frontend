@@ -109,21 +109,14 @@ export default function AdminPayoutsPage() {
     { value: '', label: 'Tất cả' },
   ];
 
-  if (userLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-white">
-        <div className="animate-spin rounded-none h-10 w-10 border-4 border-black border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  if ((currentUser?.role !== 'ADMIN' && currentUser?.role !== 'STAFF') && !userLoading) {
-    return null;
-  }
-
   return (
     <MainLayout role={currentUser?.role} allowedRoles={['ADMIN', 'STAFF']}>
-      <div className="max-w-7xl mx-auto space-y-6 pb-32">
+      {userLoading ? (
+        <div className="flex justify-center items-center h-[calc(100vh-200px)] bg-white">
+          <div className="animate-spin rounded-none h-10 w-10 border-4 border-black border-t-transparent"></div>
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto space-y-6 pb-32">
         {/* Header */}
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
           <p className="text-[10px] font-black uppercase tracking-widest text-black mb-1">Quản trị hệ thống</p>
@@ -254,7 +247,6 @@ export default function AdminPayoutsPage() {
             </div>
           </div>
         )}
-      </div>
 
       {/* Bulk Action Bar — Fixed Bottom */}
       {selectedIds.size > 0 && (
@@ -340,6 +332,8 @@ export default function AdminPayoutsPage() {
             </div>
           </div>
         </div>
+      )}
+      </div>
       )}
     </MainLayout>
   );

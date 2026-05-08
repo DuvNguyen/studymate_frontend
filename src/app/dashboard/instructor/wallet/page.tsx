@@ -76,18 +76,15 @@ export default function InstructorWalletPage() {
     }
   };
 
-  if ((userLoading && !currentUser) || (loading && !wallet)) {
-    return (
-      <LoadingScreen 
-        title="ĐANG TẢI DỮ LIỆU TÀI CHÍNH..."
-        description="STUDYMATE ĐANG KẾT NỐI VỚI HỆ THỐNG GIAO DỊCH."
-      />
-    );
-  }
-
   return (
     <MainLayout role="INSTRUCTOR" allowedRoles={['INSTRUCTOR']}>
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 pb-32 font-bold">
+      {((userLoading && !currentUser) || (loading && !wallet)) ? (
+        <LoadingScreen 
+          title="ĐANG TẢI DỮ LIỆU TÀI CHÍNH..."
+          description="STUDYMATE ĐANG KẾT NỐI VỚI HỆ THỐNG GIAO DỊCH."
+        />
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 pb-32 font-bold">
         
         {/* Header Section */}
         <div className="bg-black text-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(34,197,94,1)] p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -270,6 +267,7 @@ export default function InstructorWalletPage() {
           transaction={selectedTransaction}
         />
       </div>
+      )}
     </MainLayout>
   );
 }

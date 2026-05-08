@@ -110,16 +110,15 @@ export default function PurchasesPage() {
     );
   };
 
-  if (loading) return (
-    <LoadingScreen 
-      title="ĐANG TẢI LỊCH SỬ..."
-      description="STUDYMATE ĐANG TRÍCH XUẤT DỮ LIỆU THANH TOÁN CỦA BẠN."
-    />
-  );
-
   return (
     <MainLayout role="STUDENT">
-      <div className="max-w-7xl mx-auto px-4 py-12 font-bold text-black">
+      {loading ? (
+        <LoadingScreen 
+          title="ĐANG TẢI LỊCH SỬ..."
+          description="STUDYMATE ĐANG TRÍCH XUẤT DỮ LIỆU THANH TOÁN CỦA BẠN."
+        />
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 py-12 font-bold text-black">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b-8 border-black pb-8">
           <div>
             <span className="bg-yellow-400 border-2 border-black px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-4 inline-block">
@@ -269,6 +268,7 @@ export default function PurchasesPage() {
           />
         )}
       </div>
+      )}
     </MainLayout>
   );
 }
