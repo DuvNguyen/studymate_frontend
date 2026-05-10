@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useTransition } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useCourseLearn } from '@/hooks/useCourseLearn';
@@ -11,6 +11,7 @@ import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 import { useLessonProgress } from '@/hooks/useLessonProgress';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useDiscussions, Discussion } from '@/hooks/useDiscussions';
+import { DiscussionItem } from '@/components/DiscussionItem';
 import { Button } from '@/components/Button';
 import { 
   Play, 
@@ -30,9 +31,13 @@ import {
   Trash2,
   Pencil,
   FileQuestion,
+  FolderArchive,
+  ArrowBigUp,
+  ArrowBigDown,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function LearnPage() {
   const { slug } = useParams() as { slug: string };
@@ -40,6 +45,7 @@ export default function LearnPage() {
   const { enrollments, loading: enrollLoading } = useEnrolledCourses();
   const { user } = useCurrentUser();
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
 
   // Find current enrollment
@@ -64,10 +70,30 @@ export default function LearnPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'qa'>('overview');
   const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
   
-  const { discussions, addDiscussion, loading: discussionsLoading, markBestAnswer, deleteDiscussion, updateDiscussion } = useDiscussions(activeLesson?.id);
+  const { discussions, addDiscussion, loading: discussionsLoading, markBestAnswer, deleteDiscussion, updateDiscussion, voteDiscussion } = useDiscussions(activeLesson?.id);
   const [qaSearch, setQaSearch] = useState('');
   const [newQuestion, setNewQuestion] = useState('');
   const [isAsking, setIsAsking] = useState(false);
+  
+  const granularProgress = useMemo(() => {
+    if (!allLessons || allLessons.length === 0) return 0;
+    
+    let totalValue = 0;
+    allLessons.forEach(lesson => {
+      const prog = progressMap[lesson.id];
+      if (prog?.completed) {
+        totalValue += 1;
+      } else if (prog?.watched_duration && lesson.durationSecs) {
+        // Add partial completion (capped at 0.99 to avoid jumping to 100% without 'completed' flag)
+        totalValue += Math.min(prog.watched_duration / lesson.durationSecs, 0.99);
+      }
+    });
+    
+    // Fallback to backend enrollment percent if frontend calculation is lower 
+    // (ensures we don't show less than what the server already confirmed)
+    const calculated = Math.floor((totalValue / allLessons.length) * 100);
+    return Math.max(calculated, enrollment?.progress_percent || 0);
+  }, [allLessons, progressMap, enrollment?.progress_percent]);
 
   // Set initial active lesson
   useEffect(() => {
@@ -156,6 +182,26 @@ export default function LearnPage() {
     );
   }
 
+  if (course?.status === 'ARCHIVED') {
+    return (
+      <MainLayout>
+        <div className="p-16 text-center border-8 border-black m-12 bg-white shadow-[20px_20px_0px_0px_rgba(0,0,0,1)]">
+          <div className="w-24 h-24 bg-amber-400 border-4 border-black mx-auto mb-8 flex items-center justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -rotate-3">
+            <FolderArchive className="w-12 h-12 text-black" />
+          </div>
+          <h1 className="text-5xl font-black mb-6 text-black tracking-tighter uppercase italic">Khóa học đang được lưu trữ</h1>
+          <p className="text-xl font-black mb-12 text-black uppercase border-y-4 border-black py-4 inline-block">
+             GIẢNG VIÊN ĐÃ TẠM THỜI LƯU TRỮ KHÓA HỌC NÀY. BẠN HIỆN KHÔNG THỂ VÀO HỌC NỘI DUNG.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button size="lg" onClick={() => router.push('/dashboard/student/courses')}>QUAY LẠI KHÓA HỌC CỦA TÔI</Button>
+          </div>
+          <p className="mt-8 text-xs font-black opacity-30 uppercase tracking-[0.3em]">Status: COURSE_STATUS_ARCHIVED</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
   const currentProgress = activeLesson ? progressMap[activeLesson.id] : null;
 
 
@@ -170,13 +216,17 @@ export default function LearnPage() {
 
   const handlePrev = () => {
     if (currentIndex > 0) {
-      setActiveLesson(allLessons[currentIndex - 1]);
+      startTransition(() => {
+        setActiveLesson(allLessons[currentIndex - 1]);
+      });
     }
   };
 
   const handleNext = () => {
     if (currentIndex < allLessons.length - 1) {
-      setActiveLesson(allLessons[currentIndex + 1]);
+      startTransition(() => {
+        setActiveLesson(allLessons[currentIndex + 1]);
+      });
     }
   };
 
@@ -204,7 +254,7 @@ export default function LearnPage() {
                   <div className="flex items-center gap-4">
                     <span className="text-[10px] font-black px-2 py-1 bg-black text-white uppercase tracking-widest">MISSION IN PROGRESS</span>
                     <span className="text-[10px] font-black px-2 py-1 bg-emerald-400 border-2 border-black text-black uppercase tracking-widest">
-                      {enrollment?.progress_percent}% COMPLETED
+                      {granularProgress}% COMPLETED
                     </span>
                   </div>
                 </div>
@@ -214,17 +264,25 @@ export default function LearnPage() {
               <div className="flex items-center gap-4">
                 <div className="w-48 h-8 bg-gray-100 border-4 border-black relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                   <div 
-                    className="h-full bg-emerald-400 border-right-4 border-black transition-all duration-1000" 
-                    style={{ width: `${enrollment?.progress_percent}%` }}
+                    className="h-full bg-emerald-400 border-right-4 border-black transition-all duration-500" 
+                    style={{ width: `${granularProgress}%` }}
                   />
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-black uppercase tracking-[0.2em] drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">PROGRESS GAUGE</span>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-black uppercase tracking-[0.2em] drop-shadow-[0_1.2px_1.2px_rgba(255,255,255,0.8)]">MISSION PROGRESS: {granularProgress}%</span>
                 </div>
               </div>
             </div>
 
             {/* Stage Frame: Video Player */}
             <div className="relative group">
-              <div className="bg-white border-4 border-black p-4 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+              <div className="bg-white border-4 border-black p-4 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative">
+                {isPending && (
+                   <div className="absolute inset-4 z-20 bg-white/60 backdrop-blur-[1px] flex flex-col items-center justify-center animate-in fade-in duration-200">
+                      <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-4">
+                         <LoadingSpinner size="lg" />
+                         <p className="text-[10px] font-black uppercase tracking-widest text-black">Đang chuyển bài học...</p>
+                      </div>
+                   </div>
+                )}
                 <div className="aspect-video bg-black relative overflow-hidden border-4 border-black">
                   {activeLesson?.youtubeVideoId ? (
                     <YouTubePlayer 
@@ -374,7 +432,7 @@ export default function LearnPage() {
                     <div className="space-y-8 pb-12">
                       {discussionsLoading ? (
                         <div className="flex items-center justify-center py-20">
-                           <div className="w-12 h-12 border-4 border-black border-t-transparent animate-spin"></div>
+                           <LoadingSpinner size="lg" />
                         </div>
                       ) : discussions.length === 0 ? (
                         <div className="text-center py-24 border-4 border-dashed border-black bg-gray-50 opacity-50">
@@ -387,6 +445,7 @@ export default function LearnPage() {
                           key={d.id} 
                           discussion={d} 
                           onMarkBest={toggleBestAnswer}
+                          onVote={voteDiscussion}
                           onDelete={deleteDiscussion}
                           onUpdate={updateDiscussion}
                           onReply={async (content) => {
@@ -441,7 +500,11 @@ export default function LearnPage() {
                           return (
                             <button
                               key={lesson.id}
-                              onClick={() => setActiveLesson(lesson)}
+                              onClick={() => {
+                                startTransition(() => {
+                                  setActiveLesson(lesson);
+                                });
+                              }}
                               className={`w-full p-4 flex items-center justify-between transition-all border-2 border-black relative group ${isActive ? 'bg-yellow-400 translate-x-2 translate-y-[-4px] shadow-[-8px_4px_0px_0px_rgba(0,0,0,1)]' : 'bg-white hover:bg-yellow-50 hover:translate-x-1 hover:translate-y-[-2px] hover:shadow-[-4px_2px_0px_0px_rgba(0,0,0,1)]'}`}
                             >
                               <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -529,168 +592,3 @@ export default function LearnPage() {
   );
 }
 
-function DiscussionItem({ 
-  discussion, 
-  onMarkBest, 
-  onDelete,
-  onUpdate,
-  onReply, 
-  currentUser,
-  level = 0 
-}: { 
-  discussion: Discussion, 
-  onMarkBest: (id: number) => void, 
-  onDelete: (id: number) => void,
-  onUpdate: (id: number, content: string) => void,
-  onReply: (content: string) => Promise<void>, 
-  currentUser: any,
-  level?: number 
-}) {
-  const [showReplyForm, setShowReplyForm] = useState(false);
-  const [replyContent, setReplyContent] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(discussion.content);
-
-  return (
-    <div className={`space-y-6 animate-in slide-in-from-left-4 duration-300 ${level > 0 ? 'ml-12 border-l-4 border-black pl-8 mt-6' : ''}`}>
-      <div className={`p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 ${discussion.is_best_answer ? 'bg-emerald-50' : 'bg-white'}`}>
-        <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-black border-dotted">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-black border-4 border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {discussion.user.avatarUrl ? (
-                <img src={discussion.user.avatarUrl} alt={discussion.user.fullName} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-yellow-400 flex items-center justify-center font-black italic">USER</div>
-              )}
-            </div>
-            <div>
-              <p className="text-lg font-black text-black leading-none mb-1 uppercase tracking-tighter">{discussion.user.fullName || 'ANONYMOUS'}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black px-1 bg-black text-white border border-black uppercase">{discussion.user.role?.roleName || 'STUDENT'}</span>
-                <p className="text-[10px] font-black text-black uppercase tracking-widest">{new Date(discussion.created_at).toLocaleString()}</p>
-                {discussion.is_edited && (
-                  <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter italic"> (ĐÃ CHỈNH SỬA)</span>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {!discussion.is_deleted && currentUser?.id === discussion.user.id && (
-              <button 
-                onClick={() => {
-                  setIsEditing(true);
-                  setEditContent(discussion.content);
-                }}
-                className="w-10 h-10 border-2 border-black flex items-center justify-center hover:bg-yellow-400 text-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
-            )}
-            {!discussion.is_deleted && (currentUser?.id === discussion.user.id || ['ADMIN', 'STAFF', 'INSTRUCTOR'].includes(currentUser?.role?.roleName || '')) && (
-              <button 
-                onClick={() => onDelete(discussion.id)}
-                className="w-10 h-10 border-2 border-black flex items-center justify-center hover:bg-red-500 hover:text-white text-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
-            {discussion.is_best_answer && !discussion.is_deleted && (
-              <div className="bg-emerald-400 border-4 border-black text-black text-xs font-black px-4 py-2 flex items-center gap-2 uppercase tracking-tighter shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                <Award className="w-4 h-4" /> CÂU TRẢ LỜI ĐÚNG
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className={`text-md font-bold text-black leading-relaxed mb-8 whitespace-pre-line p-6 border-2 border-black ${discussion.is_deleted ? 'bg-gray-100 italic opacity-60' : 'bg-gray-50'}`}>
-          {isEditing ? (
-            <div className="space-y-4">
-              <textarea 
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="w-full h-32 p-4 border-2 border-black font-black text-sm text-black focus:outline-none focus:bg-white resize-none"
-              />
-              <div className="flex justify-end gap-4">
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>HỦY</Button>
-                <Button 
-                  size="sm"
-                  onClick={async () => {
-                    await onUpdate(discussion.id, editContent);
-                    setIsEditing(false);
-                  }}
-                >
-                  LƯU THAY ĐỔI
-                </Button>
-              </div>
-            </div>
-          ) : (
-            discussion.is_deleted ? discussion.content.replace(/_/g, '') : discussion.content
-          )}
-        </div>
-        
-        <div className="flex items-center gap-6">
-          {!discussion.is_deleted && (
-            <>
-              <button 
-                onClick={() => setShowReplyForm(!showReplyForm)}
-                className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2 bg-black text-white px-4 py-2 hover:bg-yellow-400 hover:text-black transition-colors"
-              >
-                <MessageSquare className="w-4 h-4" /> TRẢ LỜI
-              </button>
-              <button 
-                onClick={() => onMarkBest(discussion.id)}
-                className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 px-4 py-2 border-2 border-black transition-colors ${discussion.is_best_answer ? 'bg-emerald-400 text-black shadow-[4px_4px_0px_0px_rgba(34,197,94,1)]' : 'bg-white text-black hover:bg-emerald-50'}`}
-              >
-                <Award className="w-4 h-4 text-black" /> {discussion.is_best_answer ? 'HỦY ĐÁNH DẤU' : 'HỮU ÍCH'}
-              </button>
-            </>
-          )}
-        </div>
-
-        {showReplyForm && (
-          <div className="mt-8 pt-8 border-t-4 border-black border-double animate-in fade-in slide-in-from-top-4">
-            <textarea 
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="NHẬP PHẢN HỒI INTELLIGENCE CỦA BẠN..."
-              className="w-full h-32 p-4 border-4 border-black font-black text-sm text-black focus:outline-none focus:bg-yellow-50 mb-4 resize-none placeholder:text-black/10"
-            />
-            <div className="flex justify-end gap-4">
-              <Button variant="outline" size="sm" onClick={() => setShowReplyForm(false)}>HỦY</Button>
-              <Button 
-                size="sm"
-                onClick={async () => {
-                  if (!replyContent.trim()) return;
-                  await onReply(replyContent);
-                  setReplyContent('');
-                  setShowReplyForm(false);
-                }}
-                disabled={!replyContent.trim()}
-              >
-                GỬI PHẢN HỒI
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {discussion.children && discussion.children.length > 0 && (
-        <div className="space-y-6">
-          {discussion.children.map((child) => (
-            <DiscussionItem 
-              key={child.id} 
-              discussion={child} 
-              onMarkBest={onMarkBest} 
-              onDelete={onDelete}
-              onUpdate={onUpdate}
-              onReply={onReply} 
-              currentUser={currentUser}
-              level={level + 1} 
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}

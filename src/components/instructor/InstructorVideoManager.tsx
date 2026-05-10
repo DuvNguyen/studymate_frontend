@@ -1,15 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { useInstructorVideos, useUploadVideo, Video } from '@/hooks/useVideos';
+import { useInstructorVideos, useUploadVideo, useDeleteVideo, Video } from '@/hooks/useVideos';
 import { Button } from '@/components/Button';
+import { VideoPreviewModal } from './VideoPreviewModal';
+import { Play } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function InstructorVideoManager() {
   const { videos, loading, error, refetch } = useInstructorVideos();
   const { upload, uploading } = useUploadVideo();
+  const { remove, deleting } = useDeleteVideo();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const openPreview = (video: Video) => {
+    setSelectedVideo(video);
+    setIsPreviewOpen(true);
+  };
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,9 +33,27 @@ export default function InstructorVideoManager() {
       await upload(file, title || undefined);
       setFile(null);
       setTitle('');
+      toast.success('Đã tải video lên thành công!');
       refetch();
     } catch (err: any) {
       setUploadError(err.message);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa video này không? Thao tác này không thể hoàn tác.')) {
+      return;
+    }
+
+    try {
+      setDeletingId(id);
+      await remove(id);
+      toast.success('Đã xóa nội dung thành công!');
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi khi xóa video');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -72,7 +103,7 @@ export default function InstructorVideoManager() {
           <p className="text-[10px] font-black uppercase tracking-widest text-black/60 mb-1 leading-none">Giảng viên / Content</p>
           <h1 className="text-3xl font-black text-black uppercase leading-none tracking-tight">Thư viện Video</h1>
         </div>
-        <Button onClick={refetch} variant="outline" size="sm" className="h-fit">
+        <Button onClick={() => refetch()} variant="outline" size="sm" className="h-fit">
           Làm mới ↻
         </Button>
       </div>
@@ -151,9 +182,18 @@ export default function InstructorVideoManager() {
           videos.map((vid) => (
             <div key={vid.id} className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8 flex flex-col md:flex-row gap-8 relative transition-all group hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
               {/* Thumbnail Placeholder */}
-              <div className="w-full md:w-64 aspect-video bg-black border-2 border-black flex items-center justify-center relative overflow-hidden group-hover:bg-gray-900 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                 <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] rotate-12">Preview View</span>
-              </div>
+              <button 
+                onClick={() => openPreview(vid)}
+                className="w-full md:w-64 aspect-video bg-black border-2 border-black flex items-center justify-center relative overflow-hidden group-hover:bg-gray-900 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group/btn"
+              >
+                 <div className="absolute inset-0 bg-indigo-600/0 group-hover/btn:bg-indigo-600/20 transition-colors" />
+                 <div className="z-10 flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 bg-white border-2 border-black rounded-none flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover/btn:scale-110 transition-transform">
+                       <Play className="w-6 h-6 text-black fill-black" />
+                    </div>
+                    <span className="text-[10px] font-black text-white uppercase tracking-[0.2em] opacity-40 group-hover/btn:opacity-100 transition-opacity">Xem thử Video</span>
+                 </div>
+              </button>
 
               <div className="flex-1 flex flex-col justify-between py-2">
                 <div>
@@ -194,7 +234,20 @@ export default function InstructorVideoManager() {
                       LOG: {new Date(vid.uploadedAt).toLocaleString('vi-VN')}
                    </p>
                    <div className="flex gap-4">
-                      <button className="text-[11px] font-black uppercase tracking-widest text-red-600 hover:bg-red-100 px-4 py-2 border-2 border-transparent hover:border-black transition-all">Xóa nội dung</button>
+                      <button 
+                        onClick={() => handleDelete(vid.id)}
+                        disabled={deletingId === vid.id}
+                        className="text-[11px] font-black uppercase tracking-widest text-red-600 hover:bg-red-100 px-4 py-2 border-2 border-transparent hover:border-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                         {deletingId === vid.id ? (
+                           <>
+                             <div className="w-3 h-3 border-2 border-red-600 border-t-transparent animate-spin rounded-none" />
+                             Đang xử lý...
+                           </>
+                         ) : (
+                           'Xóa nội dung'
+                         )}
+                      </button>
                    </div>
                 </div>
               </div>
@@ -202,6 +255,12 @@ export default function InstructorVideoManager() {
           ))
         )}
       </div>
+
+      <VideoPreviewModal 
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        video={selectedVideo}
+      />
     </div>
   );
 }

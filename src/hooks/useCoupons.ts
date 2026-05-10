@@ -33,7 +33,7 @@ export function useCoupons() {
     setValidating(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/coupons/validate?code=${encodeURIComponent(code)}&subtotal=${subtotal}`
+        `${process.env.NEXT_PUBLIC_API_URL}/coupons/validate?code=${encodeURIComponent(code)}&subtotal=${subtotal}`
       );
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Mã giảm giá không hợp lệ');
@@ -48,7 +48,7 @@ export function useCoupons() {
     setCreating(true);
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/coupons`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,7 +68,7 @@ export function useCoupons() {
   const fetchMyCoupons = useCallback(async () => {
     if (!session) return;
     const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/coupons/me`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const json = await res.json();

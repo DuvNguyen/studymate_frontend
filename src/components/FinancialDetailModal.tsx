@@ -19,6 +19,7 @@ interface FinancialDetailModalProps {
     progress?: number;
     orderNumber?: string;
     canRefund?: boolean;
+    refundReason?: string;
     onRefund?: () => void;
   };
 }
@@ -118,13 +119,22 @@ export function FinancialDetailModal({ isOpen, onClose, data }: FinancialDetailM
 
           {/* Action Buttons */}
           <div className="pt-4 flex flex-col gap-4">
-            {data.canRefund && data.onRefund && (
+            {data.canRefund && data.onRefund ? (
                <button 
                 onClick={data.onRefund}
                 className="w-full bg-yellow-400 text-black border-4 border-black p-4 font-black uppercase italic shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all hover:bg-yellow-300"
                >
                  Yêu cầu hoàn tiền →
                </button>
+            ) : (
+              data.status === 'COMPLETED' && data.refundReason && (
+                <div className="bg-zinc-100 border-4 border-dashed border-black p-4 text-center">
+                  <p className="text-[10px] font-black uppercase text-black/40 mb-1 leading-none italic">Điều kiện hoàn tiền</p>
+                  <p className="font-black text-rose-500 text-xs uppercase tracking-widest leading-tight italic">
+                    {data.refundReason}
+                  </p>
+                </div>
+              )
             )}
             <button 
               onClick={onClose}

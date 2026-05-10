@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { Button } from './Button';
 import { useRefund } from '@/hooks/useRefund';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface RefundRequestModalProps {
   isOpen: boolean;
@@ -20,8 +22,17 @@ interface RefundRequestModalProps {
   onSuccess: () => void;
 }
 
+const SUPPORTED_BANKS = [
+  'Vietcombank', 'VietinBank', 'BIDV', 'Agribank', 'ACB', 'MB Bank', 'Techcombank',
+  'Sacombank', 'VPBank', 'TPBank', 'VIB', 'HDBank', 'Eximbank', 'MSB (Maritime Bank)',
+  'OCB', 'SCB', 'LienVietPostBank', 'DongA Bank', 'SeABank', 'SHB', 'KienlongBank',
+  'NCB', 'Nam A Bank', 'Bac A Bank', 'ABBank', 'OceanBank', 'Bao Viet Bank',
+  'Viet A Bank', 'PVcomBank', 'CBBank'
+].sort();
+
 export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: RefundRequestModalProps) {
   const { requestRefund, loading } = useRefund();
+  const { fetchNotifications } = useNotifications();
   const [reason, setReason] = useState('');
   const [bankName, setBankName] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
@@ -32,6 +43,12 @@ export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: R
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!reason.trim() || !bankName || !bankAccountNumber.trim() || !bankAccountName.trim()) {
+      setError('Vui lòng điền đầy đủ các thông tin bắt buộc');
+      return;
+    }
+
     setError(null);
     try {
       await requestRefund({
@@ -41,6 +58,11 @@ export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: R
         bankAccountNumber,
         bankAccountName,
       });
+      toast.success('Yêu cầu hoàn tiền đã được gửi thành công!');
+      
+      // Refresh notifications bell
+      fetchNotifications();
+      
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -79,15 +101,18 @@ export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: R
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-black uppercase text-black mb-1 ml-1">Tên Ngân hàng</label>
-                <input
-                  type="text"
+                <label className="block text-[10px] font-black uppercase text-black mb-1 ml-1">Ngân hàng</label>
+                <select
                   required
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  placeholder="Ví dụ: Vietcombank, Techcombank..."
-                  className="w-full border-2 border-black p-3 font-black text-sm outline-none"
-                />
+                  className="w-full border-2 border-black p-3 font-black text-sm outline-none bg-white appearance-none cursor-pointer focus:bg-zinc-50"
+                >
+                  <option value="">Chọn ngân hàng...</option>
+                  {SUPPORTED_BANKS.map(bank => (
+                    <option key={bank} value={bank}>{bank}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase text-black mb-1 ml-1">Số tài khoản</label>
@@ -125,7 +150,8 @@ export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: R
             <Button
               type="button"
               onClick={onClose}
-              className="flex-1 h-14 bg-white text-black border-2 border-black hover:bg-zinc-100 font-black uppercase text-xs"
+              variant="outline"
+              className="flex-1 h-14 text-black font-black uppercase text-xs"
             >
               Hủy bỏ
             </Button>
@@ -134,7 +160,7 @@ export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: R
               disabled={loading}
               className="flex-2 h-14 bg-black text-white hover:bg-rose-600 border-2 border-black font-black uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none translate-x-[-2px] translate-y-[-2px] active:translate-x-0 active:translate-y-0 transition-all"
             >
-              {loading ? 'ĐANG GỬI...' : 'XÁC NHẬN YÊU CẦU →'}
+              {loading ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN YÊU CẦU →'}
             </Button>
           </div>
         </form>

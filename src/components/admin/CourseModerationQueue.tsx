@@ -201,14 +201,24 @@ export default function CourseManagementQueue() {
                     </div>
                   </div>
 
-                  <Button 
-                    onClick={() => setExpandedId(expandedId === course.id ? null : course.id)} 
-                    variant={expandedId === course.id ? 'primary' : 'outline'}
-                    size="sm"
-                    className="text-[10px]"
-                  >
-                    {expandedId === course.id ? 'Đóng chi tiết ∧' : 'Xem nội dung khóa học ∨'}
-                  </Button>
+                  <div className="flex gap-4">
+                    <Button 
+                      onClick={() => setExpandedId(expandedId === course.id ? null : course.id)} 
+                      variant={expandedId === course.id ? 'primary' : 'outline'}
+                      size="sm"
+                      className="text-[10px]"
+                    >
+                      {expandedId === course.id ? 'Đóng chi tiết ∧' : 'Xem nội dung khóa học ∨'}
+                    </Button>
+                    <a 
+                      href={`/courses/${course.slug}/learn`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center px-4 py-2 bg-yellow-400 border-2 border-black font-black text-[10px] uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-px hover:translate-y-px hover:shadow-none transition-all text-black"
+                    >
+                      Học Thử Khóa Học ↗
+                    </a>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-4 w-full md:w-48 border-t-4 border-black md:border-t-0 md:border-l-4 md:pl-8 pt-6 md:pt-0">

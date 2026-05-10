@@ -35,7 +35,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { session, isLoaded } = useSession();
   const { signOut } = useClerk();
   const [user, setUser] = useState<CurrentUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUser = async () => {
@@ -48,10 +48,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     setLoading(true);
+
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+      const timestamp = new Date().getTime();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me?t=${timestamp}`, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       });
 
       if (!res.ok) {

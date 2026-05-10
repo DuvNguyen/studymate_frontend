@@ -17,7 +17,7 @@ export function useEnrolledCourses() {
         return;
       }
 
-      const res = await fetch('http://localhost:3001/api/v1/enrollments/my-courses', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/my-courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

@@ -76,38 +76,48 @@ export function useRefund() {
     bankAccountName: string;
   }) => {
     if (!session) return;
-    const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refunds/request`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const json = await res.json();
-      throw new Error(json.message || 'Lỗi gửi yêu cầu hoàn tiền');
+    setLoading(true);
+    try {
+      const token = await session.getToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refunds/request`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.message || 'Lỗi gửi yêu cầu hoàn tiền');
+      }
+      return await res.json();
+    } finally {
+      setLoading(false);
     }
-    return res.json();
   };
 
   const processRefund = async (id: number, status: string, adminNote?: string) => {
     if (!session) return;
-    const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refunds/admin/${id}/process`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status, adminNote }),
-    });
-    if (!res.ok) {
-      const json = await res.json();
-      throw new Error(json.message || 'Lỗi xử lý yêu cầu');
+    setLoading(true);
+    try {
+        const token = await session.getToken();
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refunds/admin/${id}/process`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status, adminNote }),
+        });
+        if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.message || 'Lỗi xử lý yêu cầu');
+        }
+        return await res.json();
+    } finally {
+        setLoading(false);
     }
-    return res.json();
   };
 
   return {

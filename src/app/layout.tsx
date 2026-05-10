@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 
 import { CartProvider } from '@/contexts/CartContext';
 import { UserProvider } from '@/contexts/UserContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
 export default function RootLayout({
   children,
@@ -17,17 +18,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <UserProvider>
-        <CartProvider>
-          <html lang="vi">
-            <body>
+    <html lang="vi" suppressHydrationWarning>
+      <body>
+        <ClerkProvider>
+          <UserProvider>
+            <NotificationProvider>
+              <CartProvider>
                 {children}
                 <Toaster position="top-right" />
-            </body>
-          </html>
-        </CartProvider>
-      </UserProvider>
-    </ClerkProvider>
+              </CartProvider>
+            </NotificationProvider>
+          </UserProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

@@ -240,7 +240,7 @@ export default function InstructorCouponsPage() {
 
   useEffect(() => {
     fetchMyCoupons().finally(() => setPageLoading(false));
-  }, []);
+  }, [fetchMyCoupons]);
 
   if (userLoading) return <LoadingScreen />;
 

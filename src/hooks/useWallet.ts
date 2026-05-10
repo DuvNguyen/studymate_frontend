@@ -32,8 +32,14 @@ export interface Transaction {
       student?: {
         full_name: string;
         email: string;
+        profile?: {
+          fullName: string;
+        };
       };
     };
+    commission_rate: number;
+    platform_fee: number;
+    instructor_amount: number;
   };
 }
 
@@ -80,16 +86,25 @@ export function useWallet() {
     }
   }, [session]);
 
-  const fetchTransactions = useCallback(async () => {
+  const [transactionMeta, setTransactionMeta] = useState({ total: 0, totalPages: 1, page: 1 });
+
+  const fetchTransactions = useCallback(async (page: number = 1, limit: number = 10) => {
     if (!session) return;
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/me/transactions`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/me/transactions?page=${page}&limit=${limit}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Không thể lấy lịch sử giao dịch');
       const json = await res.json();
-      setTransactions(json.data || json);
+      const content = json.data || json;
+      
+      const items = Array.isArray(content) ? content : (content.items || []);
+      const total = content.total || items.length;
+      const totalPages = content.totalPages || Math.ceil(total / limit);
+
+      setTransactions(items);
+      setTransactionMeta({ total, totalPages, page });
     } catch (err: any) {
       setError(err.message);
     }
@@ -196,6 +211,30 @@ export function useWallet() {
     window.URL.revokeObjectURL(url);
   };
 
+  const exportPayoutsCsv = async (ids: number[]) => {
+    if (!session) return;
+    const token = await session.getToken();
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/payouts/export-csv`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids }),
+    });
+    if (!res.ok) {
+      const json = await res.json();
+      throw new Error(json.message || 'Lỗi xuất file CSV');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `studymate_payouts_${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const reconcilePayouts = async (file: File) => {
     if (!session) return;
     const token = await session.getToken();
@@ -212,12 +251,14 @@ export function useWallet() {
       const json = await res.json();
       throw new Error(json.message || 'Lỗi đối soát');
     }
-    return res.json();
+    const json = await res.json();
+    return json.data || json;
   };
 
   return {
     wallet,
     transactions,
+    transactionMeta,
     payouts,
     loading,
     error,
@@ -228,6 +269,7 @@ export function useWallet() {
     fetchAllPayouts,
     processPayout,
     exportPayouts,
+    exportPayoutsCsv,
     reconcilePayouts,
   };
 }

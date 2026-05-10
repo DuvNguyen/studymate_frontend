@@ -6,9 +6,10 @@ import MainLayout from '@/components/MainLayout';
 import { Button } from '@/components/Button';
 import LoadingScreen from '@/components/LoadingScreen';
 import { toast } from 'react-hot-toast';
-import { Search, Filter, ArrowUpRight, ArrowDownLeft, Activity, HelpCircle } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownLeft, Activity, HelpCircle, ArrowRight } from 'lucide-react';
 import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { Pagination } from '@/components/Pagination';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function AdminLedgerPage() {
   const { getToken, isLoaded } = useAuth();
@@ -42,9 +43,10 @@ export default function AdminLedgerPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
-      setItems(json.items || []);
-      setStats(json.stats || null);
-      setTotal(json.total || 0);
+      const content = json.data || json;
+      setItems(content.items || []);
+      setStats(content.stats || null);
+      setTotal(content.total || 0);
     } catch (err: any) {
       toast.error('Không thể tải dữ liệu sổ cái');
     } finally {
@@ -64,6 +66,40 @@ export default function AdminLedgerPage() {
       case 'CANCELLED': return <span className={`${base} bg-rose-500 text-white`}>CANCELLED</span>;
       case 'COMPLETED': return <span className={`${base} bg-blue-400 text-black`}>COMPLETED</span>;
       default: return <span className={`${base} bg-zinc-100 text-black`}>{status}</span>;
+    }
+  };
+
+  const getTransactionSource = (tx: any) => {
+    switch (tx.transaction_type) {
+      case 'PURCHASE':
+        return tx.order_item?.order?.student?.profile?.fullName || 'Học viên';
+      case 'EARNING':
+        return 'StudyMate Platform';
+      case 'PLATFORM_FEE':
+        return 'Course Booking';
+      case 'WITHDRAWAL':
+        return tx.wallet?.user?.profile?.fullName || 'Giảng viên';
+      case 'REFUND':
+        return 'StudyMate Platform';
+      default:
+        return 'Hệ thống';
+    }
+  };
+
+  const getTransactionDest = (tx: any) => {
+    switch (tx.transaction_type) {
+      case 'PURCHASE':
+        return 'StudyMate Platform';
+      case 'EARNING':
+        return tx.wallet?.user?.profile?.fullName || 'Giảng viên';
+      case 'PLATFORM_FEE':
+        return 'Hệ thống (Commission)';
+      case 'WITHDRAWAL':
+        return 'Bank Account';
+      case 'REFUND':
+        return tx.wallet?.user?.profile?.fullName || 'Người dùng';
+      default:
+        return 'Ví người dùng';
     }
   };
 
@@ -157,12 +193,20 @@ export default function AdminLedgerPage() {
         </div>
 
         {/* Ledger Table - Compact */}
-        <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
+           {loading && items.length > 0 && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center animate-in fade-in duration-200">
+                 <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-4">
+                    <LoadingSpinner size="lg" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-black">Đang cập nhật sổ cái...</p>
+                 </div>
+              </div>
+           )}
            <table className="w-full border-collapse">
               <thead>
                  <tr className="bg-black text-white text-[11px] font-black uppercase tracking-widest italic border-b-4 border-black">
                     <th className="p-4 text-left border-r-2 border-white/20 uppercase">TX-ID / Ngày</th>
-                    <th className="p-4 text-left border-r-2 border-white/20 uppercase">Đối tượng</th>
+                    <th className="p-4 text-left border-r-2 border-white/20 uppercase">DÒNG TIỀN (TỪ ➜ ĐẾN)</th>
                     <th className="p-4 text-center border-r-2 border-white/20 uppercase">Loại GD</th>
                     <th className="p-4 text-right border-r-2 border-white/20 uppercase">Giá trị</th>
                     <th className="p-4 text-right border-r-2 border-white/20 uppercase">Số dư sau</th>
@@ -183,11 +227,31 @@ export default function AdminLedgerPage() {
                              <p className="text-[11px] font-black text-black/70 italic tracking-tighter mt-1">{new Date(tx.created_at).toLocaleDateString('vi-VN')}</p>
                           </td>
                           <td className="p-4 border-r-4 border-black">
-                             <p className="font-black text-black uppercase text-[11px] truncate max-w-[150px] leading-tight">
-                                {tx.wallet?.user?.profile?.fullName || 'Hệ thống'}
-                             </p>
-                             <p className="text-[10px] font-black text-black/60 uppercase mt-1 italic tracking-tighter">UID: {tx.wallet?.user_id?.slice(-8) || 'SYSTEM'}</p>
-                          </td>
+                              <div className="flex items-center gap-2">
+                                 <div className="flex flex-col">
+                                    <span className="text-[9px] font-black uppercase text-black/50 leading-none mb-1">Từ (Nguồn)</span>
+                                    <span className="font-black text-black uppercase text-[10px] leading-tight">
+                                       {getTransactionSource(tx)}
+                                    </span>
+                                 </div>
+                                 <ArrowRight size={12} className="text-black/40 flex-shrink-0" />
+                                 <div className="flex flex-col">
+                                    <span className="text-[9px] font-black uppercase text-black/50 leading-none mb-1">Đến (Đích)</span>
+                                    <span className="font-black text-black uppercase text-[10px] leading-tight">
+                                       {getTransactionDest(tx)}
+                                    </span>
+                                 </div>
+                              </div>
+                              <div className="mt-2 pt-2 border-t border-black/5 flex items-center gap-2">
+                                 <span className="text-[8px] font-black bg-black text-white px-1 py-0.5">OWNER</span>
+                                 <span className="text-[9px] font-black text-black/70">
+                                    {tx.wallet?.user?.profile?.fullName || (tx.wallet?.user_id === 1 ? 'SYSTEM' : `USER ${tx.wallet?.user_id}`)}
+                                 </span>
+                                 <span className="text-[9px] font-black text-black/40 italic">
+                                    UID: {String(tx.wallet?.user_id).padStart(4, '0')}
+                                 </span>
+                              </div>
+                           </td>
                           <td className="p-4 border-r-4 border-black text-center whitespace-nowrap">
                              {getTypeBadge(tx.transaction_type)}
                           </td>

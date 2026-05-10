@@ -18,6 +18,7 @@ export default function InstructorWalletPage() {
   const {
     wallet,
     transactions,
+    transactionMeta,
     payouts,
     loading,
     fetchWallet,
@@ -31,15 +32,15 @@ export default function InstructorWalletPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(6);
 
   useEffect(() => {
     if (currentUser?.role === 'INSTRUCTOR') {
       fetchWallet();
-      fetchTransactions();
+      fetchTransactions(1, 999);
       fetchMyPayouts();
     }
-  }, [currentUser, fetchWallet, fetchTransactions, fetchMyPayouts]);
+  }, [currentUser?.id, fetchWallet, fetchTransactions, fetchMyPayouts]);
 
   const filteredTransactions = transactions.filter(tx => {
     if (!startDate || !endDate) return true;
@@ -47,6 +48,7 @@ export default function InstructorWalletPage() {
     return txDate >= startDate && txDate <= endDate;
   });
 
+  const totalPages = Math.ceil(filteredTransactions.length / limit);
   const paginatedTransactions = filteredTransactions.slice((page - 1) * limit, page * limit);
 
   const getTypeBadge = (type: string) => {
@@ -55,6 +57,8 @@ export default function InstructorWalletPage() {
       case 'EARNING': return <span className={`${base} bg-emerald-100 text-black`}>THU NHẬP</span>;
       case 'WITHDRAWAL': return <span className={`${base} bg-rose-100 text-black`}>RÚT TIỀN</span>;
       case 'REFUND': return <span className={`${base} bg-yellow-100 text-black`}>HOÀN TIỀN</span>;
+      case 'PURCHASE': return <span className={`${base} bg-blue-100 text-black`}>MUA HÀNG</span>;
+      case 'PLATFORM_FEE': return <span className={`${base} bg-purple-100 text-black`}>PHÍ SÀN</span>;
       default: return <span className={`${base} bg-zinc-100 text-black`}>{type}</span>;
     }
   };
@@ -62,26 +66,25 @@ export default function InstructorWalletPage() {
   const getStatusBadge = (status: string) => {
     const base = "border-2 border-black px-2 py-0.5 text-[10px] font-black uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)]";
     switch (status) {
-      case 'LOCKED': return <span className={`${base} bg-zinc-200 text-black`}>LOCKED</span>;
-      case 'AVAILABLE': return <span className={`${base} bg-emerald-400 text-black`}>AVAILABLE</span>;
+      case 'LOCKED': return <span className={`${base} bg-zinc-200 text-black`}>LOCKED (KHÓA)</span>;
+      case 'AVAILABLE': return <span className={`${base} bg-emerald-400 text-black font-black`}>AVAILABLE</span>;
+      case 'RELEASED': return <span className={`${base} bg-emerald-100 text-black`}>RELEASED</span>;
       case 'CANCELLED': return <span className={`${base} bg-rose-500 text-white`}>CANCELLED</span>;
       case 'PENDING': return <span className={`${base} bg-amber-400 text-black italic`}>PENDING</span>;
+      case 'COMPLETED': return <span className={`${base} bg-emerald-500 text-white`}>COMPLETED</span>;
       default: return <span className={`${base} bg-zinc-100 text-black`}>{status}</span>;
     }
   };
 
-  if ((userLoading && !currentUser) || (loading && !wallet)) {
-    return (
-      <LoadingScreen 
-        title="ĐANG TẢI DỮ LIỆU TÀI CHÍNH..."
-        description="STUDYMATE ĐANG KẾT NỐI VỚI HỆ THỐNG GIAO DỊCH."
-      />
-    );
-  }
-
   return (
     <MainLayout role="INSTRUCTOR" allowedRoles={['INSTRUCTOR']}>
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 pb-32 font-bold">
+      {((userLoading && !currentUser) || (loading && !wallet)) ? (
+        <LoadingScreen 
+          title="ĐANG TẢI DỮ LIỆU TÀI CHÍNH..."
+          description="STUDYMATE ĐANG KẾT NỐI VỚI HỆ THỐNG GIAO DỊCH."
+        />
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 pb-32 font-bold">
         
         {/* Header Section */}
         <div className="bg-black text-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(34,197,94,1)] p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -141,6 +144,11 @@ export default function InstructorWalletPage() {
                     </div>
                  )}
               </div>
+
+              <div className="flex justify-between items-center bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                 <span className="text-[10px] font-black uppercase">Sổ cái chi tiết</span>
+                 <Activity size={16} />
+              </div>
            </div>
 
            {/* Right Main Content: Transaction List (Compact) */}
@@ -189,14 +197,27 @@ export default function InstructorWalletPage() {
                                 </td>
                                 <td className="p-4 border-r-4 border-black">
                                    <p className="font-black text-black uppercase text-xs line-clamp-2 leading-tight">
-                                      {tx.transaction_type === 'EARNING' ? `BÁN KHÓA HỌC: ${tx.order_item?.course?.title || 'KHÓA HỌC'}` : tx.transaction_type}
+                                      {tx.transaction_type === 'EARNING' 
+                                         ? `BÁN KHÓA HỌC: ${tx.order_item?.course?.title || 'KHÓA HỌC'}` 
+                                         : tx.transaction_type === 'WITHDRAWAL'
+                                         ? 'YÊU CẦU RÚT TIỀN'
+                                         : tx.transaction_type === 'REFUND'
+                                         ? 'HOÀN TIỀN GIAO DỊCH'
+                                         : tx.transaction_type}
                                    </p>
                                    <div className="mt-2">
                                       {getTypeBadge(tx.transaction_type)}
                                    </div>
                                 </td>
-                                <td className={`p-4 border-r-4 border-black text-right font-black italic text-base tabular-nums whitespace-nowrap ${tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                                   {tx.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN').format(tx.amount)}
+                                <td className="p-4 border-r-4 border-black text-right font-black italic text-base tabular-nums whitespace-nowrap">
+                                   <div className={`flex flex-col items-end ${tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                      <span>{tx.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN').format(tx.amount)}</span>
+                                      {tx.transaction_type === 'EARNING' && tx.order_item && (
+                                        <span className="text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-1 mt-1 not-italic">
+                                          {(1 - tx.order_item.commission_rate) * 100}% SHARE
+                                        </span>
+                                      )}
+                                   </div>
                                 </td>
                                 <td className="p-4 border-r-4 border-black text-center whitespace-nowrap">
                                    {getStatusBadge(tx.status)}
@@ -215,6 +236,20 @@ export default function InstructorWalletPage() {
                     </tbody>
                  </table>
               </div>
+
+              {/* Pagination Section */}
+              {totalPages > 1 && (
+                <div className="flex justify-center">
+                  <Pagination 
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => {
+                      setPage(newPage);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  />
+                </div>
+              )}
            </div>
         </div>
 
@@ -232,6 +267,7 @@ export default function InstructorWalletPage() {
           transaction={selectedTransaction}
         />
       </div>
+      )}
     </MainLayout>
   );
 }

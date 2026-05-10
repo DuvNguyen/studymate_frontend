@@ -173,17 +173,24 @@ export default function AdminRefundsPage() {
           </div>
         </div>
 
-        <div className="bg-white border-8 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <div className="bg-white border-8 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
+           {loading && refundRequests.length > 0 && (
+             <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center animate-in fade-in duration-200">
+               <div className="bg-black text-white px-6 py-3 border-4 border-black font-black uppercase italic tracking-widest shadow-[8px_8px_0px_0px_rgba(244,63,94,1)] animate-pulse">
+                 ĐANG CẬP NHẬT...
+               </div>
+             </div>
+           )}
            <table className="w-full border-collapse">
               <thead>
-                 <tr className="bg-black text-white text-[10px] font-black uppercase tracking-widest italic border-b-4 border-black">
-                    <th className="p-4 text-left border-r-2 border-white/20 w-16">ID</th>
-                    <th className="p-4 text-left border-r-2 border-white/20">Học viên</th>
-                    <th className="p-4 text-left border-r-2 border-white/20">Khóa học</th>
-                    <th className="p-4 text-right border-r-2 border-white/20">Số tiền</th>
-                    <th className="p-4 text-center border-r-2 border-white/20 w-32">Tiến độ</th>
-                    <th className="p-4 text-center border-r-2 border-white/20 w-32">Ngày gửi</th>
-                    <th className="p-4 text-center w-20">Xử lý</th>
+                 <tr className="bg-black text-white text-xs font-black uppercase tracking-widest italic border-b-4 border-black">
+                    <th className="p-5 text-left border-r-2 border-white/20 w-20">ID</th>
+                    <th className="p-5 text-left border-r-2 border-white/20 min-w-[200px]">Học viên</th>
+                    <th className="p-5 text-left border-r-2 border-white/20">Khóa học</th>
+                    <th className="p-5 text-right border-r-2 border-white/20 w-40">Số tiền</th>
+                    <th className="p-5 text-center border-r-2 border-white/20 w-32">Tiến độ</th>
+                    <th className="p-5 text-center border-r-2 border-white/20 w-36">Ngày gửi</th>
+                    <th className="p-5 text-center w-24">Xử lý</th>
                  </tr>
               </thead>
               <tbody className="divide-y-4 divide-black">
@@ -194,26 +201,26 @@ export default function AdminRefundsPage() {
                  ) : (
                     paginatedRequests.map((request) => (
                        <tr key={request.id} className="hover:bg-zinc-50 transition-colors group">
-                          <td className="p-3 border-r-4 border-black font-black text-[10px]">#{request.id}</td>
-                          <td className="p-3 border-r-4 border-black">
-                             <p className="font-black text-black uppercase text-[10px]">{request.student?.full_name}</p>
-                             <p className="text-[8px] font-bold opacity-40 uppercase truncate">{request.student?.email}</p>
+                          <td className="p-5 border-r-4 border-black font-black text-xs text-black whitespace-nowrap">#{request.id}</td>
+                          <td className="p-5 border-r-4 border-black">
+                             <p className="font-black text-black uppercase text-xs leading-tight mb-1">{request.student?.full_name}</p>
+                             <p className="text-[10px] font-black uppercase truncate text-black">{request.student?.email}</p>
                           </td>
-                          <td className="p-3 border-r-4 border-black">
-                             <p className="font-black text-black uppercase text-[10px] line-clamp-1 italic tracking-tighter">{request.course?.title}</p>
+                          <td className="p-5 border-r-4 border-black">
+                             <p className="font-black text-black uppercase text-xs line-clamp-2 italic tracking-tighter leading-tight">{request.course?.title}</p>
                           </td>
-                          <td className="p-3 border-r-4 border-black text-right font-black italic text-black whitespace-nowrap">
+                          <td className="p-5 border-r-4 border-black text-right font-black italic text-black whitespace-nowrap text-sm">
                              {new Intl.NumberFormat('vi-VN').format(request.amount)}
                           </td>
-                          <td className="p-3 border-r-4 border-black text-center">
-                             <span className="bg-emerald-100 border-2 border-black px-2 py-0.5 text-[9px] font-black uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                          <td className="p-5 border-r-4 border-black text-center">
+                             <span className="bg-emerald-100 border-2 border-black px-4 py-1 text-[11px] font-black uppercase shadow-[4px_4px_0px_rgba(0,0,0,1)]">
                                 {request.enrollment?.progress_percent || 0}%
                              </span>
                           </td>
-                          <td className="p-3 border-r-4 border-black text-center font-black text-black italic text-[9px]">
+                          <td className="p-5 border-r-4 border-black text-center font-black text-black italic text-xs">
                              {new Date(request.created_at).toLocaleDateString('vi-VN')}
                           </td>
-                          <td className="p-3 text-center">
+                          <td className="p-5 text-center">
                              <button 
                                onClick={() => { setSelectedRequest(request); setIsModalOpen(true); }}
                                className="mx-auto w-10 h-10 bg-black text-white hover:bg-rose-500 hover:text-white border-2 border-black flex items-center justify-center transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
