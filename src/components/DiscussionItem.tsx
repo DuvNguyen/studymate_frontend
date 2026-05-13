@@ -18,6 +18,7 @@ interface DiscussionItemProps {
   onDelete: (id: number) => void;
   onUpdate: (id: number, content: string) => void;
   onReply: (content: string) => Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentUser: any;
   level?: number;
 }

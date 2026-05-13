@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { Suspense, useState, useRef, useEffect, useMemo } from 'react';
-import { useCourseDetail, CourseDetail } from '@/hooks/useCourseDetail';
+import { useCourseDetail } from '@/hooks/useCourseDetail';
 import PublicLayout from '@/components/PublicLayout';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
@@ -10,11 +10,10 @@ import toast from 'react-hot-toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useClerk } from '@clerk/nextjs';
-import Footer from '@/components/Footer';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 import Link from 'next/link';
-import LoadingScreen from '@/components/LoadingScreen';
+import Image from 'next/image';
 import ReviewSection from '@/components/ReviewSection';
 
 function VideoPreviewModal({ 
@@ -91,10 +90,10 @@ function CourseDetailContent() {
     setIsModalOpen(true);
   };
 
-  const { addToCart, appliedCoupon, discountAmount, applyCoupon, removeCoupon } = useCart();
+  const { addToCart, applyCoupon, removeCoupon, discountAmount, appliedCoupon } = useCart();
   const router = useRouter();
   const { user, loading: userLoading } = useCurrentUser();
-  const { signOut } = useClerk();
+  const { signOut, session } = useClerk();
   const { enrollments, loading: enrollLoading } = useEnrolledCourses();
 
   // Local input state for the coupon code
@@ -107,7 +106,7 @@ function CourseDetailContent() {
       isEnrolled: !!enrollment,
       isCompleted: enrollment?.progress_percent === 100
     };
-  }, [course?.id, enrollments]);
+  }, [course, enrollments]);
 
   // Loading states
   const [isAdding, setIsAdding] = useState(false);
@@ -184,7 +183,7 @@ function CourseDetailContent() {
     }
 
     // Reset snap count after 2s of inactivity
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       clickCountRef.current = 0;
     }, 2000);
 
@@ -252,7 +251,7 @@ function CourseDetailContent() {
     
     setIsEnrolling(true);
     try {
-      const token = await (window as any).Clerk?.session?.getToken();
+      const token = await session?.getToken();
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/direct`, {
         method: 'POST',
         headers: { 
@@ -269,7 +268,8 @@ function CourseDetailContent() {
       } else {
         toast.error(result.message || 'Lỗi ghi danh trực tiếp');
       }
-    } catch (err: any) {
+    } catch (err) {
+      console.error(err);
       toast.error('Lỗi kết nối server');
     } finally {
       setIsEnrolling(false);
@@ -508,24 +508,11 @@ function CourseDetailContent() {
                   onClick={() => openPreview(course.sections?.[0]?.lessons?.[0]?.youtubeVideoId || null)}
                 >
                   {course.thumbnailUrl ? (
-                    <img 
+                    <Image 
                       src={course.thumbnailUrl} 
                       alt={course.title}
-                      className="absolute top-0 left-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.classList.add('flex', 'items-center', 'justify-center', 'bg-gray-900');
-                          parent.innerHTML += `
-                            <div class="px-4 text-center">
-                              <p class="text-[10px] font-black text-amber-400 uppercase tracking-tighter line-clamp-2 mb-2">${course.title}</p>
-                              <p class="text-[8px] font-bold text-gray-500 uppercase tracking-widest leading-none">Vui lòng kiểm tra kết nối ảnh</p>
-                            </div>
-                          `;
-                        }
-                      }}
+                      fill
+                      className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                     />
                   ) : (
                     <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-white font-bold">

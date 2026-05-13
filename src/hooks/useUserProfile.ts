@@ -47,8 +47,8 @@ export function useUserProfile() {
 
         const json = await res.json();
         setProfile(json.data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
       }
@@ -85,8 +85,8 @@ export function useUserProfile() {
       const json = await res.json();
       setProfile(json.data); // Cập nhật lại state với dữ liệu mới
       return json.data;
-    } catch (err: any) {
-        setError(err.message);
+    } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
         throw err;
     } finally {
       setUpdating(false);

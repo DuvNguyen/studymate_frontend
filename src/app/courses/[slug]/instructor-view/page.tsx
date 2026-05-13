@@ -1,28 +1,24 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useCourseLearn } from '@/hooks/useCourseLearn';
 import { Lesson } from '@/hooks/useCourseDetail';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useInstructorDiscussions } from '@/hooks/useInstructorDiscussions';
+import { Discussion } from '@/hooks/useDiscussions';
 import { DiscussionItem } from '@/components/DiscussionItem';
 import { Button } from '@/components/Button';
 import { 
   Play, 
   MessageSquare, 
-  Info,
-  Search, 
   ChevronRight, 
   ChevronDown,
-  ArrowLeft,
-  Zap,
   Target,
   ChevronLeft,
   Settings,
-  Eye,
   ShieldCheck,
   BookOpen
 } from 'lucide-react';
@@ -68,20 +64,19 @@ export default function InstructorViewPage() {
   // Set initial active lesson
   useEffect(() => {
     if (course && course.sections.length > 0 && !activeLesson) {
-      // Check query param for lesson ID
       const searchParams = new URLSearchParams(window.location.search);
       const lessonId = searchParams.get('lesson');
       
       if (lessonId) {
         const targetLesson = allLessons.find(l => l.id === Number(lessonId));
         if (targetLesson) {
-          setActiveLesson(targetLesson);
+          setTimeout(() => setActiveLesson(targetLesson), 0);
           return;
         }
       }
 
       const firstLesson = course.sections[0].lessons[0];
-      if (firstLesson) setActiveLesson(firstLesson);
+      if (firstLesson) setTimeout(() => setActiveLesson(firstLesson), 0);
     }
   }, [course, activeLesson, allLessons]);
 
@@ -92,7 +87,7 @@ export default function InstructorViewPage() {
       course.sections.forEach(s => {
         initial[s.id] = true;
       });
-      setExpandedSections(initial);
+      setTimeout(() => setExpandedSections(initial), 0);
     }
   }, [course]);
 
@@ -267,7 +262,7 @@ export default function InstructorViewPage() {
                           <p className="text-2xl font-black text-black uppercase italic">Chưa có thảo luận nào trong bài học này.</p>
                         </div>
                       ) : (
-                        discussions.map((d: any) => (
+                        discussions.map((d: Discussion) => (
                           <DiscussionItem 
                             key={d.id} 
                             discussion={d} 

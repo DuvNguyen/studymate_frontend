@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
 import { X, Save, Clock, Target, ListChecks } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Button } from '@/components/Button';
 interface QuizSettingsModalProps {
   courseId: number;
   sectionId: number | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   quiz: any; // Existing quiz if editing
   onClose: () => void;
   onSaved: () => void;
@@ -16,6 +17,7 @@ interface QuizSettingsModalProps {
 
 export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, onSaved }: QuizSettingsModalProps) {
   const { getToken } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [banks, setBanks] = useState<any[]>([]);
   const [title, setTitle] = useState(quiz?.title || (sectionId ? 'BÀI KIỂM TRA CHƯƠNG' : 'BÀI KIỂM TRA CUỐI KHÓA'));
   const [passingScore, setPassingScore] = useState(quiz?.passingScore || 80);
@@ -31,11 +33,7 @@ export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, 
   const [numHard, setNumHard] = useState(quiz?.numHard || 0);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchBanks();
-  }, []);
-
-  const fetchBanks = async () => {
+  const fetchBanks = useCallback(async () => {
     try {
       const token = await getToken();
       const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${courseId}/question-banks`, {
@@ -45,10 +43,14 @@ export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, 
         const data = await res.json();
         setBanks(data.data || data);
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi khi tải ngân hàng câu hỏi');
     }
-  };
+  }, [courseId, getToken]);
+
+  useEffect(() => {
+    fetchBanks();
+  }, [fetchBanks]);
 
   const handleSave = async () => {
     if (!title.trim()) return toast.error('Vui lòng nhập tiêu đề');
@@ -94,7 +96,7 @@ export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, 
         onSaved();
         onClose();
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi khi lưu');
     } finally {
       setLoading(false);

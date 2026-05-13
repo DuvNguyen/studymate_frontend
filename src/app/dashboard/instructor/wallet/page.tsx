@@ -2,23 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
-import { Button } from '@/components/Button';
+
 import MainLayout from '@/components/MainLayout';
 import LoadingScreen from '@/components/LoadingScreen';
-import { useUser } from '@clerk/nextjs';
+
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useRouter } from 'next/navigation';
+
 import { WithdrawalModal } from '@/components/WithdrawalModal';
 import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { Pagination } from '@/components/Pagination';
-import { Wallet, HelpCircle, ArrowUpRight, ArrowDownLeft, Activity } from 'lucide-react';
+import { HelpCircle, Activity } from 'lucide-react';
 
 export default function InstructorWalletPage() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const {
     wallet,
     transactions,
-    transactionMeta,
     payouts,
     loading,
     fetchWallet,
@@ -30,6 +29,7 @@ export default function InstructorWalletPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [page, setPage] = useState(1);
   const [limit] = useState(6);
@@ -40,7 +40,7 @@ export default function InstructorWalletPage() {
       fetchTransactions(1, 999);
       fetchMyPayouts();
     }
-  }, [currentUser?.id, fetchWallet, fetchTransactions, fetchMyPayouts]);
+  }, [currentUser?.id, currentUser?.role, fetchWallet, fetchTransactions, fetchMyPayouts]);
 
   const filteredTransactions = transactions.filter(tx => {
     if (!startDate || !endDate) return true;

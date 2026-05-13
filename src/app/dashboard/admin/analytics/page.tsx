@@ -7,23 +7,61 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
 import LoadingScreen from '@/components/LoadingScreen';
 import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { 
-  TrendingUp, Users, DollarSign, ShoppingBag, Download, Calendar, RefreshCw, AlertTriangle, Zap, X
+  TrendingUp, DollarSign, ShoppingBag, Download, Calendar, RefreshCw, AlertTriangle, Zap, X
 } from 'lucide-react';
 import MetricCard from '@/components/analytics/MetricCard';
 import { Button } from '@/components/Button';
 
 const COLORS = ['#FFD600', '#000000', '#10B981', '#3B82F6', '#F43F5E'];
 
+interface DashboardStats {
+  totalRevenue: number;
+  growth: number;
+  orderCount: number;
+  thisMonthRevenue: number;
+}
+
+interface RevenuePoint {
+  ds: string;
+  y: number;
+}
+
+interface CategoryShare {
+  id?: string;
+  name: string;
+  value: number;
+}
+
+interface AnalyticsData {
+  anomalies: Array<{
+    ds: string;
+    y: number;
+    y_rolling_mean: number;
+  }>;
+  forecast: {
+    summary: {
+      next_period_total: number;
+      trend: 'up' | 'down';
+    };
+  };
+  ranking: Array<{
+    category_id?: string;
+    name: string;
+    priority: string;
+    growth_score: number;
+  }>;
+}
+
 const AdminAnalyticsDashboard = () => {
   const { session } = useSession();
   const { user, loading: userLoading } = useCurrentUser();
-  const [stats, setStats] = useState<any>(null);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [chartData, setChartData] = useState<RevenuePoint[]>([]);
+  const [categories, setCategories] = useState<CategoryShare[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
@@ -186,7 +224,7 @@ const AdminAnalyticsDashboard = () => {
             title="CẢNH BÁO BẤT THƯỜNG" 
             value={analytics?.anomalies?.length || 0} 
             suffix=" CẢNH BÁO"
-            icon={<AlertTriangle className={analytics?.anomalies?.length > 0 ? 'text-rose-600' : ''} size={24} />}
+            icon={<AlertTriangle className={analytics && analytics.anomalies.length > 0 ? 'text-rose-600' : ''} size={24} />}
           />
         </div>
 
@@ -259,7 +297,7 @@ const AdminAnalyticsDashboard = () => {
                     stroke="#000"
                     strokeWidth={4}
                   >
-                    {categories.map((entry: any, index: number) => (
+                    {categories.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -275,7 +313,7 @@ const AdminAnalyticsDashboard = () => {
               </ResponsiveContainer>
             </div>
             <div className="mt-4 space-y-2 overflow-y-auto flex-1 max-h-[200px] pr-2">
-              {categories.map((cat: any, idx: number) => (
+              {categories.map((cat, idx) => (
                 <div key={cat.id || idx} className="flex justify-between items-center text-xs font-black text-black p-2 border-2 border-black uppercase" style={{ borderLeftColor: COLORS[idx % COLORS.length], borderLeftWidth: '8px' }}>
                   <span className="truncate mr-2">{cat.name}</span>
                   <span className="flex-shrink-0">{cat.value.toLocaleString()} VNĐ</span>
@@ -318,7 +356,7 @@ const AdminAnalyticsDashboard = () => {
 
              <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                 <h4 className="font-black uppercase text-[10px] text-yellow-400 border-b border-white/20 pb-2 tracking-widest sticky top-0 bg-black z-10">Xếp hạng danh mục tiềm năng</h4>
-                {analytics?.ranking?.map((item: any, idx: number) => (
+                {analytics?.ranking?.map((item, idx) => (
                   <div key={item.category_id || idx} className="flex justify-between items-center bg-white/5 p-3 border-l-4 border-yellow-400">
                      <span className="font-bold text-sm uppercase">{item.name}</span>
                      <div className="flex items-center gap-4">
@@ -346,7 +384,7 @@ const AdminAnalyticsDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="font-bold text-black divide-y-4 divide-black">
-                  {analytics?.anomalies?.length > 0 ? analytics.anomalies.map((anno: any, idx: number) => (
+                  {analytics && analytics.anomalies.length > 0 ? analytics.anomalies.map((anno, idx) => (
                     <tr key={idx} className="hover:bg-rose-50 transition-colors">
                       <td className="p-3 text-sm">{anno.ds}</td>
                       <td className="p-3 text-sm">{anno.y?.toLocaleString() || 0} VNĐ</td>
@@ -414,7 +452,6 @@ const AdminAnalyticsDashboard = () => {
         </button>
       </div>
 
-      {/* Actual Info Box with proper State */}
       <AnalyticsInfoModal isOpen={showInfo} onClose={() => setShowInfo(false)} />
     </MainLayout>
   );
@@ -452,7 +489,7 @@ const AnalyticsInfoModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () 
           <section>
             <h4 className="font-black text-sm uppercase tracking-widest text-black/40 mb-3">2. Cảnh báo bất thường (Anomalies)</h4>
             <p className="text-base font-bold text-black border-l-4 border-rose-500 pl-4 py-1">
-              Phát hiện các điểm doanh thu "lạ" so với quỹ đạo thông thường.
+              Phát hiện các điểm doanh thu &quot;lạ&quot; so với quỹ đạo thông thường.
             </p>
             <div className="mt-4 text-sm font-bold text-black/60 italic space-y-2">
               <p>• <span className="text-rose-600">Giảm đột biến</span>: Có thể do lỗi thanh toán hoặc hệ thống.</p>

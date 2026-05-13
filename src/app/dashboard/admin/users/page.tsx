@@ -80,6 +80,7 @@ export default function AdminUsersPage() {
       await deleteUser(id);
       alert('Đã xóa cứng người dùng thành công!');
       fetchUsers();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.message || 'Có lỗi xảy ra khi xóa người dùng');
     }
@@ -109,6 +110,7 @@ export default function AdminUsersPage() {
         const error = await res.json();
         alert(error.message || 'Có lỗi khi cấm người dùng.');
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.message || 'Có lỗi khi gọi API.');
     } finally {
@@ -136,6 +138,7 @@ export default function AdminUsersPage() {
         const error = await res.json();
         alert(error.message || 'Có lỗi khi bỏ đình chỉ.');
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.message || 'Có lỗi khi gọi API.');
     } finally {

@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePendingVideos, useReviewVideo, Video } from '@/hooks/useVideos';
+import { usePendingVideos, useReviewVideo } from '@/hooks/useVideos';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { Button } from '@/components/Button';
 import { Pagination } from '@/components/Pagination';
 
 export default function VideoModerationQueue() {
-  const { videos, meta, loading, error, refetch } = usePendingVideos();
+  const { videos, meta, loading, refetch } = usePendingVideos();
   const { review, reviewing } = useReviewVideo();
   const { users: instructors, fetchUsers: fetchInstructors } = useAdminUsers();
 
@@ -43,7 +43,7 @@ export default function VideoModerationQueue() {
     try {
       await review(id, 'APPROVED');
       refetch();
-    } catch (err) {
+    } catch {
       alert('Lỗi khi duyệt video');
     }
   };
@@ -58,7 +58,7 @@ export default function VideoModerationQueue() {
       setRejectReason('');
       setActiveVideoId(null);
       refetch();
-    } catch (err) {
+    } catch {
       alert('Lỗi khi từ chối video');
     }
   };
@@ -222,8 +222,8 @@ export default function VideoModerationQueue() {
                     <div className="space-y-4">
                       <h4 className="font-black text-xs uppercase tracking-[0.3em] border-b-4 border-black pb-2 inline-block text-black">Ghi chú hệ thống</h4>
                       <p className="text-xs font-black text-black italic leading-relaxed bg-yellow-50 p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        "Nội dung video này sau khi phê duyệt sẽ được ánh xạ trực tiếp vào khóa học của Giảng viên. 
-                        Vui lòng kiểm tra tính sư phạm và chất lượng âm thanh kỹ thuật."
+                        &quot;Nội dung video này sau khi phê duyệt sẽ được ánh xạ trực tiếp vào khóa học của Giảng viên. 
+                        Vui lòng kiểm tra tính sư phạm và chất lượng âm thanh kỹ thuật.&quot;
                       </p>
                     </div>
                   </div>

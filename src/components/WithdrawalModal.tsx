@@ -8,7 +8,9 @@ import { useWallet } from '@/hooks/useWallet';
 interface WithdrawalModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   wallet: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentUser: any;
   onSuccess?: () => void;
 }
@@ -72,8 +74,8 @@ export function WithdrawalModal({
         onClose();
         setSuccess(false);
       }, 3000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

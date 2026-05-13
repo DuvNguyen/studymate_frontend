@@ -16,6 +16,7 @@ export default function InstructorCoursesPage() {
   const router = useRouter();
   const { categories, loading: categoriesLoading } = useCategories();
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +71,7 @@ export default function InstructorCoursesPage() {
 
         setCourses(courseList);
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi tải danh sách khóa học');
     } finally {
       setLoading(false);
@@ -79,6 +80,7 @@ export default function InstructorCoursesPage() {
 
   useEffect(() => {
     fetchCourses();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusTab, triggerFetch, page]);
 
   const handleSearch = () => {
@@ -102,7 +104,7 @@ export default function InstructorCoursesPage() {
       } else {
         toast.error(`Lỗi khi ${action} khóa học`);
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi kết nối');
     }
   };
@@ -144,7 +146,7 @@ export default function InstructorCoursesPage() {
       } else {
         toast.error('Không thể tạo khóa học mới');
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi kết nối');
     } finally {
       setIsSubmitting(false);

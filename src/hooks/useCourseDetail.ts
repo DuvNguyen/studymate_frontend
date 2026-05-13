@@ -52,16 +52,20 @@ export function useCourseDetail(slug: string): UseCourseDetailReturn {
 
   useEffect(() => {
     if (!slug) {
-      setLoading(true); // Vẫn ở trạng thái loading nếu chưa có slug
+      setTimeout(() => {
+        setLoading(true); // Vẫn ở trạng thái loading nếu chưa có slug
+      }, 0);
       return;
     }
 
     const controller = new AbortController();
     
     // Reset state về trang thái ban đầu mỗi khi slug thay đổi
-    setLoading(true);
-    setCourse(null);
-    setError(null);
+    setTimeout(() => {
+      setLoading(true);
+      setCourse(null);
+      setError(null);
+    }, 0);
 
     fetch(`${API_BASE}/courses/${slug}`, { signal: controller.signal })
       .then((res) => {

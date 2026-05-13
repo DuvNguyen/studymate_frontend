@@ -1,27 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
 
 interface VideoPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSelect: (videoId: number, videoData: any) => void;
 }
 
 export default function VideoPickerModal({ isOpen, onClose, onSelect }: VideoPickerModalProps) {
   const { getToken } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchVideos();
-    }
-  }, [isOpen]);
 
-  const fetchVideos = async () => {
+
+  const fetchVideos = useCallback(async () => {
     setLoading(true);
     try {
       const token = await getToken();
@@ -33,12 +31,18 @@ export default function VideoPickerModal({ isOpen, onClose, onSelect }: VideoPic
         const data = await res.json();
         setVideos(data.data || data); // handle both paginated and flat response
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi tải danh sách video');
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchVideos();
+    }
+  }, [isOpen, fetchVideos]);
 
   if (!isOpen) return null;
 

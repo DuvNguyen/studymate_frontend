@@ -1,26 +1,55 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useClerk } from '@clerk/nextjs';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
+import Image from 'next/image';
+
+interface InstructorDocument {
+  id: number;
+  title: string;
+  documentType: string;
+  fileUrl: string;
+}
+
+interface InstructorProfile {
+  bankName: string;
+  bankAccountName: string;
+  bankAccountNumber: string;
+  kycStatus: 'PENDING' | 'PENDING_UPDATE' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string;
+  certificates?: Array<{ title: string; fileUrl: string } | string>;
+  idCardUrl?: string;
+  pendingData?: Partial<InstructorProfile>;
+}
+
+interface KycRequest {
+  id: number;
+  fullName: string;
+  email: string;
+  instructorProfile: InstructorProfile;
+  instructorDocuments: InstructorDocument[];
+}
+
+type KycStatusTab = 'PENDING' | 'PENDING_UPDATE' | 'APPROVED' | 'REJECTED' | 'ALL';
 
 export default function AdminKycPage() {
-  const [kycs, setKycs] = useState<any[]>([]);
+  const [kycs, setKycs] = useState<KycRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'PENDING' | 'PENDING_UPDATE' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
+  const [activeTab, setActiveTab] = useState<KycStatusTab>('PENDING');
   const { session } = useClerk();
   const { user: appUser, loading: appLoading } = useCurrentUser();
 
-  const fetchKycs = async () => {
+  const fetchKycs = useCallback(async () => {
     try {
       setLoading(true);
       const token = await session?.getToken();
       if (!token) return;
 
-      const res = await fetch(`http://localhost:3001/api/v1/users/kyc-requests`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/kyc-requests`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const json = await res.json();
@@ -35,13 +64,13 @@ export default function AdminKycPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
     if (session) {
       fetchKycs();
     }
-  }, [session]);
+  }, [session, fetchKycs]);
 
   const handleAction = async (id: number, status: 'APPROVED' | 'REJECTED') => {
     let reason = '';
@@ -57,7 +86,7 @@ export default function AdminKycPage() {
     try {
       setActionLoading(id);
       const token = await session?.getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/users/${id}/kyc-status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}/kyc-status`, {
         method: 'PATCH',
         headers: { 
           'Authorization': `Bearer ${token}`, 
@@ -73,8 +102,8 @@ export default function AdminKycPage() {
         const err = await res.json();
         alert(err.message || 'Có lỗi xảy ra.');
       }
-    } catch (err: any) {
-      alert(err.message || 'Lỗi kết nối.');
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Lỗi kết nối.');
     } finally {
       setActionLoading(null);
     }
@@ -105,25 +134,26 @@ export default function AdminKycPage() {
         </div>
 
         <div className="grid grid-cols-5 gap-2 p-2 -m-2 overflow-visible w-full">
-          {[
-            { id: 'PENDING', label: 'DUYÊT MỚI' },
-            { id: 'PENDING_UPDATE', label: 'CẬP NHẬT' },
-            { id: 'APPROVED', label: 'ĐÃ DUYỆT' },
-            { id: 'REJECTED', label: 'TỪ CHỐI' },
-            { id: 'ALL', label: 'TẤT CẢ' }
-          ].map(tab => {
-            const count = tab.id === 'ALL' ? kycs.length : kycs.filter(u => u.instructorProfile?.kycStatus === tab.id).length;
-            const hasUnread = count > 0 && activeTab !== tab.id;
+          {(['PENDING', 'PENDING_UPDATE', 'APPROVED', 'REJECTED', 'ALL'] as const).map(tabId => {
+            const labelMap: Record<KycStatusTab, string> = {
+              'PENDING': 'DUYÊT MỚI',
+              'PENDING_UPDATE': 'CẬP NHẬT',
+              'APPROVED': 'ĐÃ DUYỆT',
+              'REJECTED': 'TỪ CHỐI',
+              'ALL': 'TẤT CẢ'
+            };
+            const count = tabId === 'ALL' ? kycs.length : kycs.filter(u => u.instructorProfile?.kycStatus === tabId).length;
+            const hasUnread = count > 0 && activeTab !== tabId;
 
             return (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                key={tabId}
+                onClick={() => setActiveTab(tabId)}
                 className={`group relative w-full h-14 flex items-center justify-center px-1 font-black uppercase text-[10px] sm:text-xs border-2 border-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
-                  activeTab === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+                  activeTab === tabId ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
                 }`}
               >
-                <span className="text-center break-words leading-tight">{tab.label}</span>
+                <span className="text-center break-words leading-tight">{labelMap[tabId]}</span>
                 {hasUnread && (
                   <span className="absolute -top-2 -right-1 w-4 h-4 bg-red-600 border-2 border-black rounded-full shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] animate-bounce z-20" />
                 )}
@@ -270,13 +300,13 @@ export default function AdminKycPage() {
                       {(() => {
                         const profile = u.instructorProfile;
                         if (!profile) return null;
-                        const hasPending = profile?.kycStatus === 'PENDING_UPDATE' && profile?.pendingData;
-                        const data = hasPending ? profile.pendingData : profile;
+                        const hasPending = profile.kycStatus === 'PENDING_UPDATE' && !!profile.pendingData;
+                        const data = (hasPending && profile.pendingData) ? profile.pendingData : profile;
 
-                        const isChanged = (key: string) => {
+                        const isChanged = (key: keyof InstructorProfile) => {
                           if (!hasPending) return true; 
-                          const oldVal = (profile as any)?.[key];
-                          const newVal = (data as any)?.[key];
+                          const oldVal = profile[key];
+                          const newVal = data[key];
                           return JSON.stringify(oldVal) !== JSON.stringify(newVal);
                         };
 
@@ -314,9 +344,9 @@ export default function AdminKycPage() {
                               <div className="space-y-4">
                                 <h4 className="text-xs font-black uppercase tracking-widest border-b-2 border-black pb-2 mb-4">Danh hiệu nổi bật</h4>
                                 <div className="grid grid-cols-1 gap-4">
-                                  {data?.certificates?.length > 0 ? (
+                                  {data?.certificates && data.certificates.length > 0 ? (
                                     <div className="space-y-4">
-                                      {data.certificates.map((c: any, idx: number) => {
+                                      {data.certificates.map((c, idx) => {
                                         const title = typeof c === 'string' ? c : c.title;
                                         const fileUrl = typeof c === 'object' ? c?.fileUrl : null;
                                         const isPdf = fileUrl?.toLowerCase().endsWith('.pdf');
@@ -370,7 +400,7 @@ export default function AdminKycPage() {
                                 <div className="bg-white border-2 border-black p-4 inline-block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                                   {data?.idCardUrl ? (
                                     <a href={data.idCardUrl} target="_blank" rel="noreferrer" className="block hover:opacity-90 transition-opacity">
-                                      <img src={data.idCardUrl} alt="ID Card" className="max-h-80 w-auto object-contain" />
+                                      <Image src={data.idCardUrl} alt="ID Card" width={800} height={500} className="max-h-80 w-auto object-contain" />
                                     </a>
                                   ) : (
                                     <div className="h-40 w-80 bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
@@ -382,12 +412,12 @@ export default function AdminKycPage() {
                             )}
 
                             {/* Portfolio Documents */}
-                            {isChanged('documents') && (
+                            {isChanged('certificates') && (
                               <div className="md:col-span-2 space-y-4 pt-4">
                                 <h4 className="text-xs font-black uppercase tracking-widest border-b-2 border-black pb-2 mb-4">Hồ sơ năng lực bổ sung</h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                                  {u.instructorDocuments?.length > 0 ? (
-                                    u.instructorDocuments.map((doc: any) => (
+                                  {u.instructorDocuments && u.instructorDocuments.length > 0 ? (
+                                    u.instructorDocuments.map((doc) => (
                                       <div key={doc.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group">
                                         <div className="flex justify-between items-start mb-3">
                                           <div>
@@ -405,7 +435,7 @@ export default function AdminKycPage() {
                                                 <span className="text-[10px] font-black text-black">XEM PDF</span>
                                               </div>
                                             ) : (
-                                              <img src={doc.fileUrl} alt={doc.title} className="h-40 w-auto object-cover" />
+                                              <Image src={doc.fileUrl} alt={doc.title} width={400} height={225} className="h-40 w-auto object-cover" />
                                             )}
                                           </a>
                                         ) : (

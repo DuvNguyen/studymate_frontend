@@ -23,7 +23,7 @@ interface CourseCardProps {
   course: Course;
 }
 
-function StarRating({ rating }: { rating: any }) {
+function StarRating({ rating }: { rating: number | string }) {
   const numRating = Number(rating) || 0;
   return (
     <div className="flex items-center gap-1">

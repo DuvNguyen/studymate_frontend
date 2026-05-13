@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
 import { Plus, Trash2, Edit3, Save, X, CheckCircle2, Circle } from 'lucide-react';
@@ -13,7 +13,9 @@ interface QuestionBankManagerProps {
 
 export default function QuestionBankManager({ courseId, onClose }: QuestionBankManagerProps) {
   const { getToken } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [banks, setBanks] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedBank, setSelectedBank] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingBank, setIsAddingBank] = useState(false);
@@ -23,9 +25,9 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
 
   // Question editing state
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
   const [questionText, setQuestionText] = useState('');
-  const [questionType, setQuestionType] = useState('MCQ');
   const [difficulty, setDifficulty] = useState('EASY');
   const [options, setOptions] = useState<{ text: string; isCorrect: boolean }[]>([
     { text: '', isCorrect: false },
@@ -34,33 +36,33 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     { text: '', isCorrect: false },
   ]);
 
-  useEffect(() => {
-    fetchBanks();
-  }, []);
-
-  const fetchBanks = async () => {
+  const fetchBanks = useCallback(async () => {
     setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${courseId}/question-banks`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses/${courseId}/question-banks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
         setBanks(data.data || data);
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi khi tải ngân hàng câu hỏi');
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId, getToken]);
+
+  useEffect(() => {
+    fetchBanks();
+  }, [fetchBanks]);
 
   const handleCreateBank = async () => {
     if (!newBankName.trim()) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/question-banks`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/question-banks`, {
         method: 'POST',
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -74,7 +76,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
         setIsAddingBank(false);
         fetchBanks();
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi khi tạo ngân hàng');
     }
   };
@@ -83,14 +85,14 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     setIsDetailLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/question-banks/${bankId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/question-banks/${bankId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
         setSelectedBank(data.data || data);
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi khi tải chi tiết');
     } finally {
       setIsDetailLoading(false);
@@ -114,8 +116,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     try {
       const token = await getToken();
       const url = editingQuestion 
-        ? `http://localhost:3001/api/v1/instructor/questions/${editingQuestion.id}`
-        : `http://localhost:3001/api/v1/instructor/question-banks/${selectedBank.id}/questions`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/instructor/questions/${editingQuestion.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/instructor/question-banks/${selectedBank.id}/questions`;
       
       const method = editingQuestion ? 'PUT' : 'POST';
 
@@ -142,7 +144,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
         setOptions([{ text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }]);
         fetchBankDetail(selectedBank.id);
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi khi lưu câu hỏi');
     }
   };
@@ -151,7 +153,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     if (!confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/questions/${qId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/questions/${qId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -159,7 +161,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
         toast.success('Đã xóa câu hỏi');
         fetchBankDetail(selectedBank.id);
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi khi xóa');
     }
   };
@@ -345,6 +347,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                     </div>
                   ) : (
                     <div className="space-y-4">
+                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                        {selectedBank.questions?.map((q: any, idx: number) => (
                          <div key={q.id} className="border-4 border-black p-6 hover:bg-gray-50 transition-colors group">
                             <div className="flex justify-between items-start mb-4">
@@ -364,8 +367,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                     onClick={() => {
                                       setEditingQuestion(q);
                                       setQuestionText(q.questionText);
-                                      setQuestionType('MCQ');
                                       setDifficulty(q.difficulty || 'EASY');
+                                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                       setOptions(q.options.map((o: any) => ({ text: o.optionText, isCorrect: o.isCorrect })));
                                       setIsAddingQuestion(true);
                                     }}
@@ -382,6 +385,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
+                               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                {q.options?.map((opt: any) => (
                                  <div key={opt.id} className={`p-3 border-2 border-black flex items-center justify-between ${opt.isCorrect ? 'bg-emerald-100 border-emerald-600 border-[3px]' : 'bg-gray-50 border-gray-200'}`}>
                                     <span className="font-bold text-sm text-black">{opt.optionText}</span>
@@ -436,7 +440,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                    </li>
                    <li className="flex gap-2">
                      <span className="text-emerald-400">2.</span>
-                     <span>Thêm câu hỏi: Chọn ngân hàng và nhấn "THÊM CÂU HỎI".</span>
+                     <span>Thêm câu hỏi: Chọn ngân hàng và nhấn &quot;THÊM CÂU HỎI&quot;.</span>
                    </li>
                    <li className="flex gap-2">
                      <span className="text-emerald-400">3.</span>

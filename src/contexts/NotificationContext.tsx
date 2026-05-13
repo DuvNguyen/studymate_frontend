@@ -10,6 +10,7 @@ export interface Notification {
   title: string;
   message: string;
   isRead: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: any;
   createdAt: string;
   updatedAt: string;

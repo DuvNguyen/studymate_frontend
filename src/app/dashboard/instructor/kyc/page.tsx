@@ -36,6 +36,7 @@ export default function KycPage() {
     kycData.kycStatus === 'PENDING_UPDATE' ||
     (kycData.kycStatus === 'APPROVED' && !isEditing);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchKycData(); }, []);
 
   const fetchKycData = async () => {
@@ -68,14 +69,14 @@ export default function KycPage() {
             bankAccountNumber: p.bankAccountNumber ?? baseData.bankAccountNumber,
             bankName: p.bankName ?? baseData.bankName,
             // Đảm bảo certificates được map đúng format mới
-            certificates: (p.certificates || baseData.certificates).map((c: any) => 
+            certificates: (p.certificates || baseData.certificates).map((c: { title?: string; fileUrl?: string } | string) => 
               typeof c === 'string' ? { title: c, fileUrl: '' } : c
             ),
             documents: p.documents ?? baseData.documents,
           });
         } else {
           // Xử lý dữ liệu cũ (là string) sang format mới (object)
-          const formattedCertificates = baseData.certificates.map((c: any) => 
+          const formattedCertificates = baseData.certificates.map((c: { title?: string; fileUrl?: string } | string) => 
             typeof c === 'string' ? { title: c, fileUrl: '' } : c
           );
           setKycData({ ...baseData, certificates: formattedCertificates });
@@ -196,7 +197,7 @@ export default function KycPage() {
         finalCertificates[idx].fileUrl = url;
       }
 
-      const { kycStatus, rejectionReason, ...basePayload } = kycData;
+      // Build payload excluding kycStatus and rejectionReason (read-only fields)
       const payload = {
         bankAccountName: kycData.bankAccountName,
         bankAccountNumber: kycData.bankAccountNumber,
@@ -231,8 +232,8 @@ export default function KycPage() {
         const msg = err?.message ? (Array.isArray(err.message) ? err.message.join('; ') : err.message) : 'Nộp hồ sơ thất bại.';
         toast.error(`Lỗi: ${msg}`);
       }
-    } catch (e: any) {
-      toast.error(e.message || 'Có lỗi xảy ra.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra.');
     } finally {
       setIsSubmitting(false);
     }

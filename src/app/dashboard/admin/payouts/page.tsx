@@ -42,6 +42,7 @@ export default function AdminPayoutsPage() {
       setAdminNote('');
       setActionModal({ open: false, payoutId: null, action: null, instructor: '', amount: 0 });
       fetchAllPayouts(filterStatus || undefined);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -70,6 +71,7 @@ export default function AdminPayoutsPage() {
     setExporting('XLSX');
     try {
       await exportPayouts(Array.from(selectedIds));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -81,6 +83,7 @@ export default function AdminPayoutsPage() {
     setExporting('CSV');
     try {
       await exportPayoutsCsv(Array.from(selectedIds));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.message);
     } finally {

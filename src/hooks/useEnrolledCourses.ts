@@ -3,6 +3,7 @@ import { useAuth } from '@clerk/nextjs';
 
 export function useEnrolledCourses() {
   const { getToken, isLoaded } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,8 +28,8 @@ export function useEnrolledCourses() {
       } else {
         setError(result.message || 'Không thể tải danh sách khóa học');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

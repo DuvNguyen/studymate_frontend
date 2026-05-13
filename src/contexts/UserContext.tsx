@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useSession, useClerk } from '@clerk/nextjs';
 
 export interface CurrentUser {
@@ -38,7 +38,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     if (!isLoaded) return;
     if (!session) {
       setUser(null);
@@ -65,20 +65,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const json = await res.json();
       setUser(json.data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
-      const errorMsg = err.message.toLocaleLowerCase();
+    } catch (err) {
+      const errorObj = err instanceof Error ? err : new Error(String(err));
+      setError(errorObj.message);
+      const errorMsg = errorObj.message.toLocaleLowerCase();
       if (errorMsg.includes('khóa vĩnh viễn') || errorMsg.includes('đình chỉ')) {
         signOut();
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [isLoaded, session, signOut]);
 
   useEffect(() => {
     fetchUser();
-  }, [isLoaded, session?.id]);
+  }, [fetchUser]);
 
   return (
     <UserContext.Provider value={{ user, loading, error, refetchUser: fetchUser }}>

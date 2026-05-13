@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdminCourses } from '@/hooks/useAdminCourses';
 import { useCategories } from '@/hooks/useCategories';
 import { Button } from '@/components/Button';
 import { Pagination } from '@/components/Pagination';
 
 export default function CourseManagementQueue() {
-  const { courses, meta, loading, error, fetchCourses, approveCourse, rejectCourse, suspendCourse } = useAdminCourses();
+  const { courses, meta, loading, fetchCourses, approveCourse, rejectCourse, suspendCourse } = useAdminCourses();
   const { categories, loading: categoriesLoading } = useCategories();
   
   // Tabs & Search states
@@ -26,7 +26,7 @@ export default function CourseManagementQueue() {
 
   useEffect(() => {
     fetchCourses({ page, limit: 5, status: activeTab, search: searchQuery, categoryId: filterCategory ? String(filterCategory) : '' });
-  }, [fetchCourses, activeTab, triggerFetch, page]);
+  }, [fetchCourses, activeTab, triggerFetch, page, filterCategory, searchQuery]);
 
   const handleSearch = () => {
     setPage(1);
@@ -38,8 +38,8 @@ export default function CourseManagementQueue() {
     try {
       await approveCourse(id);
       handleSearch();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -53,8 +53,8 @@ export default function CourseManagementQueue() {
       setRejectReason('');
       setActiveCourseId(null);
       handleSearch();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -68,8 +68,8 @@ export default function CourseManagementQueue() {
       setSuspendReason('');
       setSuspendingCourseId(null);
       handleSearch();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -95,7 +95,7 @@ export default function CourseManagementQueue() {
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ALL')}
             className={`px-6 py-3 font-black uppercase text-sm border-2 border-black whitespace-nowrap transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
               activeTab === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
             }`}
@@ -251,10 +251,12 @@ export default function CourseManagementQueue() {
                   <div className="space-y-4">
                     <h4 className="font-black text-xs uppercase tracking-[0.3em] border-b-4 border-black pb-2 inline-block text-black">Nội dung chi tiết</h4>
                     
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {course.sections?.map((section: any, index: number) => (
                       <div key={section.id} className="border-2 border-black p-4 mb-4 bg-gray-50">
                         <h5 className="font-black text-sm uppercase text-black mb-3">Chương {index + 1}: {section.title}</h5>
                         <div className="space-y-2">
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           {section.lessons?.map((lesson: any, lIndex: number) => (
                             <div key={lesson.id} className="bg-white border-2 border-black p-3 text-xs flex justify-between items-center relative overflow-hidden">
                               <span className="font-black relative z-10 text-black">Bài {lIndex + 1}: {lesson.title}</span>

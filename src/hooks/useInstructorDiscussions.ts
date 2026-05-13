@@ -33,7 +33,7 @@ export function useInstructorDiscussions() {
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, meta]);
 
   useEffect(() => {
     fetchDiscussions();

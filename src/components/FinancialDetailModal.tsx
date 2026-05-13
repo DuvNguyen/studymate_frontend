@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Button } from './Button';
+
 import { Info, User, BookOpen, Calendar, DollarSign, Activity, X } from 'lucide-react';
 
 interface FinancialDetailModalProps {

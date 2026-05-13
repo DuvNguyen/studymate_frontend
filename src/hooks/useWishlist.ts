@@ -36,8 +36,8 @@ export function useWishlist() {
       
       const json = await res.json();
       setWishlist(json.data || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -77,8 +77,8 @@ export function useWishlist() {
       
       // toast.success(json.message);
       return json.data.isInWishlist;
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
       return null;
     }
   }, [session, fetchWishlist]);

@@ -41,7 +41,9 @@ export function useCategories(): UseCategoriesReturn {
     if (cachedCategories) return;
 
     const controller = new AbortController();
-    setLoading(true);
+    setTimeout(() => {
+      setLoading(true);
+    }, 0);
 
     fetch(`${API_BASE}/categories`, { signal: controller.signal })
       .then((res) => {

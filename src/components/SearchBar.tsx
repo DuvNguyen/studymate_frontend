@@ -2,11 +2,18 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import useDebounce from '../hooks/useDebounce';
+
+interface CourseSuggestion {
+  slug: string;
+  title: string;
+  thumbnailUrl?: string;
+}
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<CourseSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -21,8 +28,9 @@ export default function SearchBar() {
       }
       setLoading(true);
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/courses/suggest?q=${encodeURIComponent(debouncedQuery)}`);
-        const data = await res.json();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+        const res = await fetch(`${apiUrl}/courses/suggest?q=${encodeURIComponent(debouncedQuery)}`);
+        const data: CourseSuggestion[] = await res.json();
         setSuggestions(data);
       } catch (error) {
         console.error('Failed to fetch suggestions:', error);
@@ -89,7 +97,15 @@ export default function SearchBar() {
               className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-100 cursor-pointer border-b border-black/10 last:border-none"
             >
               {s.thumbnailUrl && (
-                <img src={s.thumbnailUrl} alt={s.title} className="w-10 h-10 object-cover border border-black" />
+                <div className="relative w-10 h-10 flex-shrink-0">
+                  <Image 
+                    src={s.thumbnailUrl} 
+                    alt={s.title} 
+                    fill 
+                    className="object-cover border border-black" 
+                    sizes="40px"
+                  />
+                </div>
               )}
               <div className="flex-1">
                 <p className="text-[11px] font-black uppercase leading-tight line-clamp-1">{s.title}</p>

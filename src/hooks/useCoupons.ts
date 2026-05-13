@@ -43,6 +43,16 @@ export function useCoupons() {
     }
   }, []);
 
+  const fetchMyCoupons = useCallback(async () => {
+    if (!session) return;
+    const token = await session.getToken();
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const json = await res.json();
+    if (res.ok) setMyCoupons(json.data || json);
+  }, [session]);
+
   const createCoupon = useCallback(async (data: Partial<Coupon>) => {
     if (!session) throw new Error('Unauthorized');
     setCreating(true);
@@ -63,17 +73,7 @@ export function useCoupons() {
     } finally {
       setCreating(false);
     }
-  }, [session]);
-
-  const fetchMyCoupons = useCallback(async () => {
-    if (!session) return;
-    const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const json = await res.json();
-    if (res.ok) setMyCoupons(json.data || json);
-  }, [session]);
+  }, [session, fetchMyCoupons]);
 
   return { validating, creating, myCoupons, validateCoupon, createCoupon, fetchMyCoupons };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useSession } from '@clerk/nextjs';
 
 export interface Wallet {
@@ -79,8 +79,8 @@ export function useWallet() {
       if (!res.ok) throw new Error('Không thể lấy thông tin ví');
       const json = await res.json();
       setWallet(json.data || json);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -105,8 +105,8 @@ export function useWallet() {
 
       setTransactions(items);
       setTransactionMeta({ total, totalPages, page });
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   }, [session]);
 
@@ -120,8 +120,8 @@ export function useWallet() {
       if (!res.ok) throw new Error('Không thể lấy danh sách yêu cầu rút tiền');
       const json = await res.json();
       setPayouts(json.data || json);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   }, [session]);
 
@@ -162,8 +162,8 @@ export function useWallet() {
       if (!res.ok) throw new Error('Không thể lấy danh sách yêu cầu rút tiền');
       const json = await res.json();
       setPayouts(json.data || json);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

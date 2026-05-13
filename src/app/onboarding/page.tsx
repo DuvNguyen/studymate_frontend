@@ -65,8 +65,8 @@ export default function OnboardingPage() {
           setError('Không thể đồng bộ hồ sơ, bạn hãy thử tải lại trang nhé.');
           isFetchingRef.current = false;
         }
-      } catch (err: any) {
-        console.error('[Onboarding] Exception catch:', err.message || err);
+      } catch (err) {
+        console.error('[Onboarding] Exception catch:', err instanceof Error ? err.message : String(err));
         if (retryCount < 10) {
           setTimeout(() => checkRoleAndRedirect(retryCount + 1), 1500);
         } else {

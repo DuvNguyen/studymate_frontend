@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import MainLayout from '@/components/MainLayout';
-import { Button } from '@/components/Button';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useRefund, RefundRequest } from '@/hooks/useRefund';
 import { toast } from 'react-hot-toast';
-import { X, Check, Eye, HelpCircle, ArrowRightCircle } from 'lucide-react';
-import Image from 'next/image';
+import { X, ArrowRightCircle } from 'lucide-react';
+
 import { Pagination } from '@/components/Pagination';
 
 interface RefundDetailModalProps {
@@ -62,7 +61,7 @@ function RefundDetailModal({ isOpen, onClose, request, onApprove, onReject, proc
 
                      <div className="border-2 border-black p-4 bg-white space-y-3 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)]">
                         <p className="text-[10px] font-black uppercase italic border-b border-black pb-1">Lý do hoàn tiền</p>
-                        <p className="text-xs font-black italic">"{request.reason}"</p>
+                        <p className="text-xs font-black italic">&quot;{request.reason}&quot;</p>
                      </div>
 
                      <div className="border-2 border-black p-4 bg-white/50 space-y-2">
@@ -134,8 +133,8 @@ export default function AdminRefundsPage() {
       toast.success(status === 'APPROVED' ? 'Đã duyệt hoàn tiền!' : 'Đã từ chối yêu cầu.');
       setIsModalOpen(false);
       fetchAllRefundRequests(filterStatus);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi xảy ra');
     } finally {
       setProcessingId(null);
     }
