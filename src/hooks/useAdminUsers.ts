@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useSession } from '@clerk/nextjs';
 
 export interface AdminUser {
@@ -72,8 +72,8 @@ export function useAdminUsers() {
       setUsers(d.data || []);
       setTotal(d.meta?.total || 0);
       setMeta(d.meta || null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ export function useAdminUsers() {
       // Reload danh sách
       await fetchUsers();
       return true;
-    } catch (err: any) {
+    } catch (err) {
       throw err;
     }
   };
@@ -122,7 +122,7 @@ export function useAdminUsers() {
       // Reload danh sách
       await fetchUsers();
       return true;
-    } catch (err: any) {
+    } catch (err) {
       throw err;
     }
   };

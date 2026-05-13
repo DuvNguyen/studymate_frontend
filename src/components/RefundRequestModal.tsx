@@ -65,8 +65,8 @@ export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: R
       
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 

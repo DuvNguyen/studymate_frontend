@@ -10,6 +10,7 @@ export interface PaginationMeta {
 
 export function useAdminCourses() {
   const { getToken } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [courses, setCourses] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);

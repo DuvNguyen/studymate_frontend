@@ -7,7 +7,7 @@ import PublicLayout from '@/components/PublicLayout';
 import { Button } from '@/components/Button';
 import LoadingScreen from '@/components/LoadingScreen';
 import EmptyState from '@/components/EmptyState';
-import { ArrowLeft, Award, Calendar, Mail, User, BookOpen, Quote, FileText } from 'lucide-react';
+import { ArrowLeft, Award, Calendar, User, BookOpen, Quote, FileText } from 'lucide-react';
 import Image from 'next/image';
 
 export default function InstructorPortfolioPage() {
@@ -134,7 +134,7 @@ export default function InstructorPortfolioPage() {
                  <div className="bg-white border-4 border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
                     {instructor.bio && instructor.bio !== 'Chưa có thông tin giới thiệu.' ? (
                       <p className="text-lg font-bold leading-relaxed whitespace-pre-line text-gray-800 italic">
-                        "{instructor.bio}"
+                        &quot;{instructor.bio}&quot;
                       </p>
                     ) : (
                       <EmptyState 
@@ -155,6 +155,7 @@ export default function InstructorPortfolioPage() {
                  </h2>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {instructor.certificates && instructor.certificates.length > 0 ? (
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       instructor.certificates.map((cert: any, idx: number) => (
                         <div 
                           key={idx} 
@@ -200,7 +201,8 @@ export default function InstructorPortfolioPage() {
              </h2>
              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                {instructor.courses && instructor.courses.length > 0 ? (
-                 instructor.courses.map((course: any) => (
+                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  instructor.courses.map((course: any) => (
                    <div 
                      key={course.id} 
                      className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer group flex flex-col h-full"

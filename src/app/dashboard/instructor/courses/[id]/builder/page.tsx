@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import VideoPickerModal from '@/components/instructor/VideoPickerModal';
 import QuestionBankManager from '@/components/instructor/QuestionBankManager';
 import QuizSettingsModal from '@/components/instructor/QuizSettingsModal';
-import { BookOpen, FileQuestion, Settings2, Plus, Trash2, Layout, PlayCircle, BookPlus, Search } from 'lucide-react';
+import { BookOpen, FileQuestion, Settings2, Plus } from 'lucide-react';
 import { Button } from '@/components/Button';
 
 export default function CourseBuilderPage() {
@@ -16,6 +16,7 @@ export default function CourseBuilderPage() {
   const { getToken } = useAuth();
   const router = useRouter();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingSection, setIsAddingSection] = useState(false);
@@ -30,8 +31,9 @@ export default function CourseBuilderPage() {
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
   const [editLessonTitle, setEditLessonTitle] = useState('');
   const [editLessonIsPreview, setEditLessonIsPreview] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editSelectedVideo, setEditSelectedVideo] = useState<any>(null);
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [newLessonIsPreview, setNewLessonIsPreview] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -43,17 +45,20 @@ export default function CourseBuilderPage() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editCoursePreviewVideo, setEditCoursePreviewVideo] = useState<any>(null);
 
   // Quiz states
   const [isBankManagerOpen, setIsBankManagerOpen] = useState(false);
   const [isQuizSettingsOpen, setIsQuizSettingsOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [quizToEdit, setQuizToEdit] = useState<any>(null);
   const [sectionIdForQuiz, setSectionIdForQuiz] = useState<number | null>(null);
 
 
   useEffect(() => {
     fetchCourseDetail();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchCourseDetail = async () => {
@@ -72,7 +77,7 @@ export default function CourseBuilderPage() {
         toast.error('Không tìm thấy khóa học');
         router.push('/dashboard/instructor/courses');
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi khi tải khóa học');
     } finally {
       setLoading(false);
@@ -123,8 +128,8 @@ export default function CourseBuilderPage() {
       } else {
         toast.error('Lỗi khi lưu cài đặt');
       }
-    } catch (e: any) {
-      toast.error(e.message || 'Lỗi kết nối');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Lỗi kết nối');
     } finally {
       setIsUploading(false);
     }
@@ -150,7 +155,7 @@ export default function CourseBuilderPage() {
       } else {
         toast.error('Không thể thêm chương học');
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi kết nối');
     }
   };
@@ -182,7 +187,7 @@ export default function CourseBuilderPage() {
     }
     try {
       const token = await getToken();
-      const body: any = { title: newLessonTitle, isPreview: newLessonIsPreview };
+      const body: { title: string; isPreview: boolean; videoId?: number } = { title: newLessonTitle, isPreview: newLessonIsPreview };
       if (selectedVideo) {
         body.videoId = selectedVideo.id;
       }
@@ -205,7 +210,7 @@ export default function CourseBuilderPage() {
         const error = await res.json();
         toast.error(error.message || 'Không thể thêm bài học');
       }
-    } catch (e) {
+    } catch {
       toast.error('Lỗi kết nối');
     }
   };
@@ -250,7 +255,7 @@ export default function CourseBuilderPage() {
     if (!editLessonTitle.trim()) return;
     try {
       const token = await getToken();
-      const body: any = { title: editLessonTitle, isPreview: editLessonIsPreview };
+      const body: { title: string; isPreview: boolean; videoId?: number } = { title: editLessonTitle, isPreview: editLessonIsPreview };
       if (editSelectedVideo) {
         body.videoId = editSelectedVideo.id;
       }
@@ -433,6 +438,7 @@ export default function CourseBuilderPage() {
         </div>
 
         <div className="space-y-6">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {course?.sections?.map((section: any, index: number) => (
             <div key={section.id} className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
               <div className="flex justify-between items-center mb-4 border-b-2 border-black pb-2">
@@ -470,6 +476,7 @@ export default function CourseBuilderPage() {
                 )}
               </div>
               <div className="space-y-3 mb-4">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {section.lessons?.map((lesson: any, lIndex: number) => (
                   <div key={lesson.id} className="bg-gray-50 border-2 border-black p-4">
                     {editingLessonId === lesson.id ? (

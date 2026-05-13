@@ -1,11 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { InstructorSignupButton } from "../components/InstructorSignupButton";
 import { StudentSignupButton } from "../components/StudentSignupButton";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import PublicLayout from "../components/PublicLayout";
 import FeaturedCourses from "../components/FeaturedCourses";
 
@@ -15,7 +11,7 @@ export default async function HomePage() {
   try {
     const authSession = await auth();
     userId = authSession?.userId;
-  } catch (e) {
+  } catch {
     // ignore
   }
 

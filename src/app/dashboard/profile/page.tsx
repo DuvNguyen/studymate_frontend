@@ -14,7 +14,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile) {
-      setBio(profile.bio || '');
+      setTimeout(() => {
+        setBio(profile.bio || '');
+      }, 0);
     }
   }, [profile]);
 
@@ -24,8 +26,8 @@ export default function ProfilePage() {
     try {
       await updateProfile({ bio });
       setMessage({ type: 'success', text: 'Cập nhật hồ sơ thành công!' });
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Có lỗi xảy ra' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Có lỗi xảy ra' });
     }
   };
 

@@ -12,6 +12,18 @@ const DISCOUNT_TYPE_LABELS: Record<string, string> = {
   FIXED: 'Cố định (₫)',
 };
 
+interface CouponForm {
+  code: string;
+  discountType: 'PERCENTAGE' | 'FIXED';
+  discountValue: string;
+  minOrderValue: string;
+  maxDiscountAmount: string;
+  startDate: string;
+  endDate: string;
+  usageLimit: string;
+  isActive: boolean;
+}
+
 function CouponFormModal({
   onClose,
   onSuccess,
@@ -20,7 +32,7 @@ function CouponFormModal({
   onSuccess: () => void;
 }) {
   const { createCoupon, creating } = useCoupons();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<CouponForm>({
     code: '',
     discountType: 'PERCENTAGE',
     discountValue: '',
@@ -32,7 +44,7 @@ function CouponFormModal({
     isActive: true,
   });
 
-  const set = (k: string, v: any) =>
+  const set = (k: keyof CouponForm, v: string | boolean) =>
     setForm((prev) => ({ ...prev, [k]: v }));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,20 +55,21 @@ function CouponFormModal({
     try {
       await createCoupon({
         code: form.code.trim().toUpperCase(),
-        discountType: form.discountType as any,
+        discountType: form.discountType,
         discountValue: Number(form.discountValue),
         minOrderValue: Number(form.minOrderValue) || 0,
         maxDiscountAmount: form.maxDiscountAmount ? Number(form.maxDiscountAmount) : undefined,
-        startDate: form.startDate ? new Date(form.startDate) as any : undefined,
-        endDate: form.endDate ? new Date(form.endDate) as any : undefined,
+        startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
+        endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
         usageLimit: form.usageLimit ? Number(form.usageLimit) : undefined,
         isActive: form.isActive,
       });
       toast.success('Tạo mã giảm giá thành công!');
       onSuccess();
       onClose();
-    } catch (e: any) {
-      toast.error(e.message || 'Lỗi tạo mã giảm giá');
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error(error.message || 'Lỗi tạo mã giảm giá');
     }
   };
 
@@ -85,7 +98,7 @@ function CouponFormModal({
             <label className="block text-[10px] font-black uppercase tracking-widest mb-1 text-black">Loại giảm giá</label>
             <select
               value={form.discountType}
-              onChange={(e) => set('discountType', e.target.value)}
+              onChange={(e) => set('discountType', e.target.value as 'PERCENTAGE' | 'FIXED')}
               className="w-full border-2 border-black px-3 py-2 text-sm font-bold text-black outline-none"
             >
               <option value="PERCENTAGE">Phần trăm (%)</option>

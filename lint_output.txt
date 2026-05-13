@@ -1,0 +1,602 @@
+
+> studymate-frontend@0.1.0 lint
+> eslint
+
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/cart/page.tsx
+    6:8   warning  'Navbar' is defined but never used        @typescript-eslint/no-unused-vars
+   43:65  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:47  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/checkout/pending/page.tsx
+    6:8   warning  'Navbar' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   19:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   72:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  122:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/instructor-view/page.tsx
+    4:40  warning  'useCallback' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   16:3   warning  'Info' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   17:3   warning  'Search' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   20:3   warning  'ArrowLeft' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   21:3   warning  'Zap' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   25:3   warning  'Eye' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   78:11  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/instructor-view/page.tsx:78:11
+  76 |         const targetLesson = allLessons.find(l => l.id === Number(lessonId));
+  77 |         if (targetLesson) {
+> 78 |           setActiveLesson(targetLesson);
+     |           ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  79 |           return;
+  80 |         }
+  81 |       }  react-hooks/set-state-in-effect
+   95:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/instructor-view/page.tsx:95:7
+  93 |         initial[s.id] = true;
+  94 |       });
+> 95 |       setExpandedSections(initial);
+     |       ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  96 |     }
+  97 |   }, [course]);
+  98 |                                                                                        react-hooks/set-state-in-effect
+  270:45  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/learn/page.tsx
+   25:3   warning  'Award' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   31:3   warning  'Trash2' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   32:3   warning  'Pencil' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   35:3   warning  'ArrowBigUp' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   36:3   warning  'ArrowBigDown' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   52:30  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `course`, but the source dependencies were [course?.id, enrollments, slug]. Inferred less specific property than source.
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/learn/page.tsx:52:30
+  50 |
+  51 |   // Find current enrollment
+> 52 |   const enrollment = useMemo(() => {
+     |                              ^^^^^^^
+> 53 |     if (!course || !enrollments) return null;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 54 |     return enrollments.find(e => e.course.slug === slug || e.course_id === course.id);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 55 |   }, [course?.id, enrollments, slug]);
+     | ^^^^ Could not preserve existing manual memoization
+  56 |   
+  57 |   // Lesson navigation logic
+  58 |   const allLessons = useMemo(() => {  react-hooks/preserve-manual-memoization
+   52:30  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `course`, but the source dependencies were [course?.id, enrollments, slug]. Inferred less specific property than source.
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/learn/page.tsx:52:30
+  50 |
+  51 |   // Find current enrollment
+> 52 |   const enrollment = useMemo(() => {
+     |                              ^^^^^^^
+> 53 |     if (!course || !enrollments) return null;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 54 |     return enrollments.find(e => e.course.slug === slug || e.course_id === course.id);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 55 |   }, [course?.id, enrollments, slug]);
+     | ^^^^ Could not preserve existing manual memoization
+  56 |   
+  57 |   // Lesson navigation logic
+  58 |   const allLessons = useMemo(() => {  react-hooks/preserve-manual-memoization
+   55:6   warning  React Hook useMemo has a missing dependency: 'course'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+  102:24  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/learn/page.tsx:102:24
+  100 |     if (course && course.sections.length > 0 && !activeLesson) {
+  101 |       const firstLesson = course.sections[0].lessons[0];
+> 102 |       if (firstLesson) setActiveLesson(firstLesson);
+      |                        ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  103 |     }
+  104 |   }, [course, activeLesson]);
+  105 |                   react-hooks/set-state-in-effect
+  113:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/learn/page.tsx:113:7
+  111 |         initial[s.id] = true;
+  112 |       });
+> 113 |       setExpandedSections(initial);
+      |       ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  114 |     }
+  115 |   }, [course]);
+  116 |                                                                                                                                                  react-hooks/set-state-in-effect
+  211:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  421:45  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/page.tsx
+    5:27  warning  'CourseDetail' is defined but never used                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   13:8   warning  'Footer' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   17:8   warning  'LoadingScreen' is defined but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  110:6   warning  React Hook useMemo has a missing dependency: 'course'. Either include it or remove the dependency array                                                                                                                                                                                  react-hooks/exhaustive-deps
+  187:11  warning  'timer' is assigned a value but never used                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  255:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  272:14  warning  'err' is defined but never used                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  272:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  511:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/[slug]/test/[quizId]/page.tsx
+   18:3    warning  'RotateCcw' is defined but never used                                                                                                   @typescript-eslint/no-unused-vars
+   26:75   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+   88:36   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+   89:42   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+   95:40   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+   96:52   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  109:6    warning  React Hook useEffect has missing dependencies: 'fetchPastAttempts' and 'fetchQuiz'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  124:14   warning  'e' is defined but never used                                                                                                           @typescript-eslint/no-unused-vars
+  169:14   warning  'e' is defined but never used                                                                                                           @typescript-eslint/no-unused-vars
+  195:17   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  261:14   warning  'e' is defined but never used                                                                                                           @typescript-eslint/no-unused-vars
+  369:55   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  389:87   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  428:96   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                         react/no-unescaped-entities
+  428:110  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                         react/no-unescaped-entities
+  506:51   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  562:54   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/page.tsx
+   10:8   warning  'Footer' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   36:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/page.tsx:36:7
+  34 |     // Only update if it's different to avoid unnecessary resets
+  35 |     if (debouncedSearchInput !== search) {
+> 36 |       setSearch(debouncedSearchInput);
+     |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  37 |       setPage(1);
+  38 |     }
+  39 |   }, [debouncedSearchInput, search]);        react-hooks/set-state-in-effect
+   45:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/courses/page.tsx:45:7
+  43 |     const currentUrlSearch = searchParams.get('search') ?? '';
+  44 |     if (currentUrlSearch !== searchInput) {
+> 45 |       setSearchInput(currentUrlSearch);
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  46 |       setSearch(currentUrlSearch);
+  47 |     }
+  48 |   }, [searchParams]);  react-hooks/set-state-in-effect
+   48:6   warning  React Hook useEffect has a missing dependency: 'searchInput'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  161:15  error    Do not use an `<a>` element to navigate to `/courses/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @next/next/no-html-link-for-pages
+  161:15  error    Do not use an `<a>` element to navigate to `/courses/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @next/next/no-html-link-for-pages
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/admin/analytics/page.tsx
+   10:3   warning  'LineChart' is defined but never used                            @typescript-eslint/no-unused-vars
+   10:14  warning  'Line' is defined but never used                                 @typescript-eslint/no-unused-vars
+   10:20  warning  'BarChart' is defined but never used                             @typescript-eslint/no-unused-vars
+   10:30  warning  'Bar' is defined but never used                                  @typescript-eslint/no-unused-vars
+   13:15  warning  'Users' is defined but never used                                @typescript-eslint/no-unused-vars
+   23:38  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   24:46  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   25:48  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   26:46  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  262:45  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  278:37  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  321:49  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  349:86  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  455:44  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  455:47  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/admin/kyc/page.tsx
+    9:36  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   44:6   warning  React Hook useEffect has a missing dependency: 'fetchKycs'. Either include it or remove the dependency array                                                                                                                                                                             react-hooks/exhaustive-deps
+   76:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  121:55  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  278:54  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  279:51  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  319:66  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  373:39  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  390:69  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  408:47  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/admin/ledger/page.tsx
+   6:10  warning  'Button' is defined but never used         @typescript-eslint/no-unused-vars
+   9:18  warning  'Filter' is defined but never used         @typescript-eslint/no-unused-vars
+   9:26  warning  'ArrowUpRight' is defined but never used   @typescript-eslint/no-unused-vars
+   9:40  warning  'ArrowDownLeft' is defined but never used  @typescript-eslint/no-unused-vars
+   9:55  warning  'Activity' is defined but never used       @typescript-eslint/no-unused-vars
+  16:38  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  17:38  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  27:48  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  50:14  warning  'err' is defined but never used            @typescript-eslint/no-unused-vars
+  50:19  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  72:37  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  89:35  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/admin/payouts/page.tsx
+   4:21  warning  'Payout' is defined but never used           @typescript-eslint/no-unused-vars
+   5:10  warning  'Button' is defined but never used           @typescript-eslint/no-unused-vars
+  12:9   warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  45:19  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  73:19  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  84:19  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/admin/reconciliation/page.tsx
+   3:20  warning  'useCallback' is defined but never used      @typescript-eslint/no-unused-vars
+  12:9   warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  58:19  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/admin/refunds/page.tsx
+    3:31  warning  'useCallback' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+    5:10  warning  'Button' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    9:13  warning  'Check' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+    9:20  warning  'Eye' is defined but never used                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+    9:25  warning  'HelpCircle' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   10:8   warning  'Image' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   65:66  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+   65:83  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+   80:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  137:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/admin/users/page.tsx
+   36:45  warning  'updateStatus' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   83:19  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  112:19  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  139:19  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/instructor/coupons/page.tsx
+  35:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/instructor/courses/[id]/builder/page.tsx
+   11:51  warning  'Trash2' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   11:59  warning  'Layout' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   11:67  warning  'PlayCircle' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   11:79  warning  'BookPlus' is defined but never used                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   11:89  warning  'Search' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   19:40  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   33:62  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   35:54  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   46:72  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   51:48  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   57:6   warning  React Hook useEffect has a missing dependency: 'fetchCourseDetail'. Either include it or remove the dependency array                                                                                                                                                                     react-hooks/exhaustive-deps
+   75:14  warning  'e' is defined but never used                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  126:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  153:14  warning  'e' is defined but never used                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  185:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  208:14  warning  'e' is defined but never used                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  253:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  358:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  436:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  473:48  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/instructor/courses/page.tsx
+   19:42  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   73:14  warning  'e' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+   82:6   warning  React Hook useEffect has a missing dependency: 'fetchCourses'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  105:14  warning  'e' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+  147:14  warning  'e' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/instructor/kyc/page.tsx
+   39:40  warning  React Hook useEffect has a missing dependency: 'fetchKycData'. Either include it or remove the dependency array                                                                                                                                                                          react-hooks/exhaustive-deps
+   71:77  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   78:71  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  199:15  warning  'kycStatus' is assigned a value but never used                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  199:26  warning  'rejectionReason' is assigned a value but never used                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  199:46  warning  'basePayload' is assigned a value but never used                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  234:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  366:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  371:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  467:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/instructor/videos/page.tsx
+  22:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/instructor/wallet/page.tsx
+   5:10  warning  'Button' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+   8:10  warning  'useUser' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+  10:10  warning  'useRouter' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  14:10  warning  'Wallet' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+  14:30  warning  'ArrowUpRight' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  14:44  warning  'ArrowDownLeft' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+  21:5   warning  'transactionMeta' is assigned a value but never used                                                                  @typescript-eslint/no-unused-vars
+  33:66  error    Unexpected any. Specify a different type                                                                              @typescript-eslint/no-explicit-any
+  43:6   warning  React Hook useEffect has a missing dependency: 'currentUser?.role'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/profile/page.tsx
+  17:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/profile/page.tsx:17:7
+  15 |   useEffect(() => {
+  16 |     if (profile) {
+> 17 |       setBio(profile.bio || '');
+     |       ^^^^^^ Avoid calling setState() directly within an effect
+  18 |     }
+  19 |   }, [profile]);
+  20 |  react-hooks/set-state-in-effect
+  27:19  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/dashboard/student/purchases/page.tsx
+   6:10  warning  'Button' is defined but never used        @typescript-eslint/no-unused-vars
+   9:22  warning  'Info' is defined but never used          @typescript-eslint/no-unused-vars
+  15:46  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:64  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  74:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:39  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/instructors/[id]/page.tsx
+   10:38  warning  'Mail' is defined but never used                                 @typescript-eslint/no-unused-vars
+  137:25  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  137:42  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  158:58  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  203:50  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/onboarding/page.tsx
+  68:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/app/page.tsx
+   1:8   warning  'Image' is defined but never used       @typescript-eslint/no-unused-vars
+   3:10  warning  'UserButton' is defined but never used  @typescript-eslint/no-unused-vars
+   7:8   warning  'Navbar' is defined but never used      @typescript-eslint/no-unused-vars
+   8:8   warning  'Footer' is defined but never used      @typescript-eslint/no-unused-vars
+  18:12  warning  'e' is defined but never used           @typescript-eslint/no-unused-vars
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/ConfirmModal.tsx
+  4:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/CourseCard.tsx
+  26:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/DiscussionItem.tsx
+  21:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/FinancialDetailModal.tsx
+  4:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/MainLayout.tsx
+    6:10  warning  'UserButton' is defined but never used     @typescript-eslint/no-unused-vars
+   12:10  warning  'IconHome' is defined but never used       @typescript-eslint/no-unused-vars
+  126:11  warning  'user' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/Modal.tsx
+  4:10  warning  'X' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/RefundRequestModal.tsx
+  68:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/ReviewSection.tsx
+   52:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  160:6   warning  React Hook useEffect has a missing dependency: 'fetchReviews'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+  171:27  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/ReviewSection.tsx:171:27
+  169 |       comment: "Khóa học rất chi tiết, mình đã cài được Ubuntu trên VMWare thành công. Cảm ơn giảng viên!",
+  170 |       isPublished: true,
+> 171 |       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      |                           ^^^^^^^^^^ Cannot call impure function
+  172 |       user: { profile: { fullName: "Hải Nam" } }
+  173 |     },
+  174 |     {  react-hooks/purity
+  181:27  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/ReviewSection.tsx:181:27
+  179 |       comment: "Kiến thức về Smurf Attack rất hay, mình chưa thấy ở đâu dạy kỹ như vậy.",
+  180 |       isPublished: true,
+> 181 |       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      |                           ^^^^^^^^^^ Cannot call impure function
+  182 |       user: { profile: { fullName: "Minh Phạm" } }
+  183 |     },
+  184 |     {                  react-hooks/purity
+  191:27  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/ReviewSection.tsx:191:27
+  189 |       comment: "Giao diện đẹp, dễ học. Phù hợp cho người mới bắt đầu như mình.",
+  190 |       isPublished: true,
+> 191 |       createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+      |                           ^^^^^^^^^^ Cannot call impure function
+  192 |       user: { profile: { fullName: "Linh Đan" } }
+  193 |     },
+  194 |     {                           react-hooks/purity
+  201:27  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/ReviewSection.tsx:201:27
+  199 |       comment: "Giọng giảng viên dễ nghe, kiến thức thực tế.",
+  200 |       isPublished: true,
+> 201 |       createdAt: new Date(Date.now() - 86400000 * 15).toISOString(),
+      |                           ^^^^^^^^^^ Cannot call impure function
+  202 |       user: { profile: { fullName: "Tuấn Anh" } }
+  203 |     },
+  204 |     {                                             react-hooks/purity
+  211:27  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/ReviewSection.tsx:211:27
+  209 |       comment: "Tài liệu đi kèm đầy đủ, rất đáng đồng tiền bát gạo. 10 điểm!",
+  210 |       isPublished: true,
+> 211 |       createdAt: new Date(Date.now() - 86400000 * 20).toISOString(),
+      |                           ^^^^^^^^^^ Cannot call impure function
+  212 |       user: { profile: { fullName: "Bảo Ngọc" } }
+  213 |     }
+  214 |   ] : [];                          react-hooks/purity
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/SearchBar.tsx
+   9:50  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  92:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/TransactionDetailModal.tsx
+   4:13  warning  'Info' is defined but never used          @typescript-eslint/no-unused-vars
+   9:16  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:37  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:35  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/UnifiedVideoPlayer.tsx
+  16:3  warning  'title' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/WithdrawalModal.tsx
+  11:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/YouTubePlayer.tsx
+    8:9   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   27:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   84:26  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   89:32  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   92:13  error    Error: Cannot access variable before it is declared
+
+`startTracking` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/YouTubePlayer.tsx:92:13
+  90 |           // 1 is PLAYING
+  91 |           if (event.data === 1) {
+> 92 |             startTracking();
+     |             ^^^^^^^^^^^^^ `startTracking` accessed before it is declared
+  93 |           } else {
+  94 |             stopTracking();
+  95 |           }
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/YouTubePlayer.tsx:117:3
+  115 |   }, [apiReady, videoId]); // Only re-init if apiReady or videoId changes
+  116 |
+> 117 |   const startTracking = () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 118 |     if (intervalRef.current) return;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 119 |     intervalRef.current = setInterval(() => {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 127 |     }, 10000); // Track every 10 seconds
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 128 |   };
+      | ^^^^^ `startTracking` is declared here
+  129 |
+  130 |   const stopTracking = () => {
+  131 |     if (intervalRef.current) {  react-hooks/immutability
+   94:13  error    Error: Cannot access variable before it is declared
+
+`stopTracking` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/YouTubePlayer.tsx:94:13
+  92 |             startTracking();
+  93 |           } else {
+> 94 |             stopTracking();
+     |             ^^^^^^^^^^^^ `stopTracking` accessed before it is declared
+  95 |           }
+  96 |           
+  97 |           // 0 is ENDED
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/YouTubePlayer.tsx:130:3
+  128 |   };
+  129 |
+> 130 |   const stopTracking = () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 131 |     if (intervalRef.current) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 132 |       clearInterval(intervalRef.current);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 133 |       intervalRef.current = null;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 134 |     }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 135 |   };
+      | ^^^^^ `stopTracking` is declared here
+  136 |
+  137 |   return (
+  138 |     <div className={`w-full h-full bg-black ${className}`}>                                                                                   react-hooks/immutability
+  110:18  warning  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  115:6   warning  React Hook useEffect has a missing dependency: 'initialTime'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/exhaustive-deps
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/admin/CourseModerationQueue.tsx
+    3:31  warning  'useCallback' is defined but never used                                                                                                @typescript-eslint/no-unused-vars
+   10:35  warning  'error' is assigned a value but never used                                                                                             @typescript-eslint/no-unused-vars
+   29:6   warning  React Hook useEffect has missing dependencies: 'filterCategory' and 'searchQuery'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+   41:19  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+   56:19  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+   71:19  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+   98:51  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  254:53  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  258:58  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/admin/VideoModerationQueue.tsx
+    4:44  warning  'Video' is defined but never used                                @typescript-eslint/no-unused-vars
+   10:34  warning  'error' is assigned a value but never used                       @typescript-eslint/no-unused-vars
+   46:14  warning  'err' is defined but never used                                  @typescript-eslint/no-unused-vars
+   61:14  warning  'err' is defined but never used                                  @typescript-eslint/no-unused-vars
+  225:25  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  226:88  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/instructor/InstructorVideoManager.tsx
+  11:28  warning  'error' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  13:19  warning  'deleting' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  38:19  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  53:19  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+/home/levi/Desktop/Studymate/studymate-frontend/src/components/instructor/QuestionBankManager.tsx
+   16:38  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+   17:52  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+   26:58  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+   28:10  warning  'questionType' is assigned a value but never used                                                              @typescript-eslint/no-unused-vars
+   39:6   warning  React Hook useEffect has a missing dependency: 'fetchBanks'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   52:14  warning  'e' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+   77:14  warning  'e' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+   93:14  warning  'e' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  145:14  warning  'e' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  162:14  warning  'e' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  348:57  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  369:68  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  385:54  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  439:65  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                react/no-unescaped-entities
+  439:78  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                react/no-unescaped-entities
+
+✖ 258 problems (137 errors, 121 warnings)
+

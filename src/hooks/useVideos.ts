@@ -63,8 +63,8 @@ export function useUploadVideo() {
 
       const json = await res.json();
       return json.data as Video;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     } finally {
       setUploading(false);
@@ -102,8 +102,8 @@ export function useInstructorVideos() {
       const d = json.data || json;
       setVideos(d.data || []);
       setMeta(d.meta || null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ export function useInstructorVideos() {
     } else if (isLoaded && !session) {
       setLoading(false);
     }
-  }, [isLoaded, session]);
+  }, [isLoaded, session, fetchVideos]);
 
   return { videos, meta, loading, error, refetch: fetchVideos };
 }
@@ -150,8 +150,8 @@ export function usePendingVideos() {
       const d = json.data || json;
       setVideos(d.data || []);
       setMeta(d.meta || null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -163,7 +163,7 @@ export function usePendingVideos() {
     } else if (isLoaded && !session) {
       setLoading(false);
     }
-  }, [isLoaded, session]);
+  }, [isLoaded, session, fetchVideos]);
 
   return { videos, meta, loading, error, refetch: fetchVideos };
 }
@@ -180,7 +180,7 @@ export function useReviewVideo() {
     setError(null);
     try {
       const token = await session.getToken();
-      const body: any = { status };
+      const body: Record<string, string> = { status };
       if (reason) body.reason = reason;
 
       const res = await fetch(`${API_URL}/${id}/review`, {
@@ -199,8 +199,8 @@ export function useReviewVideo() {
 
       const json = await res.json();
       return json.data as Video;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     } finally {
       setReviewing(false);
@@ -233,8 +233,8 @@ export function useDeleteVideo() {
       }
 
       return true;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       throw err;
     } finally {
       setDeleting(false);

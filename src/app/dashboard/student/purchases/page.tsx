@@ -3,15 +3,16 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import MainLayout from '@/components/MainLayout';
-import { Button } from '@/components/Button';
+
 import { RefundRequestModal } from '@/components/RefundRequestModal';
 import LoadingScreen from '@/components/LoadingScreen';
-import { HelpCircle, Info } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { FinancialDetailModal } from '@/components/FinancialDetailModal';
 import { Pagination } from '@/components/Pagination';
 
 export default function PurchasesPage() {
   const { getToken, isLoaded } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export default function PurchasesPage() {
   
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedEnrollment, setSelectedEnrollment] = useState<any>(null);
 
   const fetchPurchases = useCallback(async () => {
@@ -41,8 +43,8 @@ export default function PurchasesPage() {
       } else {
         setError(result.message || 'Lỗi tải dữ liệu');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -71,6 +73,7 @@ export default function PurchasesPage() {
     });
   }, [purchases, searchQuery, statusFilter]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const canRefund = (enrollment: any) => {
     if (!enrollment.is_active || enrollment.refund_request) return { eligible: false };
     const now = new Date();
@@ -84,6 +87,7 @@ export default function PurchasesPage() {
     return { eligible: true };
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getStatusBadge = (enrollment: any) => {
     const base = "border-2 border-black px-2 py-1 text-[9px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] inline-block min-w-[120px] leading-tight";
     

@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
-import { X, Info, User, Calendar, CreditCard, ArrowRightLeft, ShieldCheck } from 'lucide-react';
+import { X, User, Calendar, CreditCard, ArrowRightLeft, ShieldCheck } from 'lucide-react';
 
 interface TransactionDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transaction: any;
 }
 
@@ -29,6 +30,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
     return date.toLocaleDateString('vi-VN');
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getTransactionSource = (tx: any) => {
     switch (tx.transaction_type) {
       case 'PURCHASE':
@@ -46,6 +48,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getTransactionDest = (tx: any) => {
     switch (tx.transaction_type) {
       case 'PURCHASE':

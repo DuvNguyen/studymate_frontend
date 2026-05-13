@@ -1,8 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useReviews, Review } from '@/hooks/useReviews';
 import toast from 'react-hot-toast';
+
+// Static mock dates (outside render to avoid impure function calls)
+const MOCK_DATES = [
+  new Date(new Date('2025-05-01').getTime()).toISOString(),
+  new Date(new Date('2025-04-28').getTime()).toISOString(),
+  new Date(new Date('2025-04-23').getTime()).toISOString(),
+  new Date(new Date('2025-04-18').getTime()).toISOString(),
+  new Date(new Date('2025-04-13').getTime()).toISOString(),
+];
 
 function StarRating({ rating, onRate, interactive = false }: {
   rating: number;
@@ -49,8 +58,8 @@ function ReviewFormModal({ courseId, onClose, onSuccess }: {
       toast.success('Đánh giá của bạn đã được gửi!');
       onSuccess();
       onClose();
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi gửi đánh giá');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi gửi đánh giá');
     }
   };
 
@@ -155,60 +164,43 @@ export default function ReviewSection({
   const [showModal, setShowModal] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  useEffect(() => {
+  const fetch = useCallback(() => {
     fetchReviews(courseId);
-  }, [courseId]);
+  }, [courseId, fetchReviews]);
 
-  // Mock data for presentation (Course ID 130: Master Linux)
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
   const mockReviews: Review[] = courseId === 130 ? [
     {
-      id: 9991,
-      userId: 9991,
-      course_id: 130,
-      rating: 5,
+      id: 9991, userId: 9991, course_id: 130, rating: 5,
       comment: "Khóa học rất chi tiết, mình đã cài được Ubuntu trên VMWare thành công. Cảm ơn giảng viên!",
-      isPublished: true,
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      isPublished: true, createdAt: MOCK_DATES[0],
       user: { profile: { fullName: "Hải Nam" } }
     },
     {
-      id: 9992,
-      userId: 9992,
-      course_id: 130,
-      rating: 5,
+      id: 9992, userId: 9992, course_id: 130, rating: 5,
       comment: "Kiến thức về Smurf Attack rất hay, mình chưa thấy ở đâu dạy kỹ như vậy.",
-      isPublished: true,
-      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      isPublished: true, createdAt: MOCK_DATES[1],
       user: { profile: { fullName: "Minh Phạm" } }
     },
     {
-      id: 9993,
-      userId: 9993,
-      course_id: 130,
-      rating: 4,
+      id: 9993, userId: 9993, course_id: 130, rating: 4,
       comment: "Giao diện đẹp, dễ học. Phù hợp cho người mới bắt đầu như mình.",
-      isPublished: true,
-      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+      isPublished: true, createdAt: MOCK_DATES[2],
       user: { profile: { fullName: "Linh Đan" } }
     },
     {
-      id: 9994,
-      userId: 9994,
-      course_id: 130,
-      rating: 5,
+      id: 9994, userId: 9994, course_id: 130, rating: 5,
       comment: "Giọng giảng viên dễ nghe, kiến thức thực tế.",
-      isPublished: true,
-      createdAt: new Date(Date.now() - 86400000 * 15).toISOString(),
+      isPublished: true, createdAt: MOCK_DATES[3],
       user: { profile: { fullName: "Tuấn Anh" } }
     },
     {
-      id: 9995,
-      userId: 9995,
-      course_id: 130,
-      rating: 5,
+      id: 9995, userId: 9995, course_id: 130, rating: 5,
       comment: "Tài liệu đi kèm đầy đủ, rất đáng đồng tiền bát gạo. 10 điểm!",
-      isPublished: true,
-      createdAt: new Date(Date.now() - 86400000 * 20).toISOString(),
+      isPublished: true, createdAt: MOCK_DATES[4],
       user: { profile: { fullName: "Bảo Ngọc" } }
     }
   ] : [];

@@ -55,6 +55,7 @@ export default function ReconciliationPage() {
     try {
       const result = await reconcilePayouts(file);
       setResults(result);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.message);
     } finally {

@@ -3,13 +3,23 @@
 import { useCart } from '@/contexts/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { useRouter } from 'next/navigation';
 import PublicLayout from '@/components/PublicLayout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
+
+interface CartItem {
+  id: number;
+  course: {
+    id: number;
+    title: string;
+    price: string | number;
+    thumbnailUrl?: string;
+    instructor_name?: string;
+  };
+}
 
 export default function CartPage() {
   const { user, loading: userLoading } = useCurrentUser();
@@ -40,7 +50,7 @@ export default function CartPage() {
     }
   };
 
-  const subtotal = cart?.cart_items?.reduce((sum: number, item: any) => sum + Number(item.course.price), 0) || 0;
+  const subtotal = cart?.cart_items?.reduce((sum: number, item: CartItem) => sum + Number(item.course.price), 0) || 0;
   const finalTotal = subtotal - discountAmount;
   const itemCount = cart?.cart_items?.length || 0;
 
@@ -101,7 +111,7 @@ export default function CartPage() {
               </p>
               
               <div className="space-y-6">
-                {cart?.cart_items?.map((item: any) => (
+                {cart?.cart_items?.map((item: CartItem) => (
                   <div key={item.id} className="flex flex-col sm:flex-row gap-4 p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group">
                     <div className="w-full sm:w-40 aspect-video bg-gray-200 border-2 border-black flex-shrink-0 relative overflow-hidden">
                       {item.course?.thumbnailUrl ? (

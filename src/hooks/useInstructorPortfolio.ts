@@ -7,7 +7,9 @@ export interface InstructorPortfolio {
   fullName: string;
   avatarUrl: string | null;
   bio: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   certificates: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   courses: any[];
   totalCourses: number;
   createdAt: string;
@@ -23,7 +25,9 @@ export function useInstructorPortfolio(id: string | number, page: number = 1, li
   useEffect(() => {
     if (!id) return;
 
-    setLoading(true);
+    setTimeout(() => {
+      setLoading(true);
+    }, 0);
     fetch(`${API_BASE}/users/${id}/portfolio?page=${page}&limit=${limit}`)
       .then((res) => {
         if (!res.ok) throw new Error('Không thể tải thông tin giảng viên');

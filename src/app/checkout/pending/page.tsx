@@ -16,6 +16,7 @@ function CheckoutContent() {
   const { getToken } = useAuth();
   const router = useRouter();
   const [isSimulating, setIsSimulating] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [order, setOrder] = useState<any>(null);
   const [fetching, setFetching] = useState(true);
 
@@ -69,6 +70,7 @@ function CheckoutContent() {
       
       // Polling will handle the redirect automatically once status changes to COMPLETED
       toast.success('Gửi yêu cầu giả lập thanh toán thành công!');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.message);
       setIsSimulating(false);

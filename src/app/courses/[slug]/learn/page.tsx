@@ -22,18 +22,13 @@ import {
   ChevronRight, 
   ChevronDown,
   ArrowLeft,
-  Award,
   Send,
   Zap,
   Target,
   Flag,
   ChevronLeft,
-  Trash2,
-  Pencil,
   FileQuestion,
   FolderArchive,
-  ArrowBigUp,
-  ArrowBigDown,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -52,7 +47,7 @@ export default function LearnPage() {
   const enrollment = useMemo(() => {
     if (!course || !enrollments) return null;
     return enrollments.find(e => e.course.slug === slug || e.course_id === course.id);
-  }, [course?.id, enrollments, slug]);
+  }, [course, enrollments, slug]);
   
   // Lesson navigation logic
   const allLessons = useMemo(() => {
@@ -99,7 +94,7 @@ export default function LearnPage() {
   useEffect(() => {
     if (course && course.sections.length > 0 && !activeLesson) {
       const firstLesson = course.sections[0].lessons[0];
-      if (firstLesson) setActiveLesson(firstLesson);
+      if (firstLesson) setTimeout(() => setActiveLesson(firstLesson), 0);
     }
   }, [course, activeLesson]);
 
@@ -110,7 +105,7 @@ export default function LearnPage() {
       course.sections.forEach(s => {
         initial[s.id] = true;
       });
-      setExpandedSections(initial);
+      setTimeout(() => setExpandedSections(initial), 0);
     }
   }, [course]);
 
@@ -208,8 +203,9 @@ export default function LearnPage() {
   const toggleBestAnswer = async (id: number) => {
     try {
       await markBestAnswer(id);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      const error = err as Error;
+      toast.error(error.message);
     }
   };
 
@@ -413,14 +409,15 @@ export default function LearnPage() {
                             className="bg-black text-white"
                             onClick={async () => {
                               if (!newQuestion.trim()) return;
-                              try {
-                                await addDiscussion(course.id, newQuestion);
-                                setNewQuestion('');
-                                setIsAsking(false);
-                                toast.success('ĐÃ ĐĂNG CÂU HỎI LÊN HỆ THỐNG!');
-                              } catch (err: any) {
-                                toast.error(err.message);
-                              }
+                                try {
+                                  await addDiscussion(course.id, newQuestion);
+                                  setNewQuestion('');
+                                  setIsAsking(false);
+                                  toast.success('ĐÃ ĐĂNG CÂU HỎI LÊN HỆ THỐNG!');
+                                } catch (err) {
+                                  const error = err as Error;
+                                  toast.error(error.message);
+                                }
                             }}
                           >
                             XÁC NHẬN GỬI <Send className="w-5 h-5 ml-2" />

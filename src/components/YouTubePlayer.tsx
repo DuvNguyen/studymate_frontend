@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 declare global {
   interface Window {
     onYouTubeIframeAPIReady: () => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     YT: any;
   }
 }
@@ -24,6 +25,7 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   onEnd,
   className = ''
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -57,7 +59,25 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       setApiReady(true);
     };
   }, []);
+  function startTracking() {
+    if (intervalRef.current) return;
+    intervalRef.current = setInterval(() => {
+      if (playerRef.current && playerRef.current.getCurrentTime) {
+        const currentTime = Math.floor(playerRef.current.getCurrentTime());
+        const duration = Math.floor(playerRef.current.getDuration());
+        if (duration > 0) {
+          onProgressRef.current?.(currentTime, duration);
+        }
+      }
+    }, 10000); // Track every 10 seconds
+  }
 
+  function stopTracking() {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }
   // Initialize Player
   useEffect(() => {
     if (!apiReady || !videoId || !containerRef.current) return;
@@ -81,11 +101,13 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         showinfo: 0,
       },
       events: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onReady: (event: any) => {
           if (initialTime > 0) {
             event.target.seekTo(initialTime);
           }
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onStateChange: (event: any) => {
           // 1 is PLAYING
           if (event.data === 1) {
@@ -107,32 +129,14 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         try {
           playerRef.current.destroy();
-        } catch (err) {
+        } catch {
           // Ignore
         }
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiReady, videoId]); // Only re-init if apiReady or videoId changes
 
-  const startTracking = () => {
-    if (intervalRef.current) return;
-    intervalRef.current = setInterval(() => {
-      if (playerRef.current && playerRef.current.getCurrentTime) {
-        const currentTime = Math.floor(playerRef.current.getCurrentTime());
-        const duration = Math.floor(playerRef.current.getDuration());
-        if (duration > 0) {
-          onProgressRef.current?.(currentTime, duration);
-        }
-      }
-    }, 10000); // Track every 10 seconds
-  };
-
-  const stopTracking = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
 
   return (
     <div className={`w-full h-full bg-black ${className}`}>

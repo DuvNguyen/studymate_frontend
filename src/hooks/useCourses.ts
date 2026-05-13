@@ -71,8 +71,10 @@ export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    setError(null);
+    setTimeout(() => {
+      setLoading(true);
+      setError(null);
+    }, 0);
 
     // Build query string từ filters
     const params = new URLSearchParams();
@@ -106,7 +108,7 @@ export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
       });
 
     return () => controller.abort();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [
     filters.categorySlug,
     filters.search,

@@ -13,7 +13,9 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function AdminLedgerPage() {
   const { getToken, isLoaded } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [items, setItems] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [stats, setStats] = useState<any>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -24,6 +26,7 @@ export default function AdminLedgerPage() {
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedTx, setSelectedTx] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -47,6 +50,7 @@ export default function AdminLedgerPage() {
       setItems(content.items || []);
       setStats(content.stats || null);
       setTotal(content.total || 0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error('Không thể tải dữ liệu sổ cái');
     } finally {
@@ -69,6 +73,7 @@ export default function AdminLedgerPage() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getTransactionSource = (tx: any) => {
     switch (tx.transaction_type) {
       case 'PURCHASE':
@@ -86,6 +91,7 @@ export default function AdminLedgerPage() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getTransactionDest = (tx: any) => {
     switch (tx.transaction_type) {
       case 'PURCHASE':

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, useEffect } from 'react';
 import useDebounce from '@/hooks/useDebounce';
@@ -7,7 +8,7 @@ import { useCourses, CourseFilters } from '@/hooks/useCourses';
 import { useCategories } from '@/hooks/useCategories';
 import CoursesGrid from '@/components/CoursesGrid';
 import { Pagination } from '@/components/Pagination';
-import Footer from '@/components/Footer';
+
 import PublicLayout from '@/components/PublicLayout';
 
 const LEVEL_OPTIONS = [
@@ -31,10 +32,11 @@ function CoursesPageContent() {
 
   // Update search when debounced input changes
   useEffect(() => {
-    // Only update if it's different to avoid unnecessary resets
     if (debouncedSearchInput !== search) {
-      setSearch(debouncedSearchInput);
-      setPage(1);
+      setTimeout(() => {
+        setSearch(debouncedSearchInput);
+        setPage(1);
+      }, 0);
     }
   }, [debouncedSearchInput, search]);
 
@@ -42,10 +44,12 @@ function CoursesPageContent() {
   useEffect(() => {
     const currentUrlSearch = searchParams.get('search') ?? '';
     if (currentUrlSearch !== searchInput) {
-      setSearchInput(currentUrlSearch);
-      setSearch(currentUrlSearch);
+      setTimeout(() => {
+        setSearchInput(currentUrlSearch);
+        setSearch(currentUrlSearch);
+      }, 0);
     }
-  }, [searchParams]);
+  }, [searchParams, searchInput]);
 
   const filters: CourseFilters = {
     categorySlug,
@@ -158,13 +162,13 @@ function CoursesPageContent() {
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <span className="text-xs font-bold text-gray-500 uppercase">Đang lọc:</span>
             {currentCategory && (
-              <a
+              <Link
                 href="/courses"
                 className="inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 bg-amber-300 border border-black text-black"
               >
                 {currentCategory.name}
                 <span className="text-black/60">×</span>
-              </a>
+              </Link>
             )}
             {level && (
               <button

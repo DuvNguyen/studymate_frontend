@@ -13,7 +13,6 @@ interface UnifiedVideoPlayerProps {
 export const UnifiedVideoPlayer: React.FC<UnifiedVideoPlayerProps> = ({
   youtubeVideoId,
   cdnUrl,
-  title,
   className = '',
 }) => {
   if (youtubeVideoId) {

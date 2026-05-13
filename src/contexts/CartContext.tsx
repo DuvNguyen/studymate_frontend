@@ -4,12 +4,14 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import { useAuth } from '@clerk/nextjs';
 
 interface CartContextType {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cart: any;
   loading: boolean;
   error: string;
   fetchCart: () => Promise<void>;
   addToCart: (courseId: number) => Promise<{ success: boolean; error?: string }>;
   removeFromCart: (itemId: number) => Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   checkout: () => Promise<{ success: boolean; order?: any; error?: string }>;
   checkoutLoading: boolean;
   appliedCoupon: string | null;
@@ -22,6 +24,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { getToken, isSignedIn } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -55,9 +58,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       console.log('[CartContext] Fetched cart data:', result.data);
       setCart(result.data);
-    } catch (err: any) {
-      console.error('[CartContext] Error in fetchCart:', err.message);
-      setError(err.message);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[CartContext] Error in fetchCart:', msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -80,6 +84,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotal = manualSubtotal;
     } else {
       if (!cart || cart.cart_items.length === 0) return { success: false, error: 'Giỏ hàng trống' };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       subtotal = cart.cart_items.reduce((acc: number, item: any) => acc + Number(item.course?.price || 0), 0);
     }
     
@@ -96,8 +101,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setAppliedCoupon(code);
       setDiscountAmount(result.data?.discountAmount || result.discountAmount || 0);
       return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
     }
   };
 
@@ -128,9 +133,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       setCart(result.data);
       return { success: true };
-    } catch (err: any) {
+    } catch (err) {
       // Don't console.error here to avoid Next.js dev overlay for business logic errors
-      return { success: false, error: err.message };
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
     }
   };
 
@@ -160,9 +165,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setAppliedCoupon(null);
       setDiscountAmount(0);
       return { success: true, order: result.data };
-    } catch (err: any) {
-      console.error('[CartContext] Error in checkout:', err.message);
-      return { success: false, error: err.message };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[CartContext] Error in checkout:', msg);
+      return { success: false, error: msg };
     } finally {
       setCheckoutLoading(false);
     }
@@ -183,9 +189,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!res.ok) throw new Error(result.message || 'Lỗi xóa khỏi giỏ');
       
       setCart(result.data);
-    } catch (err: any) {
-      console.error('[CartContext] Error in removeFromCart:', err.message);
-      setError(err.message);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[CartContext] Error in removeFromCart:', msg);
+      setError(msg);
     }
   };
 

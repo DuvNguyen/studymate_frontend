@@ -8,9 +8,9 @@ import { Play } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function InstructorVideoManager() {
-  const { videos, loading, error, refetch } = useInstructorVideos();
+  const { videos, loading, refetch } = useInstructorVideos();
   const { upload, uploading } = useUploadVideo();
-  const { remove, deleting } = useDeleteVideo();
+  const { remove } = useDeleteVideo();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -35,8 +35,8 @@ export default function InstructorVideoManager() {
       setTitle('');
       toast.success('Đã tải video lên thành công!');
       refetch();
-    } catch (err: any) {
-      setUploadError(err.message);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -50,8 +50,8 @@ export default function InstructorVideoManager() {
       await remove(id);
       toast.success('Đã xóa nội dung thành công!');
       refetch();
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi khi xóa video');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
     } finally {
       setDeletingId(null);
     }

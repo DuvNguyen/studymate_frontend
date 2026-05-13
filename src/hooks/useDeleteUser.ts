@@ -28,9 +28,9 @@ export function useDeleteUser() {
       const { data } = await res.json();
       setLoading(false);
       return data;
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message || 'Lỗi không xác định');
+      setError(err instanceof Error ? err.message : 'Lỗi không xác định');
       setLoading(false);
       throw err;
     }
