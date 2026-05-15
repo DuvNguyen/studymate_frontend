@@ -3,9 +3,9 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
+import Image from 'next/image';
 import { Button } from '@/components/Button';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { PAYMENT_CONFIG } from '@/constants/payment';
 import PublicLayout from '@/components/PublicLayout';
@@ -20,56 +20,69 @@ function CheckoutContent() {
   const [order, setOrder] = useState<any>(null);
   const [fetching, setFetching] = useState(true);
 
+  const fetchOrderStatus = useCallback(async () => {
+    if (!orderId) return;
+
+    try {
+      const token = await getToken();
+      const now = Date.now();
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}?t=${now}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store',
+        },
+      );
+
+      const result = await res.json();
+      if (res.ok) {
+        const latestOrder = result.data;
+        setOrder(latestOrder);
+
+        if (latestOrder.status === 'COMPLETED') {
+          setIsSimulating(false);
+          toast.success('Thanh toán thành công! Đang chuyển hướng...');
+          setTimeout(() => {
+            router.push('/dashboard/student/courses?fromCheckout=1');
+            router.refresh();
+          }, 1200);
+        }
+      }
+    } catch (err) {
+      console.error('Polling error:', err);
+    } finally {
+      setFetching(false);
+    }
+  }, [getToken, orderId, router]);
+
   // Poll for order status
   useEffect(() => {
     if (!orderId) return;
 
-    const fetchOrder = async () => {
-      try {
-        const token = await getToken();
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const result = await res.json();
-        if (res.ok) {
-          setOrder(result.data);
-          
-          // Automatic redirect if completed
-          if (result.data.status === 'COMPLETED') {
-            toast.success('Thanh toán thành công! Đang chuyển hướng...');
-            setTimeout(() => {
-              router.push('/dashboard/student/courses');
-            }, 2000);
-          }
-        }
-      } catch (err) {
-        console.error('Polling error:', err);
-      } finally {
-        setFetching(false);
-      }
-    };
+    fetchOrderStatus();
 
-    fetchOrder(); // Initial fetch
-    
-    // Set up polling interval every 3 seconds
-    const interval = setInterval(fetchOrder, 3000);
-    
+    const interval = setInterval(fetchOrderStatus, 3000);
+
     return () => clearInterval(interval);
-  }, [orderId, getToken, router]);
+  }, [orderId, fetchOrderStatus]);
 
   const handleSimulatePayment = async () => {
     if (!orderId) return;
     setIsSimulating(true);
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/simulate-payment`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/simulate-payment`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!res.ok) throw new Error('Lỗi xác nhận thanh toán');
-      
-      // Polling will handle the redirect automatically once status changes to COMPLETED
-      toast.success('Gửi yêu cầu giả lập thanh toán thành công!');
+
+      await fetchOrderStatus();
+
+      toast.success('Đã gửi xác nhận, hệ thống đang kiểm tra thanh toán...');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.message);
@@ -121,10 +134,11 @@ function CheckoutContent() {
         {/* QR Section */}
         <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="aspect-square bg-white border-2 border-black flex items-center justify-center p-2 mb-4 relative overflow-hidden group">
-            <img 
-              src={vietQrUrl} 
+            <Image
+              src={vietQrUrl}
               alt="VietQR Payment"
-              className="w-full h-full object-contain"
+              fill
+              className="object-contain"
             />
             {order.status === 'COMPLETED' && (
               <div className="absolute inset-0 bg-emerald-500/90 flex flex-col items-center justify-center text-white p-4 text-center">
@@ -168,15 +182,15 @@ function CheckoutContent() {
           </div>
 
           <div className="space-y-3">
-             <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className={`w-full py-4 text-sm font-black ${order.status === 'COMPLETED' ? 'bg-emerald-400 opacity-50 cursor-not-allowed' : 'bg-emerald-400 hover:bg-emerald-500'} border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all`}
               onClick={handleSimulatePayment}
               disabled={isSimulating || order.status === 'COMPLETED'}
             >
-              {isSimulating ? 'ĐANG CHỜ XÁC NHẬN...' : order.status === 'COMPLETED' ? 'ĐÃ THANH TOÁN' : 'TÔI ĐÃ CHUYỂN KHOẢN'}
+              {isSimulating && order.status !== 'COMPLETED' ? 'ĐANG CHỜ XÁC NHẬN...' : order.status === 'COMPLETED' ? 'ĐÃ THANH TOÁN' : 'TÔI ĐÃ CHUYỂN KHOẢN'}
             </Button>
-            
+
             <p className="text-[10px] font-bold text-gray-500 italic text-center leading-relaxed">
               * Hệ thống sẽ tự động cập nhật trạng thái sau khi tiền vào tài khoản. Đừng đóng trang này cho đến khi nhận được xác nhận thành công.
             </p>
@@ -191,7 +205,7 @@ function CheckoutContent() {
             <p className="text-[10px] font-black uppercase text-zinc-500">Demo Simulation Tool</p>
             <p className="text-[9px] font-bold text-zinc-400 uppercase">Sử dụng để mô phỏng Webhook ngân hàng gửi về StudioMate</p>
           </div>
-          <button 
+          <button
             onClick={handleSimulatePayment}
             disabled={isSimulating || order.status === 'COMPLETED'}
             className="text-[10px] font-black uppercase bg-black text-white px-3 py-2 hover:bg-zinc-800 disabled:opacity-50"

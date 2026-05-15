@@ -14,6 +14,7 @@ export interface RefundRequest {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   admin_note: string | null;
   processed_at: string | null;
+  processed_by_id?: number | null;
   created_at: string;
   student?: {
     full_name: string;
@@ -25,6 +26,11 @@ export interface RefundRequest {
   enrollment?: {
     enrolled_at: string;
     progress_percent: number;
+  };
+  processed_by?: {
+    id: number;
+    full_name?: string;
+    email?: string;
   };
 }
 
@@ -50,14 +56,24 @@ export function useRefund() {
     }
   }, [session]);
 
-  const fetchAllRefundRequests = useCallback(async (status?: string) => {
+  const fetchAllRefundRequests = useCallback(async (
+    status?: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ) => {
     if (!session) return;
     setLoading(true);
     try {
       const token = await session.getToken();
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/refunds/admin/all${status ? `?status=${status}` : ''}`;
+      const params = new URLSearchParams();
+      if (status) params.set('status', status);
+      if (dateFrom) params.set('dateFrom', dateFrom);
+      if (dateTo) params.set('dateTo', dateTo);
+      const query = params.toString();
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/refunds/admin/all${query ? `?${query}` : ''}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       });
       const json = await res.json();
       setRefundRequests(json.data || json);

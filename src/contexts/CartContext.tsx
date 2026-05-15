@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useUserContext } from './UserContext';
 
 interface CartContextType {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +25,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { getToken, isSignedIn } = useAuth();
+  const { user, loading: userLoading, refetchUser } = useUserContext();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +36,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [discountAmount, setDiscountAmount] = useState(0);
 
   const fetchCart = useCallback(async () => {
-    if (!isSignedIn) return;
+    if (!isSignedIn || userLoading || !user) return;
     setLoading(true);
     setError('');
     try {
@@ -43,7 +45,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         console.warn('[CartContext] No token available, skipping fetch');
         return;
       }
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/carts`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/carts?t=${Date.now()}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store'
       });
@@ -56,7 +58,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      console.log('[CartContext] Fetched cart data:', result.data);
+      if (result.data?.student_id && result.data.student_id !== user.id) {
+        console.warn(
+          `[CartContext] User mismatch detected. Expected student_id=${user.id}, got ${result.data.student_id}.`,
+        );
+        await refetchUser();
+        setCart(null);
+        setError('Đang đồng bộ lại phiên đăng nhập, vui lòng tải lại trang.');
+        return;
+      }
+
       setCart(result.data);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -65,17 +76,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [getToken, isSignedIn]);
+  }, [getToken, isSignedIn, refetchUser, user, userLoading]);
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (isSignedIn && !userLoading && user) {
       fetchCart();
     } else {
       setCart(null);
       setAppliedCoupon(null);
       setDiscountAmount(0);
     }
-  }, [isSignedIn, fetchCart]);
+  }, [isSignedIn, userLoading, user, fetchCart]);
 
   const applyCoupon = async (code: string, manualSubtotal?: number) => {
     let subtotal: number;

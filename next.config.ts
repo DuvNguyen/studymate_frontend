@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
         hostname: 'img.clerk.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.vietqr.io',
+        pathname: '/**',
+      },
     ],
   },
 };

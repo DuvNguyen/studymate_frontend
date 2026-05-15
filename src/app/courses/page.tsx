@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import useDebounce from '@/hooks/useDebounce';
 import { useCourses, CourseFilters } from '@/hooks/useCourses';
 import { useCategories } from '@/hooks/useCategories';
@@ -27,6 +27,7 @@ function CoursesPageContent() {
   const [level, setLevel] = useState('');
   const [search, setSearch] = useState(urlSearch);
   const [searchInput, setSearchInput] = useState(urlSearch);
+  const lastSyncedUrlSearchRef = useRef(urlSearch);
   const debouncedSearchInput = useDebounce(searchInput, 500);
   const [page, setPage] = useState(1);
 
@@ -42,14 +43,14 @@ function CoursesPageContent() {
 
   // Sync state with URL if it changes (e.g. from Navbar)
   useEffect(() => {
-    const currentUrlSearch = searchParams.get('search') ?? '';
-    if (currentUrlSearch !== searchInput) {
+    if (urlSearch !== lastSyncedUrlSearchRef.current) {
+      lastSyncedUrlSearchRef.current = urlSearch;
       setTimeout(() => {
-        setSearchInput(currentUrlSearch);
-        setSearch(currentUrlSearch);
+        setSearchInput(urlSearch);
+        setSearch(urlSearch);
       }, 0);
     }
-  }, [searchParams, searchInput]);
+  }, [urlSearch]);
 
   const filters: CourseFilters = {
     categorySlug,

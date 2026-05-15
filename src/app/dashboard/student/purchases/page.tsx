@@ -20,6 +20,10 @@ export default function PurchasesPage() {
   const [limit] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [sortBy, setSortBy] = useState<'time' | 'price'>('time');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -33,8 +37,9 @@ export default function PurchasesPage() {
       const token = await getToken();
       if (!token) return;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/my-purchases?page=${page}&limit=${limit}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/my-purchases`, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       });
 
       const result = await res.json();
@@ -48,14 +53,14 @@ export default function PurchasesPage() {
     } finally {
       setLoading(false);
     }
-  }, [getToken, isLoaded, page, limit]);
+  }, [getToken, isLoaded]);
 
   useEffect(() => {
     fetchPurchases();
   }, [fetchPurchases]);
 
   const filteredPurchases = useMemo(() => {
-    return purchases.filter(p => {
+    const filtered = purchases.filter(p => {
       const matchesSearch = p.course.title.toLowerCase().includes(searchQuery.toLowerCase());
       
       let matchesStatus = true;
@@ -68,14 +73,44 @@ export default function PurchasesPage() {
       } else if (statusFilter === 'REFUND_DONE') {
         matchesStatus = !p.is_active && (p.refund_request?.status === 'APPROVED' || !p.refund_request); // !is_active covers processed refunds
       }
-      
-      return matchesSearch && matchesStatus;
+
+      const enrolledDate = new Date(p.enrolled_at);
+      const matchesDateFrom = !dateFrom || enrolledDate >= new Date(`${dateFrom}T00:00:00`);
+      const matchesDateTo = !dateTo || enrolledDate <= new Date(`${dateTo}T23:59:59`);
+
+      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
     });
-  }, [purchases, searchQuery, statusFilter]);
+
+    filtered.sort((a, b) => {
+      const aValue =
+        sortBy === 'time'
+          ? new Date(a.enrolled_at).getTime()
+          : Number(a.order_item?.final_price || 0);
+      const bValue =
+        sortBy === 'time'
+          ? new Date(b.enrolled_at).getTime()
+          : Number(b.order_item?.final_price || 0);
+
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    });
+
+    return filtered;
+  }, [purchases, searchQuery, statusFilter, dateFrom, dateTo, sortBy, sortDirection]);
+
+  const paginatedPurchases = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filteredPurchases.slice(start, start + limit);
+  }, [filteredPurchases, page, limit]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, dateFrom, dateTo, sortBy, sortDirection]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const canRefund = (enrollment: any) => {
-    if (!enrollment.is_active || enrollment.refund_request) return { eligible: false };
+    if (!enrollment.is_active || enrollment.refund_request?.status === 'PENDING' || enrollment.refund_request?.status === 'APPROVED') {
+      return { eligible: false };
+    }
     const now = new Date();
     const enrolledAt = new Date(enrollment.enrolled_at);
     const diffTime = Math.abs(now.getTime() - enrolledAt.getTime());
@@ -114,6 +149,16 @@ export default function PurchasesPage() {
     );
   };
 
+  const getFinancialStatus = (enrollment: {
+    is_active: boolean;
+    refund_request?: { status?: string };
+  }) => {
+    if (enrollment.refund_request?.status === 'PENDING') return 'REFUND_PENDING';
+    if (enrollment.refund_request?.status === 'REJECTED') return 'REFUND_REJECTED';
+    if (!enrollment.is_active || enrollment.refund_request?.status === 'APPROVED') return 'REFUNDED';
+    return 'COMPLETED';
+  };
+
   return (
     <MainLayout role="STUDENT">
       {loading ? (
@@ -138,14 +183,14 @@ export default function PurchasesPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <div className="flex flex-col xl:flex-row gap-4 mb-8">
             <div className="flex-1 relative group">
                 <input 
                     type="text" 
                     placeholder="TÌM KIẾM KHÓA HỌC..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-14 bg-white border-4 border-black px-6 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:shadow-none focus:translate-x-1 focus:translate-y-1 transition-all outline-none"
+                    className="w-full min-w-[260px] h-14 bg-white border-4 border-black px-6 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:shadow-none focus:translate-x-1 focus:translate-y-1 transition-all outline-none"
                 />
             </div>
             <div className="w-full md:w-72 relative">
@@ -162,6 +207,32 @@ export default function PurchasesPage() {
                 </select>
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none font-black text-xs">▼</div>
             </div>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full md:w-52 h-14 bg-white border-4 border-black px-4 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full md:w-52 h-14 bg-white border-4 border-black px-4 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setSortBy((prev) => (prev === 'time' ? 'price' : 'time'))}
+              className="w-full md:w-56 h-14 bg-white border-4 border-black px-4 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 transition-colors"
+            >
+              {sortBy === 'time' ? 'Sắp xếp: Thời gian' : 'Sắp xếp: Giá tiền'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+              className="w-full md:w-56 h-14 bg-white border-4 border-black px-4 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 transition-colors"
+            >
+              {sortDirection === 'asc' ? 'Thứ tự: Tăng dần' : 'Thứ tự: Giảm dần'}
+            </button>
         </div>
 
         {error && (
@@ -189,7 +260,7 @@ export default function PurchasesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredPurchases.map((purchase) => (
+                paginatedPurchases.map((purchase) => (
                   <tr key={purchase.id} className="hover:bg-zinc-50 transition-colors group">
                     <td className="p-4 border-r-4 border-black font-mono font-black text-xs text-black">
                       #{purchase.order_item?.order?.order_number?.split('-').slice(-1)[0] || purchase.id}
@@ -231,7 +302,7 @@ export default function PurchasesPage() {
 
         <Pagination 
           currentPage={page}
-          totalPages={Math.ceil(purchases.length / limit) + (purchases.length === limit ? 1 : 0) || 1} 
+          totalPages={Math.max(1, Math.ceil(filteredPurchases.length / limit))}
           onPageChange={setPage}
         />
 
@@ -247,7 +318,7 @@ export default function PurchasesPage() {
               instructor: selectedEnrollment.course.instructor_name || 'Giảng viên StudyMate',
               date: selectedEnrollment.enrolled_at,
               amount: selectedEnrollment.order_item?.final_price || 0,
-              status: selectedEnrollment.is_active ? 'COMPLETED' : 'REFUNDED',
+              status: getFinancialStatus(selectedEnrollment),
               progress: selectedEnrollment.progress_percent,
               orderNumber: selectedEnrollment.order_item?.order?.order_number,
               canRefund: canRefund(selectedEnrollment).eligible,
@@ -266,6 +337,20 @@ export default function PurchasesPage() {
             onClose={() => setIsRefundModalOpen(false)}
             enrollment={selectedEnrollment}
             onSuccess={() => {
+              setPurchases((prev) =>
+                prev.map((item) =>
+                  item.id === selectedEnrollment.id
+                    ? {
+                        ...item,
+                        refund_request: {
+                          ...(item.refund_request || {}),
+                          status: 'PENDING',
+                          created_at: new Date().toISOString(),
+                        },
+                      }
+                    : item,
+                ),
+              );
               setIsRefundModalOpen(false);
               fetchPurchases();
             }}

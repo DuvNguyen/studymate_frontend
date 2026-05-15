@@ -12,14 +12,17 @@ export function useEnrolledCourses() {
     if (!isLoaded) return;
     try {
       setLoading(true);
+      setError(null);
       const token = await getToken();
       if (!token) {
         setLoading(false);
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/my-courses`, {
+      const now = Date.now();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/my-courses?t=${now}`, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       });
 
       const result = await res.json();

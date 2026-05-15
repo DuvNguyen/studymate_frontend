@@ -94,7 +94,11 @@ function CourseDetailContent() {
   const router = useRouter();
   const { user, loading: userLoading } = useCurrentUser();
   const { signOut, session } = useClerk();
-  const { enrollments, loading: enrollLoading } = useEnrolledCourses();
+  const {
+    enrollments,
+    loading: enrollLoading,
+    refresh: refreshEnrollments,
+  } = useEnrolledCourses();
 
   // Local input state for the coupon code
   const [couponInput, setCouponInput] = useState('');
@@ -155,6 +159,7 @@ function CourseDetailContent() {
         if (res.error === 'Khóa học này đã có trong giỏ hàng') {
           toast('Khóa học này đã có trong giỏ hàng', { icon: '🛒' });
         } else if (res.error === 'Bạn đã sở hữu khóa học này') {
+          void refreshEnrollments();
           toast.success('Bạn đã sở hữu khóa học này! Hãy vào Dashboard để học ngay.');
         } else {
           toast.error(res.error);
@@ -227,6 +232,9 @@ function CourseDetailContent() {
       // If successful OR if already in cart (error message check)
       if (res.success || (res.error && res.error === 'Khóa học này đã có trong giỏ hàng')) {
         router.push('/cart');
+      } else if (res.error === 'Bạn đã sở hữu khóa học này') {
+        void refreshEnrollments();
+        toast.success('Bạn đã sở hữu khóa học này! Bấm HỌC NGAY để vào khóa học.');
       } else {
         toast.error(res.error || 'Lỗi thêm vào giỏ hàng');
       }

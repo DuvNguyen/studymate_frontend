@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useCategories, Category } from '@/hooks/useCategories';
-import MegaMenuDropdown from './MegaMenuDropdown';
 
 export default function CategoryNavBar({ 
   bgColor = 'bg-white',
@@ -13,26 +11,6 @@ export default function CategoryNavBar({
   className?: string;
 }) {
   const { categories, loading } = useCategories();
-  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
-  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleMouseEnter = (cat: Category) => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    setActiveCategory(cat);
-    setMegaMenuOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    closeTimer.current = setTimeout(() => {
-      setMegaMenuOpen(false);
-      setActiveCategory(null);
-    }, 150);
-  };
-
-  const handleMegaMenuMouseEnter = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-  };
 
   if (loading) {
     return (
@@ -54,15 +32,15 @@ export default function CategoryNavBar({
 
   return (
     <div className={`relative border-b-2 border-black ${bgColor} z-40 ${className}`}>
-      <div className="w-full px-4 sm:px-6 lg:px-8 h-10 flex items-center gap-0 overflow-x-auto scrollbar-hide">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-1 min-h-10 flex flex-wrap items-center gap-0 overflow-visible">
         {/* Nút "TẤT CẢ" ở đầu */}
-        <div className="relative flex-shrink-0">
+        <div className="relative">
           <Link
             href="/courses"
             className={`
               inline-flex items-center px-3 h-10 text-[11px] font-black uppercase tracking-wide
               border-b-2 transition-all duration-100 whitespace-nowrap
-              ${!activeCategory && !megaMenuOpen && typeof window !== 'undefined' && window.location.pathname === '/courses' && !window.location.search.includes('category=')
+              ${typeof window !== 'undefined' && window.location.pathname === '/courses' && !window.location.search.includes('category=')
                 ? 'border-black text-black bg-amber-300'
                 : 'border-transparent text-black hover:bg-amber-100/50 hover:border-black'
               }
@@ -72,45 +50,14 @@ export default function CategoryNavBar({
           </Link>
         </div>
 
-        {categories.map((cat) => (
-          <div
-            key={cat.id}
-            className="relative flex-shrink-0"
-            onMouseEnter={() => handleMouseEnter(cat)}
-            onMouseLeave={handleMouseLeave}
-          >
+        {categories.map((cat: Category) => (
+          <div key={cat.id} className="relative">
             <Link
               href={`/courses?category=${cat.slug}`}
-              className={`
-                inline-flex items-center px-3 h-10 text-[11px] font-black uppercase tracking-wide
-                border-b-2 transition-all duration-100 whitespace-nowrap
-                ${activeCategory?.id === cat.id && megaMenuOpen
-                  ? 'border-black text-black bg-amber-300'
-                  : 'border-transparent text-gray-700 hover:text-black hover:border-black hover:bg-amber-100'
-                }
-              `}
+              className="inline-flex items-center px-3 h-10 text-[11px] font-black uppercase tracking-wide border-b-2 transition-all duration-100 whitespace-nowrap border-transparent text-gray-700 hover:text-black hover:border-black hover:bg-amber-100"
             >
               {cat.name}
             </Link>
-
-            {/* Dropdown sub-categories khi hover (dành cho mobile / nếu mega menu bị tắt) */}
-            {activeCategory?.id === cat.id && megaMenuOpen && (
-              <div
-                onMouseEnter={handleMegaMenuMouseEnter}
-                onMouseLeave={() => {
-                  setMegaMenuOpen(false);
-                  setActiveCategory(null);
-                }}
-              >
-                <MegaMenuDropdown
-                  categories={categories}
-                  onClose={() => {
-                    setMegaMenuOpen(false);
-                    setActiveCategory(null);
-                  }}
-                />
-              </div>
-            )}
           </div>
         ))}
       </div>

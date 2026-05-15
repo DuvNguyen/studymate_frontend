@@ -5,9 +5,18 @@ import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function StudentCoursesPage() {
-  const { enrollments, loading, error } = useEnrolledCourses();
+  const { enrollments, loading, error, refresh } = useEnrolledCourses();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('fromCheckout') === '1') {
+      void refresh();
+    }
+  }, [refresh, searchParams]);
 
   return (
     <MainLayout role="STUDENT">
@@ -78,11 +87,17 @@ export default function StudentCoursesPage() {
                       />
                     </div>
                     
-                    <Link href={`/courses/${enrollment.course.slug}/learn`} className="block">
-                      <Button className="w-full bg-black text-white hover:bg-emerald-500 hover:text-black border-2 border-black font-black uppercase tracking-widest transition-colors py-3">
-                        {enrollment.progress_percent > 0 ? 'TIẾP TỤC HỌC' : 'BẮT ĐẦU HỌC'}
-                      </Button>
-                    </Link>
+                    {enrollment.course.status === 'REJECTED' || enrollment.course.status === 'ARCHIVED' ? (
+                      <div className="w-full bg-amber-100 text-black border-2 border-black font-black uppercase tracking-widest py-3 text-center">
+                        Khóa học tạm ngưng
+                      </div>
+                    ) : (
+                      <Link href={`/courses/${enrollment.course.slug}/learn`} className="block">
+                        <Button className="w-full bg-black text-white hover:bg-emerald-500 hover:text-black border-2 border-black font-black uppercase tracking-widest transition-colors py-3">
+                          {enrollment.progress_percent > 0 ? 'TIẾP TỤC HỌC' : 'BẮT ĐẦU HỌC'}
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
