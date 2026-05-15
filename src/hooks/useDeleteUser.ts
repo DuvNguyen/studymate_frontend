@@ -13,7 +13,7 @@ export function useDeleteUser() {
       const token = await session?.getToken();
       if (!token) throw new Error('Không có quyền truy cập');
 
-      const res = await fetch(`http://localhost:3001/api/v1/users/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

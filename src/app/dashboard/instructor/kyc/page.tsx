@@ -43,7 +43,7 @@ export default function KycPage() {
     try {
       const token = await getToken();
       if (!token) return;
-      const res = await fetch('http://localhost:3001/api/v1/users/me/kyc', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/kyc`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -159,7 +159,7 @@ export default function KycPage() {
     const token = await getToken();
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch('http://localhost:3001/api/v1/uploads', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData,
@@ -217,7 +217,7 @@ export default function KycPage() {
       };
 
       const token = await getToken();
-      const res = await fetch('http://localhost:3001/api/v1/users/me/kyc', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/kyc`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

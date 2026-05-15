@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { Course } from './useCourses';
 import toast from 'react-hot-toast';
 
@@ -12,22 +12,23 @@ export interface WishlistItem {
   addedAt: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+const DEFAULT_API_BASE = 'http://localhost:3001/api/v1';
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE).replace(/\/+$/, '');
 
 export function useWishlist() {
-  const { session, isLoaded } = useSession();
+  const { getToken, isLoaded } = useAuth();
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchWishlist = useCallback(async () => {
-    if (!session) {
+    const token = await getToken();
+    if (!token) {
       setLoading(false);
       return;
     }
     
     try {
-      const token = await session.getToken();
       const res = await fetch(`${API_BASE}/wishlist`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -41,24 +42,22 @@ export function useWishlist() {
     } finally {
       setLoading(false);
     }
-  }, [session]);
+  }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded && session) {
+    if (isLoaded) {
       fetchWishlist();
-    } else if (isLoaded && !session) {
-      setLoading(false);
     }
-  }, [isLoaded, session, fetchWishlist]);
+  }, [isLoaded, fetchWishlist]);
 
   const toggleWishlist = useCallback(async (courseId: number, status?: boolean) => {
-    if (!session) {
+    const token = await getToken();
+    if (!token) {
       toast.error('Vui lòng đăng nhập để sử dụng tính năng này');
       return null;
     }
 
     try {
-      const token = await session.getToken();
       const res = await fetch(`${API_BASE}/wishlist/${courseId}`, {
         method: 'POST',
         headers: { 
@@ -81,13 +80,13 @@ export function useWishlist() {
       toast.error(err instanceof Error ? err.message : String(err));
       return null;
     }
-  }, [session, fetchWishlist]);
+  }, [getToken, fetchWishlist]);
 
   const checkInWishlist = useCallback(async (courseId: number) => {
-    if (!session) return false;
+    const token = await getToken();
+    if (!token) return false;
     
     try {
-      const token = await session.getToken();
       const res = await fetch(`${API_BASE}/wishlist/check/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -98,7 +97,7 @@ export function useWishlist() {
     } catch {
       return false;
     }
-  }, [session]);
+  }, [getToken]);
 
   return { 
     wishlist, 

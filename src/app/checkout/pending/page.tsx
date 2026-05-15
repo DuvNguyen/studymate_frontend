@@ -27,7 +27,7 @@ function CheckoutContent() {
     const fetchOrder = async () => {
       try {
         const token = await getToken();
-        const res = await fetch(`http://localhost:3001/api/v1/orders/${orderId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const result = await res.json();
@@ -62,7 +62,7 @@ function CheckoutContent() {
     setIsSimulating(true);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/orders/${orderId}/simulate-payment`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/simulate-payment`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });

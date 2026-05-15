@@ -24,7 +24,7 @@ export default function VideoPickerModal({ isOpen, onClose, onSelect }: VideoPic
     try {
       const token = await getToken();
       // Fetch from instructor endpoint and filter approved
-      const res = await fetch('http://localhost:3001/api/v1/videos/instructor?status=APPROVED', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/videos/instructor?status=APPROVED`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {

@@ -64,7 +64,7 @@ export default function CourseBuilderPage() {
   const fetchCourseDetail = async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -88,7 +88,7 @@ export default function CourseBuilderPage() {
     const token = await getToken();
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch('http://localhost:3001/api/v1/uploads/image', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads/image`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData,
@@ -107,7 +107,7 @@ export default function CourseBuilderPage() {
       }
 
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -139,7 +139,7 @@ export default function CourseBuilderPage() {
     if (!newSectionTitle.trim()) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${id}/sections`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses/${id}/sections`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -164,7 +164,7 @@ export default function CourseBuilderPage() {
     if (!confirm('Bạn có chắc chắn muốn gửi duyệt khóa học này? Sau khi gửi, bạn sẽ không thể chỉnh sửa cho đến khi có kết quả duyệt.')) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/courses/${id}/submit`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses/${id}/submit`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -191,7 +191,7 @@ export default function CourseBuilderPage() {
       if (selectedVideo) {
         body.videoId = selectedVideo.id;
       }
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/sections/${sectionId}/lessons`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/sections/${sectionId}/lessons`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -219,7 +219,7 @@ export default function CourseBuilderPage() {
     if (!editSectionTitle.trim()) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/sections/${sectionId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/sections/${sectionId}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: editSectionTitle })
@@ -238,7 +238,7 @@ export default function CourseBuilderPage() {
     if (!confirm('Bạn có chắc chắn muốn xóa chương này (bao gồm tất cả bài học bên trong)?')) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/sections/${sectionId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/sections/${sectionId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -259,7 +259,7 @@ export default function CourseBuilderPage() {
       if (editSelectedVideo) {
         body.videoId = editSelectedVideo.id;
       }
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/lessons/${lessonId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/lessons/${lessonId}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -279,7 +279,7 @@ export default function CourseBuilderPage() {
     if (!confirm('Bạn có chắc chắn muốn xóa bài học này?')) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/instructor/lessons/${lessonId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/lessons/${lessonId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

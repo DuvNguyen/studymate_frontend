@@ -95,7 +95,7 @@ export default function AdminUsersPage() {
     try {
       setIsActing(true);
       const token = await session?.getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/users/${banModal.userId}/status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${banModal.userId}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -124,7 +124,7 @@ export default function AdminUsersPage() {
     try {
       setIsActing(true);
       const token = await session?.getToken();
-      const res = await fetch(`http://localhost:3001/api/v1/users/${id}/status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

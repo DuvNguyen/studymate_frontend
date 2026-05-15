@@ -30,7 +30,7 @@ export function useAdminCourses() {
       if (search) params.append('search', search);
       if (categoryId) params.append('categoryId', String(categoryId));
 
-      const res = await fetch(`http://localhost:3001/api/v1/admin/courses?${params.toString()}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/courses?${params.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -52,7 +52,7 @@ export function useAdminCourses() {
 
   const approveCourse = async (id: number) => {
     const token = await getToken();
-    const res = await fetch(`http://localhost:3001/api/v1/admin/courses/${id}/approve`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${id}/approve`, {
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -64,7 +64,7 @@ export function useAdminCourses() {
 
   const rejectCourse = async (id: number, reason: string) => {
     const token = await getToken();
-    const res = await fetch(`http://localhost:3001/api/v1/admin/courses/${id}/reject`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${id}/reject`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -80,7 +80,7 @@ export function useAdminCourses() {
 
   const suspendCourse = async (id: number, reason: string) => {
     const token = await getToken();
-    const res = await fetch(`http://localhost:3001/api/v1/admin/courses/${id}/suspend`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${id}/suspend`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
