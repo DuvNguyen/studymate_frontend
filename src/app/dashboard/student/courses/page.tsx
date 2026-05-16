@@ -5,18 +5,17 @@ import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
-import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function StudentCoursesPage() {
   const { enrollments, loading, error, refresh } = useEnrolledCourses();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (searchParams.get('fromCheckout') === '1') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('fromCheckout') === '1') {
       void refresh();
     }
-  }, [refresh, searchParams]);
+  }, [refresh]);
 
   return (
     <MainLayout role="STUDENT">
