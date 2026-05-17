@@ -1,17 +1,19 @@
 'use client';
 
-import { UserButton } from '@clerk/nextjs';
+import { UserButton, useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useCart } from '../contexts/CartContext';
 import { NotificationBell } from './NotificationBell';
 
 export function NavbarUserMenu() {
+  const { isSignedIn, isLoaded: clerkLoaded } = useAuth();
   const { user, loading } = useCurrentUser();
   const { cart } = useCart();
   const cartItemCount = cart?.cart_items?.length || 0;
 
-  if (loading) {
+  // Hiển thị skeleton khi Clerk chưa load xong, HOẶC khi đang load, HOẶC khi đã đăng nhập Clerk nhưng chưa load xong user từ database
+  if (!clerkLoaded || loading || (isSignedIn && !user)) {
     return (
       <div className="flex items-center gap-3 border-l-4 border-black pl-4">
         <div className="flex flex-col items-end gap-1.5 opacity-50">

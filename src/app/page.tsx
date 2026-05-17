@@ -1,20 +1,10 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
-import { InstructorSignupButton } from "../components/InstructorSignupButton";
-import { StudentSignupButton } from "../components/StudentSignupButton";
 import PublicLayout from "../components/PublicLayout";
 import FeaturedCourses from "../components/FeaturedCourses";
+import { HeroActionButtons } from "../components/HeroActionButtons";
 
 
 export default async function HomePage() {
-  let userId = null;
-  try {
-    const authSession = await auth();
-    userId = authSession?.userId;
-  } catch {
-    // ignore
-  }
-
   return (
     <PublicLayout>
       <div className="bg-gray-50 text-black font-sans selection:bg-emerald-300 selection:text-black">
@@ -33,27 +23,7 @@ export default async function HomePage() {
               Khám phá hàng ngàn khóa học chất lượng cao từ các chuyên gia hàng đầu. Nâng tầm kỹ năng và kiến thức của bạn ngay hôm nay.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              {!userId ? (
-                <StudentSignupButton 
-                  className="w-full sm:w-auto px-8 py-4 bg-emerald-400 hover:bg-emerald-500 text-black font-black uppercase tracking-wider text-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1.5 active:translate-x-1.5 active:shadow-none"
-                >
-                  Học với StudyMate
-                </StudentSignupButton>
-              ) : (
-                <Link 
-                  href="/dashboard"
-                  className="w-full sm:w-auto px-8 py-4 bg-emerald-400 hover:bg-emerald-500 text-black font-black uppercase tracking-wider text-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1.5 active:translate-x-1.5 active:shadow-none inline-flex items-center justify-center"
-                >
-                  Dashboard
-                </Link>
-              )}
-              <InstructorSignupButton 
-                className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-gray-100 text-black font-black uppercase tracking-wider text-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1.5 active:translate-x-1.5 active:shadow-none"
-              >
-                Dạy trên StudyMate
-              </InstructorSignupButton>
-            </div>
+            <HeroActionButtons />
             
             <div className="mt-16 flex flex-wrap items-center justify-center gap-6 text-sm font-black uppercase tracking-widest text-black">
               <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
