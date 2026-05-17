@@ -64,6 +64,7 @@ export default function LearnPage() {
   
   const [activeTab, setActiveTab] = useState<'overview' | 'qa'>('overview');
   const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
+  const [mobileBoardOpen, setMobileBoardOpen] = useState(false);
   
   const { discussions, addDiscussion, loading: discussionsLoading, markBestAnswer, deleteDiscussion, updateDiscussion, voteDiscussion } = useDiscussions(activeLesson?.id);
   const [qaSearch, setQaSearch] = useState('');
@@ -228,26 +229,26 @@ export default function LearnPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-[#f0f0f0] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:20px_20px] p-4 lg:p-8">
-        <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8">
+      <div className="min-h-screen bg-[#f0f0f0] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:20px_20px] p-2 sm:p-3 lg:p-8">
+        <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-4 lg:gap-8">
           
           {/* Main Mission Control Area */}
           <div className="flex-1 flex flex-col gap-6">
             
             {/* Header: Mission Status */}
-            <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="flex items-center gap-6">
+            <div className="bg-white border-4 border-black p-3 sm:p-4 md:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6">
+              <div className="flex items-start sm:items-center gap-3 sm:gap-6">
                 <button 
                   onClick={() => router.push(`/courses/${course.slug}`)}
-                  className="w-14 h-14 border-4 border-black bg-white hover:bg-yellow-400 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 flex items-center justify-center"
+                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 border-4 border-black bg-white hover:bg-yellow-400 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 flex items-center justify-center"
                 >
-                  <ArrowLeft className="w-6 h-6 text-black" />
+                  <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black" />
                 </button>
                 <div>
-                  <h1 className="text-3xl font-black text-black uppercase tracking-tighter leading-none mb-2">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-black uppercase tracking-tighter leading-none mb-2">
                     {course.title}
                   </h1>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                     <span className="text-[10px] font-black px-2 py-1 bg-black text-white uppercase tracking-widest">MISSION IN PROGRESS</span>
                     <span className="text-[10px] font-black px-2 py-1 bg-emerald-400 border-2 border-black text-black uppercase tracking-widest">
                       {granularProgress}% COMPLETED
@@ -257,8 +258,8 @@ export default function LearnPage() {
               </div>
               
               {/* Progress Gauges */}
-              <div className="flex items-center gap-4">
-                <div className="w-48 h-8 bg-gray-100 border-4 border-black relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <div className="w-full md:w-48 h-8 bg-gray-100 border-4 border-black relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                   <div 
                     className="h-full bg-emerald-400 border-right-4 border-black transition-all duration-500" 
                     style={{ width: `${granularProgress}%` }}
@@ -270,7 +271,7 @@ export default function LearnPage() {
 
             {/* Stage Frame: Video Player */}
             <div className="relative group">
-              <div className="bg-white border-4 border-black p-4 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative">
+              <div className="bg-white border-4 border-black p-2 sm:p-3 md:p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative">
                 {isPending && (
                    <div className="absolute inset-4 z-20 bg-white/60 backdrop-blur-[1px] flex flex-col items-center justify-center animate-in fade-in duration-200">
                       <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-4">
@@ -300,9 +301,9 @@ export default function LearnPage() {
                   )}
 
                   {/* Status Overlay */}
-                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex items-center gap-2 max-w-[85%] pointer-events-none">
                     <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.8)]"></div>
-                    <span className="text-[10px] font-black text-white uppercase tracking-tighter bg-black/50 px-2 py-1">LIVE_SESSION: {activeLesson?.title}</span>
+                    <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-tighter bg-black/50 px-2 py-1 truncate">LIVE_SESSION: {activeLesson?.title}</span>
                   </div>
                 </div>
               </div>
@@ -347,7 +348,7 @@ export default function LearnPage() {
               <div className="flex border-b-4 border-black">
                 <button 
                   onClick={() => setActiveTab('overview')}
-                  className={`flex-1 md:flex-none px-10 py-5 font-black uppercase text-sm border-r-4 border-black transition-colors ${activeTab === 'overview' ? 'bg-black text-white' : 'hover:bg-yellow-400 text-black'}`}
+                  className={`flex-1 md:flex-none px-3 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 font-black uppercase text-[11px] sm:text-xs md:text-sm border-r-4 border-black transition-colors ${activeTab === 'overview' ? 'bg-black text-white' : 'hover:bg-yellow-400 text-black'}`}
                 >
                   <div className="flex items-center justify-center gap-3">
                     <Info className="w-4 h-4" /> TỔNG QUAN
@@ -355,7 +356,7 @@ export default function LearnPage() {
                 </button>
                 <button 
                   onClick={() => setActiveTab('qa')}
-                  className={`flex-1 md:flex-none px-10 py-5 font-black uppercase text-sm border-r-4 border-black transition-colors ${activeTab === 'qa' ? 'bg-black text-white' : 'hover:bg-yellow-400 text-black'}`}
+                  className={`flex-1 md:flex-none px-3 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 font-black uppercase text-[11px] sm:text-xs md:text-sm border-r-4 border-black transition-colors ${activeTab === 'qa' ? 'bg-black text-white' : 'hover:bg-yellow-400 text-black'}`}
                 >
                   <div className="flex items-center justify-center gap-3">
                     <MessageSquare className="w-4 h-4" /> THẢO LUẬN ({discussions.length})
@@ -363,7 +364,7 @@ export default function LearnPage() {
                 </button>
               </div>
 
-              <div className="p-8">
+              <div className="p-4 sm:p-6 md:p-8">
                 {activeTab === 'overview' ? (
                   <div className="animate-in fade-in duration-500">
                     <div className="flex items-center gap-4 mb-8">
@@ -463,7 +464,15 @@ export default function LearnPage() {
 
           {/* Syllabus Sidebar: Operations Board */}
           <div className="w-full lg:w-[400px] flex-shrink-0">
-            <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] sticky top-8">
+            <div className="lg:hidden mb-3">
+              <button
+                onClick={() => setMobileBoardOpen((prev) => !prev)}
+                className="w-full h-11 bg-white border-4 border-black font-black text-[11px] uppercase tracking-widest text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              >
+                {mobileBoardOpen ? 'ẨN DANH SÁCH BÀI HỌC' : 'MỞ DANH SÁCH BÀI HỌC'}
+              </button>
+            </div>
+            <div className={`${mobileBoardOpen ? 'block' : 'hidden'} lg:block bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] lg:sticky lg:top-8`}>
               <div className="p-6 border-b-4 border-black bg-black flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-red-500 rounded-none animate-pulse"></div>
@@ -588,4 +597,3 @@ export default function LearnPage() {
     </MainLayout>
   );
 }
-

@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import MainLayout from '@/components/MainLayout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function ReconciliationPage() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
-  const router = useRouter();
   const { reconcilePayouts } = useWallet();
 
   const [isDragging, setIsDragging] = useState(false);
@@ -73,12 +71,12 @@ export default function ReconciliationPage() {
 
   return (
     <MainLayout role={currentUser?.role} allowedRoles={['ADMIN', 'STAFF']}>
-      <div className="max-w-6xl mx-auto space-y-8 pb-20">
+      <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 pb-20 px-4 sm:px-6">
         {/* Corporate Banking Header — MB Bank Style */}
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
           <div className="flex flex-col md:flex-row">
             {/* Left: Banner */}
-            <div className="md:w-1/2 relative h-[200px] md:h-auto">
+            <div className="md:w-1/2 relative h-[180px] sm:h-[220px] md:h-auto">
               <Image
                 src="/doi-soat-banner.jpg"
                 alt="StudyMate BIZ Banking"
@@ -88,7 +86,7 @@ export default function ReconciliationPage() {
               />
             </div>
             {/* Right: Title */}
-            <div className="md:w-1/2 p-8 flex flex-col justify-center bg-gradient-to-br from-blue-900 to-blue-950">
+            <div className="md:w-1/2 p-5 sm:p-6 md:p-8 flex flex-col justify-center bg-gradient-to-br from-blue-900 to-blue-950">
               <div className="flex items-center gap-3 mb-6">
                 <Image
                   src="/doi-soat-logo.png"
@@ -100,7 +98,7 @@ export default function ReconciliationPage() {
                 <span className="text-white/60 text-xs font-bold">|</span>
                 <span className="text-white font-black text-xs uppercase tracking-widest">StudyMate</span>
               </div>
-              <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
+              <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight mb-2">
                 Đối soát giao dịch
               </h1>
               <p className="text-sm font-bold text-white/80">
@@ -116,7 +114,7 @@ export default function ReconciliationPage() {
 
         {/* Dropzone */}
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8">
-          <h2 className="text-xl font-black text-black uppercase tracking-tighter mb-6">
+          <h2 className="text-lg sm:text-xl font-black text-black uppercase tracking-tighter mb-6">
             Upload kết quả đối soát
           </h2>
 
@@ -124,7 +122,7 @@ export default function ReconciliationPage() {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`border-4 border-dashed p-16 text-center transition-all cursor-pointer ${
+            className={`border-4 border-dashed p-6 sm:p-10 md:p-16 text-center transition-all cursor-pointer ${
               isDragging
                 ? 'border-emerald-400 bg-emerald-50 scale-[1.02]'
                 : file
@@ -146,7 +144,7 @@ export default function ReconciliationPage() {
                 <div className="w-16 h-16 bg-emerald-400 border-4 border-black flex items-center justify-center mx-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                   <span className="text-3xl font-black">✓</span>
                 </div>
-                <p className="font-black text-black text-lg uppercase">{file.name}</p>
+                <p className="font-black text-black text-sm sm:text-lg uppercase break-all">{file.name}</p>
                 <p className="text-xs font-bold text-black">
                   {(file.size / 1024).toFixed(1)} KB
                 </p>
@@ -162,7 +160,7 @@ export default function ReconciliationPage() {
                 <div className="w-16 h-16 bg-black border-4 border-black flex items-center justify-center mx-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
                   <span className="text-3xl text-white">↑</span>
                 </div>
-                <p className="font-black text-black text-lg uppercase">
+                <p className="font-black text-black text-sm sm:text-lg uppercase">
                   {isDragging ? 'THẢ FILE Ở ĐÂY' : 'KÉO THẢ FILE CSV VÀO ĐÂY'}
                 </p>
                 <p className="text-xs font-bold text-black">
@@ -201,7 +199,7 @@ export default function ReconciliationPage() {
               Kết quả đối soát
             </h2>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-emerald-100 border-2 border-black p-6 text-center">
                 <p className="text-[10px] font-black uppercase text-black mb-1">Thành công</p>
                 <p className="text-4xl font-black text-emerald-600">{results.success}</p>

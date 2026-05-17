@@ -1,15 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useWallet, Payout } from '@/hooks/useWallet';
-import { Button } from '@/components/Button';
+import { useWallet } from '@/hooks/useWallet';
 import MainLayout from '@/components/MainLayout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useRouter } from 'next/navigation';
 
 export default function AdminPayoutsPage() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
-  const router = useRouter();
   const { payouts, loading, fetchAllPayouts, processPayout, exportPayouts, exportPayoutsCsv } = useWallet();
   const [filterStatus, setFilterStatus] = useState<string>('PENDING');
   const [processingId, setProcessingId] = useState<number | null>(null);
@@ -119,11 +116,11 @@ export default function AdminPayoutsPage() {
           <div className="animate-spin rounded-none h-10 w-10 border-4 border-black border-t-transparent"></div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto space-y-6 pb-32">
+        <div className="max-w-7xl mx-auto space-y-6 pb-40 px-4 sm:px-6">
         {/* Header */}
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
           <p className="text-[10px] font-black uppercase tracking-widest text-black mb-1">Quản trị hệ thống</p>
-          <h1 className="text-2xl font-black text-black uppercase">Quản lý Chi trả Giảng viên</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-black uppercase">Quản lý Chi trả Giảng viên</h1>
         </div>
 
         {/* Filter Tabs */}
@@ -155,7 +152,7 @@ export default function AdminPayoutsPage() {
         ) : (
           <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left border-collapse">
+              <table className="min-w-[1024px] text-left border-collapse">
                 <thead>
                   <tr className="bg-black text-white border-b-2 border-black">
                     <th className="p-4 w-12">
@@ -251,10 +248,78 @@ export default function AdminPayoutsPage() {
           </div>
         )}
 
+      {!loading && payouts.length > 0 && (
+        <div className="md:hidden space-y-3">
+          {payouts.map((po) => (
+            <div key={po.id} className={`bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3 ${selectedIds.has(po.id) ? 'bg-emerald-50' : ''}`}>
+              <div className="flex items-start justify-between gap-3">
+                <span className="font-mono font-black text-black text-xs bg-yellow-100 border border-black px-2 py-0.5">
+                  PO-{po.id}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(po.id)}
+                  onChange={() => toggleSelect(po.id)}
+                  className="w-5 h-5 accent-emerald-400 cursor-pointer"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-black text-black uppercase">{po.instructor?.fullName || 'N/A'}</p>
+                <p className="text-[10px] font-bold text-black italic">{po.instructor?.email}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-black">
+                <p className="text-black uppercase">Ngân hàng</p>
+                <p className="text-black uppercase text-right">{po.bankName}</p>
+                <p className="text-black uppercase">Số tài khoản</p>
+                <p className="text-black text-right font-mono">{po.bankAccountNumber}</p>
+                <p className="text-black uppercase">Chủ tài khoản</p>
+                <p className="text-black uppercase text-right">{po.bankAccountName}</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-black text-emerald-600 tracking-tighter">
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(po.amount)}
+                </span>
+                {getStatusBadge(po.status)}
+              </div>
+              {filterStatus === 'PENDING' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setActionModal({
+                      open: true,
+                      payoutId: po.id,
+                      action: 'COMPLETED',
+                      instructor: po.instructor?.fullName || po.bankAccountName,
+                      amount: po.amount,
+                    })}
+                    disabled={processingId === po.id}
+                    className="px-3 py-2 border border-black font-bold text-xs uppercase tracking-tight bg-emerald-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none transition-all"
+                  >
+                    Duyệt
+                  </button>
+                  <button
+                    onClick={() => setActionModal({
+                      open: true,
+                      payoutId: po.id,
+                      action: 'REJECTED',
+                      instructor: po.instructor?.fullName || po.bankAccountName,
+                      amount: po.amount,
+                    })}
+                    disabled={processingId === po.id}
+                    className="px-3 py-2 border border-black font-bold text-xs uppercase tracking-tight bg-red-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none transition-all"
+                  >
+                    Từ chối
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Bulk Action Bar — Fixed Bottom */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t-4 border-emerald-400 p-4 flex items-center justify-between shadow-[0_-8px_20px_rgba(0,0,0,0.3)]">
-          <div className="flex items-center gap-4">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t-4 border-emerald-400 p-3 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4 justify-between shadow-[0_-8px_20px_rgba(0,0,0,0.3)]">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
             <span className="bg-emerald-400 text-black border-2 border-black px-4 py-2 font-black text-sm shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)]">
               {selectedIds.size} đã chọn
             </span>
@@ -265,20 +330,20 @@ export default function AdminPayoutsPage() {
               Bỏ chọn tất cả
             </button>
           </div>
-          <div className="flex gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-auto">
             <button
               onClick={handleExport}
               disabled={exporting !== null}
-              className="bg-white text-black border-4 border-black px-6 py-3 font-black text-sm uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
+              className="bg-white text-black border-4 border-black px-4 sm:px-6 py-3 font-black text-xs sm:text-sm uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
             >
               {exporting === 'XLSX' ? 'ĐANG XUẤT...' : 'XUẤT XLSX'}
             </button>
             <button
               onClick={handleExportCsv}
               disabled={exporting !== null}
-              className="bg-emerald-400 text-black border-4 border-black px-8 py-3 font-black text-sm uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
+              className="bg-emerald-400 text-black border-4 border-black px-4 sm:px-8 py-3 font-black text-xs sm:text-sm uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
             >
-              {exporting === 'CSV' ? 'ĐANG XUẤT...' : `XUẤT CSV CHO ĐỐI SOÁT (${selectedIds.size})`}
+              {exporting === 'CSV' ? 'ĐANG XUẤT...' : `XUẤT CSV (${selectedIds.size})`}
             </button>
           </div>
         </div>
@@ -311,7 +376,7 @@ export default function AdminPayoutsPage() {
               onChange={(e) => setAdminNote(e.target.value)}
             />
 
-            <div className="flex gap-4 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-6">
               <button
                 onClick={() => {
                   setActionModal({ open: false, payoutId: null, action: null, instructor: '', amount: 0 });

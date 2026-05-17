@@ -139,8 +139,8 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
 
   return (
-    <div className={`w-full h-full bg-black ${className}`}>
-      <div ref={containerRef} />
+    <div className={`w-full h-full bg-black pointer-events-auto ${className}`}>
+      <div ref={containerRef} className="w-full h-full pointer-events-auto" />
     </div>
   );
 };

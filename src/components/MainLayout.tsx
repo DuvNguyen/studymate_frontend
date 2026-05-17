@@ -118,7 +118,8 @@ export default function MainLayout({
   allowedRoles,
   loading = false
 }: MainLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const pathname = usePathname();
 
   const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== null && kycStatus !== 'APPROVED' && kycStatus !== 'PENDING_UPDATE';
@@ -139,27 +140,47 @@ export default function MainLayout({
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden pt-[110px]">
+        {mobileSidebarOpen && (
+          <button
+            aria-label="Close sidebar overlay"
+            className="md:hidden fixed inset-0 z-30 bg-black/50"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
         <aside
           className={`
-            ${sidebarOpen ? 'w-56' : 'w-14'}
+            ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            md:translate-x-0
+            ${sidebarCollapsed ? 'md:w-14' : 'md:w-56'}
+            w-56
+            fixed md:relative top-[110px] md:top-0 bottom-0 left-0 z-40
             bg-black text-white flex flex-col
-            transition-all duration-200 ease-in-out flex-shrink-0
+            transition-all duration-200 ease-in-out
+            md:flex-shrink-0
             border-r-2 border-black
           `}
         >
         {/* Sidebar Header with Toggle - Moved from Main Header */}
-        <div className={`flex items-center h-14 border-b-2 border-gray-700 ${sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'}`}>
-          {sidebarOpen && (
+        <div className={`flex items-center h-14 border-b-2 border-gray-700 ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-4'}`}>
+          {!sidebarCollapsed && (
             <Link href="/" className="flex items-center overflow-hidden flex-1">
               <span className="text-lg font-black text-white tracking-tight uppercase transition-all duration-200">StudyMate</span>
             </Link>
           )}
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`p-2 text-white hover:text-white transition-colors ${!sidebarOpen ? 'w-full flex justify-center' : ''}`}
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={`hidden md:flex p-2 text-white hover:text-white transition-colors ${sidebarCollapsed ? 'w-full justify-center' : ''}`}
           >
             <IconMenu />
+          </button>
+          <button
+            onClick={() => setMobileSidebarOpen(false)}
+            className="md:hidden p-2 text-white"
+            aria-label="Close sidebar"
+          >
+            ✕
           </button>
         </div>
 
@@ -171,6 +192,7 @@ export default function MainLayout({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setMobileSidebarOpen(false)}
                 className={`
                   flex items-center gap-3 px-3 py-2.5 mx-2 rounded-sm text-xs font-bold uppercase tracking-wide
                   transition-all duration-150
@@ -181,7 +203,7 @@ export default function MainLayout({
                 `}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
-                {sidebarOpen && (
+                {!sidebarCollapsed && (
                   <span className="truncate">{item.label}</span>
                 )}
               </Link>
@@ -190,7 +212,7 @@ export default function MainLayout({
         </nav>
 
         {/* Role badge */}
-        {sidebarOpen && (
+        {!sidebarCollapsed && (
           <div className="p-3 border-t-2 border-gray-700">
             <span className={`text-[10px] font-black px-2 py-1 uppercase tracking-widest border border-black ${roleCfg.color}`}>
               {roleCfg.label}
@@ -203,20 +225,27 @@ export default function MainLayout({
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Dashboard Sub-Header (Optional Search/Breadcrumbs) */}
-        <header className="h-14 bg-white border-b-2 border-black flex items-center justify-between px-6 flex-shrink-0 z-10">
+        <header className="h-14 bg-white border-b-2 border-black flex items-center justify-between px-3 sm:px-4 md:px-6 flex-shrink-0 z-10">
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="md:hidden w-9 h-9 border-2 border-black bg-yellow-300 text-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              aria-label="Open sidebar"
+            >
+              <IconMenu />
+            </button>
             <SearchBar />
           </div>
 
           {/* Homepage style links directly in Dashboard header */}
-          <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-black/80">
+          <div className="hidden sm:flex items-center gap-4 text-xs font-black uppercase tracking-widest text-black/80">
             <span>Dashboard View</span>
           </div>
         </header>
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-white flex flex-col">
-          <div className="flex-1 p-6 flex flex-col">
+          <div className="flex-1 p-3 sm:p-4 md:p-6 flex flex-col">
             {(!isKycRoute && (isLockedInstructor || isPendingUserRole)) ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg text-center space-y-6">

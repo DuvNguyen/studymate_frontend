@@ -3,10 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import MainLayout from '@/components/MainLayout';
-import { Button } from '@/components/Button';
 import LoadingScreen from '@/components/LoadingScreen';
 import { toast } from 'react-hot-toast';
-import { Search, Filter, ArrowUpRight, ArrowDownLeft, Activity, HelpCircle, ArrowRight } from 'lucide-react';
+import { Search, HelpCircle, ArrowRight } from 'lucide-react';
 import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { Pagination } from '@/components/Pagination';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -50,8 +49,7 @@ export default function AdminLedgerPage() {
       setItems(content.items || []);
       setStats(content.stats || null);
       setTotal(content.total || 0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
+    } catch {
       toast.error('Không thể tải dữ liệu sổ cái');
     } finally {
       setLoading(false);
@@ -133,17 +131,17 @@ export default function AdminLedgerPage() {
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 pb-32 font-bold text-black">
         
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b-8 border-black pb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b-8 border-black pb-6 md:pb-8">
            <div>
               <span className="bg-violet-400 text-black border-2 border-black px-3 py-1 text-[10px] font-black uppercase tracking-widest mb-4 inline-block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 Master Ledger & Auditing
               </span>
-              <h1 className="text-6xl font-black uppercase tracking-tighter italic leading-none text-black">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter italic leading-none text-black">
                 Sổ Cái Tổng
               </h1>
            </div>
            
-           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full md:w-auto">
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full md:w-auto">
               <div className="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)]">
                  <p className="text-[10px] font-black uppercase text-black mb-1">Gross Revenue</p>
                  <p className="text-xl font-black tabular-nums">{new Intl.NumberFormat('vi-VN').format(stats?.gross_revenue || 0)}</p>
@@ -160,7 +158,7 @@ export default function AdminLedgerPage() {
         </div>
 
         {/* Search & Filters */}
-        <div className="bg-zinc-50 border-4 border-black p-4 flex flex-col md:flex-row gap-4 items-center">
+        <div className="bg-zinc-50 border-4 border-black p-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center">
            <div className="relative flex-grow w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black" size={18} />
               <input 
@@ -171,7 +169,7 @@ export default function AdminLedgerPage() {
                 className="w-full pl-12 pr-4 py-3 border-4 border-black font-black uppercase text-xs outline-none focus:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black"
               />
            </div>
-           <div className="flex gap-4 w-full md:w-auto">
+           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               <select 
                 value={type} 
                 onChange={(e) => setType(e.target.value)}
@@ -198,8 +196,8 @@ export default function AdminLedgerPage() {
            </div>
         </div>
 
-        {/* Ledger Table - Compact */}
-        <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
+        {/* Ledger Table - Compact (desktop) */}
+        <div className="hidden md:block bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
            {loading && items.length > 0 && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center animate-in fade-in duration-200">
                  <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-4">
@@ -285,6 +283,65 @@ export default function AdminLedgerPage() {
                  )}
               </tbody>
            </table>
+        </div>
+
+        {/* Ledger Cards (mobile) */}
+        <div className="md:hidden space-y-3 relative">
+          {loading && items.length > 0 && (
+            <div className="absolute inset-0 bg-white/70 z-20 flex items-center justify-center">
+              <div className="bg-white border-4 border-black p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-3">
+                <LoadingSpinner size="md" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-black">Đang cập nhật...</p>
+              </div>
+            </div>
+          )}
+          {items.length === 0 ? (
+            <div className="bg-white border-4 border-black p-8 text-center text-xl font-black uppercase italic text-black">
+              Không tìm thấy dữ liệu
+            </div>
+          ) : (
+            items.map((tx) => (
+              <div key={tx.id} className="bg-white border-4 border-black p-4 space-y-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-mono font-black text-black text-sm">TX-{tx.id}</p>
+                    <p className="text-[10px] font-black text-black/70 italic mt-1">{new Date(tx.created_at).toLocaleDateString('vi-VN')}</p>
+                  </div>
+                  {getStatusBadge(tx.status)}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase text-black/60">Từ</span>
+                    <span className="text-[11px] font-black uppercase">{getTransactionSource(tx)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ArrowRight size={12} className="text-black/40" />
+                    <span className="text-[9px] font-black uppercase text-black/60">Đến</span>
+                    <span className="text-[11px] font-black uppercase">{getTransactionDest(tx)}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  {getTypeBadge(tx.transaction_type)}
+                  <p className={`text-lg font-black italic tracking-tighter ${tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                    {tx.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN').format(tx.amount)}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase text-black/60">Số dư sau</p>
+                  <p className="text-xs font-black tabular-nums text-black">
+                    {new Intl.NumberFormat('vi-VN').format(tx.balance_after || 0)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setSelectedTx(tx); setIsModalOpen(true); }}
+                  className="w-full h-10 bg-black text-white hover:bg-yellow-400 hover:text-black border-2 border-black flex items-center justify-center gap-2 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 text-xs font-black uppercase"
+                >
+                  <HelpCircle size={16} />
+                  Chi tiết
+                </button>
+              </div>
+            ))
+          )}
         </div>
 
         <Pagination 
