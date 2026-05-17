@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useUser } from '@clerk/nextjs';
+import { updateProfileSchema } from '@/lib/validation/profile';
 
 export default function ProfilePage() {
   const { profile, loading, error, updateProfile, updating } = useUserProfile();
@@ -11,6 +12,7 @@ export default function ProfilePage() {
 
   const [bio, setBio] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [fieldError, setFieldError] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -23,8 +25,17 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
+    setFieldError(null);
+
+    const parsed = updateProfileSchema.safeParse({ bio });
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      setFieldError(issue?.message ?? 'Dữ liệu không hợp lệ');
+      return;
+    }
+
     try {
-      await updateProfile({ bio });
+      await updateProfile(parsed.data);
       setMessage({ type: 'success', text: 'Cập nhật hồ sơ thành công!' });
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Có lỗi xảy ra' });
@@ -113,9 +124,17 @@ export default function ProfilePage() {
                   rows={8}
                   className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow resize-none text-sm text-gray-800 font-medium bg-gray-50"
                   value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+                  onChange={(e) => {
+                    setBio(e.target.value);
+                    if (fieldError) setFieldError(null);
+                  }}
                   placeholder="Bạn là ai? Kể về kinh nghiệm và mục tiêu học tập..."
                 />
+                {fieldError && (
+                  <p className="mt-2 text-xs font-black uppercase tracking-wider text-black bg-red-100 border-2 border-black px-2 py-1 inline-block">
+                    {fieldError}
+                  </p>
+                )}
                 <div className="flex justify-between items-center mt-1">
                   <p className="text-[10px] text-gray-400 uppercase tracking-wide">Hiển thị trên hồ sơ công khai</p>
                   <span className={`text-[10px] font-black font-mono ${bio.length > 500 ? 'text-red-700' : 'text-gray-400'}`}>
