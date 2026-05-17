@@ -167,37 +167,37 @@ export default function PurchasesPage() {
           description="STUDYMATE ĐANG TRÍCH XUẤT DỮ LIỆU THANH TOÁN CỦA BẠN."
         />
       ) : (
-        <div className="max-w-7xl mx-auto px-4 py-12 font-bold text-black">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b-8 border-black pb-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12 font-bold text-black">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 sm:gap-6 mb-8 sm:mb-12 border-b-8 border-black pb-6 sm:pb-8">
           <div>
             <span className="bg-yellow-400 border-2 border-black px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-4 inline-block">
               Finance & Orders
             </span>
-            <h1 className="text-6xl font-black uppercase text-black tracking-tighter leading-none italic">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase text-black tracking-tighter leading-none italic">
               Lịch sử mua hàng
             </h1>
           </div>
-          <p className="text-sm font-black text-black uppercase tracking-widest border-l-8 border-black pl-6 max-w-sm italic">
+          <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide sm:tracking-widest border-l-8 border-black pl-4 sm:pl-6 max-w-sm italic">
             Theo dõi hóa đơn, trạng thái hoàn tiền và quản lý quyền lợi học tập của bạn.
           </p>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col xl:flex-row gap-4 mb-8">
-            <div className="flex-1 relative group">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="sm:col-span-2 xl:col-span-2 relative group">
                 <input 
                     type="text" 
                     placeholder="TÌM KIẾM KHÓA HỌC..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full min-w-[260px] h-14 bg-white border-4 border-black px-6 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:shadow-none focus:translate-x-1 focus:translate-y-1 transition-all outline-none"
+                    className="w-full h-12 sm:h-14 bg-white border-4 border-black px-4 sm:px-6 font-black uppercase text-[11px] sm:text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:shadow-none focus:translate-x-1 focus:translate-y-1 transition-all outline-none"
                 />
             </div>
-            <div className="w-full md:w-72 relative">
+            <div className="relative">
                 <select 
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full h-14 bg-white border-4 border-black px-6 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none appearance-none cursor-pointer"
+                    className="w-full h-12 sm:h-14 bg-white border-4 border-black px-4 sm:px-6 font-black uppercase text-[11px] sm:text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none appearance-none cursor-pointer"
                 >
                     <option value="ALL">TẤT CẢ TRẠNG THÁI</option>
                     <option value="ACTIVE"> HOẠT ĐỘNG</option>
@@ -205,31 +205,31 @@ export default function PurchasesPage() {
                     <option value="REFUND_DONE"> ĐÃ HOÀN TIỀN</option>
                     <option value="REFUND_REJECTED"> BỊ TỪ CHỐI HOÀN</option>
                 </select>
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none font-black text-xs">▼</div>
+                <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 pointer-events-none font-black text-xs">▼</div>
             </div>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full md:w-52 h-14 bg-white border-4 border-black px-4 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none"
+              className="w-full h-12 sm:h-14 bg-white border-4 border-black px-4 font-black uppercase text-[11px] sm:text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none"
             />
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-full md:w-52 h-14 bg-white border-4 border-black px-4 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none"
+              className="w-full h-12 sm:h-14 bg-white border-4 border-black px-4 font-black uppercase text-[11px] sm:text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none"
             />
             <button
               type="button"
               onClick={() => setSortBy((prev) => (prev === 'time' ? 'price' : 'time'))}
-              className="w-full md:w-56 h-14 bg-white border-4 border-black px-4 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 transition-colors"
+              className="w-full h-12 sm:h-14 bg-white border-4 border-black px-4 font-black uppercase text-[11px] sm:text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 transition-colors"
             >
               {sortBy === 'time' ? 'Sắp xếp: Thời gian' : 'Sắp xếp: Giá tiền'}
             </button>
             <button
               type="button"
               onClick={() => setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-              className="w-full md:w-56 h-14 bg-white border-4 border-black px-4 font-black uppercase text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 transition-colors"
+              className="w-full h-12 sm:h-14 bg-white border-4 border-black px-4 font-black uppercase text-[11px] sm:text-xs shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 transition-colors"
             >
               {sortDirection === 'asc' ? 'Thứ tự: Tăng dần' : 'Thứ tự: Giảm dần'}
             </button>
@@ -241,7 +241,7 @@ export default function PurchasesPage() {
           </div>
         )}
 
-        <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] mb-12 overflow-hidden">
+        <div className="hidden md:block bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] mb-12 overflow-hidden">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-black text-white border-b-4 border-black font-black uppercase text-[11px] tracking-widest italic">
@@ -298,6 +298,50 @@ export default function PurchasesPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="md:hidden space-y-3 mb-8">
+          {filteredPurchases.length === 0 ? (
+            <div className="bg-white border-4 border-black p-8 text-center font-black text-black uppercase italic text-lg">
+              Không tìm thấy dữ liệu phù hợp
+            </div>
+          ) : (
+            paginatedPurchases.map((purchase) => (
+              <div key={purchase.id} className="bg-white border-4 border-black p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-mono font-black text-xs text-black">
+                      #{purchase.order_item?.order?.order_number?.split('-').slice(-1)[0] || purchase.id}
+                    </p>
+                    <p className="text-[10px] font-black text-black/70 italic mt-1">
+                      {new Date(purchase.enrolled_at).toLocaleDateString('vi-VN')}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedEnrollment(purchase);
+                      setIsDetailModalOpen(true);
+                    }}
+                    className="w-9 h-9 bg-black text-white border-2 border-black flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                  >
+                    <HelpCircle size={16} />
+                  </button>
+                </div>
+                <p className="font-black text-black uppercase text-sm leading-tight">
+                  {purchase.course.title}
+                </p>
+                <p className="text-[10px] font-black text-black/60 uppercase italic tracking-tighter">
+                  ID: {purchase.course_id} • {purchase.course.instructor_name || 'STUDYMATE'}
+                </p>
+                <div className="flex items-center justify-between">
+                  <p className="font-black text-black italic text-base tabular-nums">
+                    {new Intl.NumberFormat('vi-VN').format(purchase.order_item?.final_price || 0)} Đ
+                  </p>
+                  <div className="text-right">{getStatusBadge(purchase)}</div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         <Pagination 
