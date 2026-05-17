@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { useInstructorDiscussions } from '@/hooks/useInstructorDiscussions';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -8,7 +9,7 @@ import { Pagination } from '@/components/Pagination';
 import { MessageSquare, BookOpen, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-export default function InstructorDiscussionsPage() {
+function InstructorDiscussionsContent() {
   const { user, loading: userLoading } = useCurrentUser();
   const { 
     discussions, 
@@ -125,5 +126,24 @@ export default function InstructorDiscussionsPage() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+export default function InstructorDiscussionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <MainLayout allowedRoles={['INSTRUCTOR']} loading>
+          <div className="max-w-5xl mx-auto py-12 px-4">
+            <div className="flex flex-col items-center justify-center py-24 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <div className="w-12 h-12 border-4 border-black border-t-transparent animate-spin mb-4"></div>
+              <p className="font-black uppercase text-xs tracking-widest text-black">Đang tải thảo luận...</p>
+            </div>
+          </div>
+        </MainLayout>
+      }
+    >
+      <InstructorDiscussionsContent />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useCategories, Category } from '@/hooks/useCategories';
 
 export default function CategoryNavBar({ 
@@ -13,9 +13,8 @@ export default function CategoryNavBar({
 }) {
   const { categories, loading } = useCategories();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const isCoursesPage = pathname === '/courses';
-  const isAllCoursesActive = isCoursesPage && !searchParams.get('category');
+  const isAllCoursesActive = isCoursesPage;
   const isDashboardRoute = pathname.startsWith('/dashboard');
 
   if (loading) {
