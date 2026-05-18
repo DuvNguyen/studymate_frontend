@@ -20,20 +20,20 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, icon, suff
   };
   
   return (
-    <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all h-full">
-      <div className="flex justify-between items-start mb-4">
-        <span className="text-sm font-black uppercase tracking-widest text-black">{title}</span>
+    <div className="bg-white border-4 border-black p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all h-full">
+      <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
+        <span className="text-xs sm:text-sm font-black uppercase tracking-wide sm:tracking-widest text-black leading-tight">{title}</span>
         {icon && <div className="p-2 bg-yellow-400 border-2 border-black">{icon}</div>}
       </div>
       
-      <div className="flex items-end gap-2 overflow-hidden">
-        <span className="text-4xl font-black text-black truncate">
+      <div className="flex items-end justify-between gap-2 overflow-hidden whitespace-nowrap">
+        <span className="text-2xl sm:text-4xl font-black text-black truncate leading-none">
           {formatValue(value)}
-          {suffix && <span className="text-xl ml-1">{suffix}</span>}
+          {suffix && <span className="text-lg sm:text-xl ml-1">{suffix}</span>}
         </span>
         
         {trend !== undefined && (
-          <div className={`flex items-center text-xs font-black px-2 py-1 border-2 border-black flex-shrink-0 ${
+          <div className={`flex items-center text-[10px] sm:text-xs font-black px-2 py-1 border-2 border-black flex-shrink-0 ${
             isPositive ? 'bg-emerald-400' : 'bg-rose-400'
           }`}>
             {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}

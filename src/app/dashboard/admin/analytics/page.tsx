@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useSession } from '@clerk/nextjs';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -66,6 +66,13 @@ const AdminAnalyticsDashboard = () => {
   const [exporting, setExporting] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [forecastPriorityFilter, setForecastPriorityFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
+  const [forecastPage, setForecastPage] = useState(1);
+  const [anomalyTrendFilter, setAnomalyTrendFilter] = useState<'ALL' | 'UP' | 'DOWN'>('ALL');
+  const [anomalyPage, setAnomalyPage] = useState(1);
+  const FORECAST_PAGE_SIZE = 6;
+  const ANOMALY_PAGE_SIZE = 5;
 
   // Date range state - Default to current year
   const [startDate, setStartDate] = useState(() => {
@@ -131,6 +138,47 @@ const AdminAnalyticsDashboard = () => {
     }
   }, [session, fetchData]);
 
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 640);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const filteredRanking = useMemo(() => {
+    const ranking = analytics?.ranking || [];
+    if (forecastPriorityFilter === 'ALL') return ranking;
+    return ranking.filter((item) => (item.priority || '').toUpperCase() === forecastPriorityFilter);
+  }, [analytics?.ranking, forecastPriorityFilter]);
+
+  const forecastTotalPages = Math.max(1, Math.ceil(filteredRanking.length / FORECAST_PAGE_SIZE));
+  const pagedRanking = useMemo(() => {
+    const start = (forecastPage - 1) * FORECAST_PAGE_SIZE;
+    return filteredRanking.slice(start, start + FORECAST_PAGE_SIZE);
+  }, [filteredRanking, forecastPage, FORECAST_PAGE_SIZE]);
+
+  const filteredAnomalies = useMemo(() => {
+    const anomalies = analytics?.anomalies || [];
+    if (anomalyTrendFilter === 'ALL') return anomalies;
+    return anomalies.filter((anno) =>
+      anomalyTrendFilter === 'UP' ? anno.y > anno.y_rolling_mean : anno.y <= anno.y_rolling_mean,
+    );
+  }, [analytics?.anomalies, anomalyTrendFilter]);
+
+  const anomalyTotalPages = Math.max(1, Math.ceil(filteredAnomalies.length / ANOMALY_PAGE_SIZE));
+  const pagedAnomalies = useMemo(() => {
+    const start = (anomalyPage - 1) * ANOMALY_PAGE_SIZE;
+    return filteredAnomalies.slice(start, start + ANOMALY_PAGE_SIZE);
+  }, [filteredAnomalies, anomalyPage, ANOMALY_PAGE_SIZE]);
+
+  useEffect(() => {
+    setForecastPage(1);
+  }, [forecastPriorityFilter]);
+
+  useEffect(() => {
+    setAnomalyPage(1);
+  }, [anomalyTrendFilter]);
+
   if (loading || userLoading) {
     return (
       <MainLayout role={user?.role || 'STUDENT'} allowedRoles={['ADMIN', 'STAFF']} loading={userLoading}>
@@ -146,9 +194,9 @@ const AdminAnalyticsDashboard = () => {
   return (
     <MainLayout role={user?.role || 'STUDENT'} allowedRoles={['ADMIN', 'STAFF']} loading={userLoading}>
       <div className="space-y-8 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white border-4 border-black p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="space-y-1">
-            <h1 className="text-4xl font-black uppercase italic tracking-tighter text-black flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase italic tracking-tighter text-black flex items-center gap-3">
               <Zap className="w-10 h-10 fill-yellow-400" />
               Thống Kê Doanh Thu
             </h1>
@@ -157,7 +205,7 @@ const AdminAnalyticsDashboard = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-wrap items-end gap-3 sm:gap-4">
             <div className="space-y-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Từ ngày</label>
               <input 
@@ -176,12 +224,12 @@ const AdminAnalyticsDashboard = () => {
                 className="block bg-white border-2 border-black px-3 py-2 text-xs font-bold uppercase focus:ring-0 focus:outline-none"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={fetchData} 
-                className="bg-yellow-400 text-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2"
+                className="bg-yellow-400 text-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 w-full sm:w-auto justify-center"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Làm mới
@@ -191,7 +239,7 @@ const AdminAnalyticsDashboard = () => {
                 size="sm" 
                 onClick={handleExport}
                 disabled={exporting}
-                className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2"
+                className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 w-full sm:w-auto justify-center"
               >
                 <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
                 {exporting ? 'Đang xử lý...' : 'Xuất báo cáo'}
@@ -230,14 +278,14 @@ const AdminAnalyticsDashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Revenue Chart */}
-          <div className="lg:col-span-2 bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="lg:col-span-2 bg-white border-4 border-black p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-black uppercase text-black flex items-center tracking-tighter">
                 <TrendingUp className="mr-2 text-yellow-400" /> BIỂU ĐỒ HOA HỒNG (COMMISSION)
               </h3>
             </div>
-            <div className="h-[400px] w-full min-h-[400px]">
-                <ResponsiveContainer width="99.9%" height={400} minWidth={0}>
+            <div className="h-[280px] sm:h-[400px] w-full min-h-[280px] sm:min-h-[400px]">
+                <ResponsiveContainer width="99.9%" height={isMobile ? 280 : 400} minWidth={0}>
                   <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorY" x1="0" y1="0" x2="0" y2="1">
@@ -250,17 +298,18 @@ const AdminAnalyticsDashboard = () => {
                       dataKey="ds" 
                       stroke="#000" 
                       fontWeight="black" 
-                      fontSize={14} 
+                      fontSize={isMobile ? 10 : 14}
                       tickLine={false} 
                       axisLine={{strokeWidth: 4}} 
+                      minTickGap={isMobile ? 28 : 12}
                     />
                     <YAxis 
                       stroke="#000" 
                       fontWeight="black" 
-                      fontSize={14} 
+                      fontSize={isMobile ? 10 : 14}
                       tickLine={false} 
                       axisLine={{strokeWidth: 4}} 
-                      width={120}
+                      width={isMobile ? 72 : 120}
                       tickFormatter={(value) => `${value.toLocaleString()} VNĐ`}
                     />
                     <Tooltip 
@@ -281,17 +330,17 @@ const AdminAnalyticsDashboard = () => {
           </div>
 
           {/* Category Share */}
-          <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
+          <div className="bg-white border-4 border-black p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
             <h3 className="text-xl font-black uppercase mb-6 text-black tracking-tighter">TỶ TRỌNG DANH MỤC</h3>
-            <div className="h-[250px] w-full min-h-[250px] flex-shrink-0">
-              <ResponsiveContainer width="99.9%" height={250} minWidth={0}>
+            <div className="h-[220px] sm:h-[250px] w-full min-h-[220px] sm:min-h-[250px] flex-shrink-0">
+              <ResponsiveContainer width="99.9%" height={isMobile ? 220 : 250} minWidth={0}>
                 <PieChart>
                   <Pie
                     data={categories}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
+                    innerRadius={isMobile ? 44 : 60}
+                    outerRadius={isMobile ? 72 : 100}
                     paddingAngle={5}
                     dataKey="value"
                     stroke="#000"
@@ -329,24 +378,24 @@ const AdminAnalyticsDashboard = () => {
         {/* AI Forecasting & Anomalies */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Forecast */}
-          <div className="bg-black text-white p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(255,214,0,1)] flex flex-col h-[600px]">
+          <div className="bg-black text-white p-4 sm:p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(255,214,0,1)] flex flex-col h-auto sm:h-[600px]">
              <div className="flex items-center gap-3 mb-6">
                 <Zap className="text-yellow-400" size={32} />
                 <div>
-                  <h3 className="text-2xl font-black uppercase italic tracking-tighter">DỰ BÁO AI (FORECAST)</h3>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dựa trên mô hình Facebook Prophet</p>
+                  <h3 className="text-xl sm:text-2xl font-black uppercase italic tracking-tighter">DỰ BÁO AI (FORECAST)</h3>
+                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wide sm:tracking-widest">Dựa trên mô hình Facebook Prophet</p>
                 </div>
              </div>
              
-             <div className="bg-white/10 p-6 border-2 border-white/20 mb-6">
+             <div className="bg-white/10 p-4 sm:p-6 border-2 border-white/20 mb-4 sm:mb-6">
                 <div className="flex justify-between items-center">
                    <div>
                       <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">DỰ KIẾN 30 NGÀY TỚI</span>
-                      <span className="text-4xl font-black text-yellow-400">
+                      <span className="text-xl sm:text-4xl font-black text-yellow-400 leading-none">
                         {analytics?.forecast?.summary?.next_period_total?.toLocaleString() || 0} VNĐ
                       </span>
                    </div>
-                   <div className={`px-4 py-2 border-2 border-white font-black uppercase text-xs ${
+                   <div className={`px-3 py-1.5 border-2 border-white font-black uppercase text-[10px] sm:text-xs ${
                      analytics?.forecast?.summary?.trend === 'up' ? 'bg-emerald-500' : 'bg-rose-500'
                    }`}>
                       XU HƯỚNG: {analytics?.forecast?.summary?.trend === 'up' ? 'TĂNG' : 'GIẢM'}
@@ -354,26 +403,74 @@ const AdminAnalyticsDashboard = () => {
                 </div>
              </div>
 
-             <div className="space-y-4 overflow-y-auto flex-1 pr-2">
-                <h4 className="font-black uppercase text-[10px] text-yellow-400 border-b border-white/20 pb-2 tracking-widest sticky top-0 bg-black z-10">Xếp hạng danh mục tiềm năng</h4>
-                {analytics?.ranking?.map((item, idx) => (
+             <div className="space-y-3 sm:space-y-4 overflow-y-auto flex-1 pr-2 mt-4 sm:mt-0">
+                <div className="flex items-center justify-between gap-2 border-b border-white/20 pb-2">
+                  <h4 className="font-black uppercase text-[10px] text-yellow-400 tracking-widest">Xếp hạng danh mục tiềm năng</h4>
+                  <div className="flex gap-1">
+                    {(['ALL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setForecastPriorityFilter(p)}
+                        className={`px-2 py-1 border text-[9px] font-black uppercase ${forecastPriorityFilter === p ? 'bg-yellow-400 text-black border-yellow-400' : 'bg-black text-white border-white/30'}`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {pagedRanking.map((item, idx) => (
                   <div key={item.category_id || idx} className="flex justify-between items-center bg-white/5 p-3 border-l-4 border-yellow-400">
-                     <span className="font-bold text-sm uppercase">{item.name}</span>
-                     <div className="flex items-center gap-4">
+                     <span className="font-bold text-xs sm:text-sm uppercase truncate pr-2">{item.name}</span>
+                     <div className="flex items-center gap-2 sm:gap-4">
                         <span className="text-[10px] font-black bg-white text-black px-2 py-0.5 uppercase">{item.priority}</span>
                         <span className="font-black text-yellow-400">{item.growth_score > 0 ? '+' : ''}{item.growth_score?.toFixed(2) || 0}</span>
                      </div>
                   </div>
                 ))}
+                {pagedRanking.length === 0 && (
+                  <p className="text-[10px] font-black uppercase text-gray-400">Không có danh mục phù hợp</p>
+                )}
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    onClick={() => setForecastPage((p) => Math.max(1, p - 1))}
+                    disabled={forecastPage <= 1}
+                    className="px-2 py-1 border border-white/40 text-[10px] font-black uppercase disabled:opacity-40"
+                  >
+                    Trước
+                  </button>
+                  <span className="text-[10px] font-black uppercase text-gray-300">{forecastPage}/{forecastTotalPages}</span>
+                  <button
+                    onClick={() => setForecastPage((p) => Math.min(forecastTotalPages, p + 1))}
+                    disabled={forecastPage >= forecastTotalPages}
+                    className="px-2 py-1 border border-white/40 text-[10px] font-black uppercase disabled:opacity-40"
+                  >
+                    Sau
+                  </button>
+                </div>
              </div>
           </div>
 
           {/* Anomalies Table */}
-          <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-[600px]">
+          <div className="bg-white border-4 border-black p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-auto sm:h-[600px]">
             <h3 className="text-xl font-black uppercase mb-6 flex items-center text-rose-600 tracking-tighter">
               <AlertTriangle className="mr-2" /> PHÁT HIỆN BẤT THƯỜNG
             </h3>
-            <div className="overflow-x-auto flex-1 pr-2">
+            <div className="flex items-center gap-2 mb-3">
+              {([
+                { key: 'ALL', label: 'Tất cả' },
+                { key: 'UP', label: 'Tăng' },
+                { key: 'DOWN', label: 'Giảm' },
+              ] as const).map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => setAnomalyTrendFilter(item.key)}
+                  className={`px-2 py-1 border-2 border-black text-[10px] font-black uppercase ${anomalyTrendFilter === item.key ? 'bg-black text-white' : 'bg-white text-black'}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <div className="hidden sm:block overflow-x-auto flex-1 pr-2">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 bg-white z-10">
                   <tr className="bg-black text-white text-xs font-black uppercase tracking-widest border-b-4 border-black">
@@ -384,7 +481,7 @@ const AdminAnalyticsDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="font-bold text-black divide-y-4 divide-black">
-                  {analytics && analytics.anomalies.length > 0 ? analytics.anomalies.map((anno, idx) => (
+                  {pagedAnomalies.length > 0 ? pagedAnomalies.map((anno, idx) => (
                     <tr key={idx} className="hover:bg-rose-50 transition-colors">
                       <td className="p-3 text-sm">{anno.ds}</td>
                       <td className="p-3 text-sm">{anno.y?.toLocaleString() || 0} VNĐ</td>
@@ -407,14 +504,51 @@ const AdminAnalyticsDashboard = () => {
                 </tbody>
               </table>
             </div>
+            <div className="sm:hidden space-y-3">
+              {pagedAnomalies.length > 0 ? pagedAnomalies.map((anno, idx) => (
+                <div key={idx} className="border-2 border-black p-3 bg-white space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-black text-black">{anno.ds}</p>
+                    <span className={`px-2 py-1 text-[9px] font-black border-2 border-black uppercase ${
+                      anno.y > anno.y_rolling_mean ? 'bg-emerald-400' : 'bg-rose-400'
+                    }`}>
+                      {anno.y > anno.y_rolling_mean ? 'TĂNG' : 'GIẢM'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-bold text-black">Thực: {anno.y?.toLocaleString() || 0} VNĐ</p>
+                  <p className="text-[11px] font-bold text-black">Kỳ vọng: {anno.y_rolling_mean?.toFixed(2) || 0} VNĐ</p>
+                </div>
+              )) : (
+                <div className="p-5 border-2 border-black text-center text-[11px] font-black uppercase text-gray-500">
+                  Hệ thống ổn định
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-between pt-3">
+              <button
+                onClick={() => setAnomalyPage((p) => Math.max(1, p - 1))}
+                disabled={anomalyPage <= 1}
+                className="px-2 py-1 border-2 border-black text-[10px] font-black uppercase disabled:opacity-40"
+              >
+                Trước
+              </button>
+              <span className="text-[10px] font-black uppercase text-black">{anomalyPage}/{anomalyTotalPages}</span>
+              <button
+                onClick={() => setAnomalyPage((p) => Math.min(anomalyTotalPages, p + 1))}
+                disabled={anomalyPage >= anomalyTotalPages}
+                className="px-2 py-1 border-2 border-black text-[10px] font-black uppercase disabled:opacity-40"
+              >
+                Sau
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Floating Help Button & Manual */}
-      <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-4">
+      <div className="fixed bottom-4 sm:bottom-8 right-3 sm:right-8 z-[100] flex flex-col items-end gap-2 sm:gap-4">
         {analytics && showBanner && (
-          <div className={`bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-sm transition-all duration-300 transform ${analytics ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`} 
+          <div className={`bg-white border-4 border-black p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-[calc(100vw-24px)] sm:w-auto max-w-sm transition-all duration-300 transform ${analytics ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`} 
                style={{ display: stats ? 'block' : 'none' }}>
             <div className="flex justify-between items-center mb-4 border-b-4 border-black pb-2">
               <h4 className="text-lg font-black uppercase italic">Hướng dẫn Analytics</h4>
@@ -443,12 +577,12 @@ const AdminAnalyticsDashboard = () => {
           </div>
         )}
 
-        <button 
+        <button
           onClick={() => setShowInfo(true)}
-          className="w-16 h-16 rounded-full bg-yellow-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center group"
+          className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-yellow-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center group"
           title="Xem hướng dẫn chi tiết"
         >
-          <span className="text-4xl font-black italic">!</span>
+          <span className="text-2xl sm:text-4xl font-black italic">!</span>
         </button>
       </div>
 

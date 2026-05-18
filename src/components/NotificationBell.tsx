@@ -81,6 +81,7 @@ export function NotificationBell() {
   const { user } = useCurrentUser();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Close panel on outside click
@@ -92,6 +93,13 @@ export function NotificationBell() {
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 640);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
   if (!user) return null;
@@ -120,7 +128,7 @@ export function NotificationBell() {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 top-[calc(100%+8px)] w-[450px] bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] z-[999]">
+        <div className={`${isMobile ? 'fixed top-[74px] left-2 right-2' : 'absolute right-0 top-[calc(100%+8px)] w-[360px]'} bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] z-[999]`}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b-2 border-black bg-black text-white">
             <span className="text-xs font-black uppercase tracking-widest">
@@ -137,7 +145,7 @@ export function NotificationBell() {
           </div>
 
           {/* Notification List */}
-          <div className="overflow-y-auto max-h-80 divide-y-2 divide-black">
+          <div className={`overflow-y-auto divide-y-2 divide-black ${isMobile ? 'max-h-[52vh]' : 'max-h-72'}`}>
             {loading ? (
               <div className="p-6 flex items-center justify-center">
                 <div className="w-6 h-6 border-4 border-black border-t-transparent rounded-none animate-spin" />
@@ -153,7 +161,7 @@ export function NotificationBell() {
                 <button
                   key={notif.id}
                   onClick={() => !notif.isRead && markAsRead(notif.id)}
-                  className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
+                  className={`w-full text-left px-3 py-2.5 flex items-start gap-2.5 transition-colors ${
                     notif.isRead ? 'bg-white hover:bg-gray-50' : 'bg-amber-50 hover:bg-amber-100'
                   }`}
                 >
@@ -165,10 +173,10 @@ export function NotificationBell() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-black text-black leading-tight ${notif.isRead ? 'opacity-60' : ''}`}>
+                    <p className={`font-black text-black leading-tight ${isMobile ? 'text-xs' : 'text-sm'} ${notif.isRead ? 'opacity-60' : ''}`}>
                        {notif.title}
                     </p>
-                    <p className="text-xs font-bold text-black mt-0.5 leading-relaxed line-clamp-2">
+                    <p className="text-[11px] font-bold text-black mt-0.5 leading-relaxed line-clamp-2">
                        {notif.message}
                     </p>
                     <p className="text-[10px] font-black uppercase tracking-wider text-black/30 mt-1">

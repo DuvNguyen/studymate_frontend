@@ -122,18 +122,18 @@ export default function AdminKycPage() {
 
   return (
     <MainLayout role={appUser?.role} allowedRoles={['ADMIN', 'STAFF']}>
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex justify-between items-center">
+      <div className="w-[calc(100%-12px)] sm:w-full max-w-7xl mx-auto space-y-6">
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between sm:items-center">
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Quản lý</p>
-            <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Duyệt KYC Giảng Viên</h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-black uppercase tracking-tight leading-none">Duyệt KYC Giảng Viên</h1>
           </div>
           <button onClick={fetchKycs} className="font-black uppercase text-sm border-2 border-black px-4 py-2 hover:bg-gray-50 flex items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-px active:translate-x-px active:shadow-none transition-all">
             Làm mới ↻
           </button>
         </div>
 
-        <div className="grid grid-cols-5 gap-2 p-2 -m-2 overflow-visible w-full">
+        <div className="flex gap-2 p-2 overflow-x-auto w-full">
           {(['PENDING', 'PENDING_UPDATE', 'APPROVED', 'REJECTED', 'ALL'] as const).map(tabId => {
             const labelMap: Record<KycStatusTab, string> = {
               'PENDING': 'DUYÊT MỚI',
@@ -149,7 +149,7 @@ export default function AdminKycPage() {
               <button
                 key={tabId}
                 onClick={() => setActiveTab(tabId)}
-                className={`group relative w-full h-14 flex items-center justify-center px-1 font-black uppercase text-[10px] sm:text-xs border-2 border-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
+                className={`group relative h-14 min-w-[108px] sm:min-w-[140px] flex items-center justify-center px-1 font-black uppercase text-[10px] sm:text-xs border-2 border-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
                   activeTab === tabId ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
                 }`}
               >
@@ -190,7 +190,7 @@ export default function AdminKycPage() {
 
               return filtered.map((u) => (
                 <div key={u.id} className="relative z-0">
-                  <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex flex-col md:flex-row gap-6 relative z-10 transition-all">
+                  <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 flex flex-col md:flex-row gap-4 sm:gap-6 relative z-10 transition-all">
                     <div className="flex-1">
                       <h3 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-1">
                         {u.fullName || u.email}
@@ -222,7 +222,7 @@ export default function AdminKycPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 justify-center min-w-[140px]">
+                    <div className="flex flex-col gap-2 justify-center min-w-0 md:min-w-[140px] w-full md:w-auto">
                       {u.instructorProfile?.kycStatus === 'PENDING' && (
                         <>
                           <button

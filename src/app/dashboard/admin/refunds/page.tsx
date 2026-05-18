@@ -157,12 +157,20 @@ export default function AdminRefundsPage() {
   const [selectedRequest, setSelectedRequest] = useState<RefundRequest | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [isMobile, setIsMobile] = useState(false);
+  const pageSize = isMobile ? 6 : 10;
 
   useEffect(() => {
     void fetchAllRefundRequests(filterStatus === 'ALL' ? undefined : filterStatus, dateFrom || undefined, dateTo || undefined);
     setPage(1);
   }, [fetchAllRefundRequests, filterStatus, dateFrom, dateTo]);
+
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   const sortedRequests = useMemo(() => {
     const items = [...refundRequests];
@@ -182,12 +190,12 @@ export default function AdminRefundsPage() {
   }, [refundRequests, sortBy, sortDirection]);
 
   const paginatedRequests = useMemo(
-    () => sortedRequests.slice((page - 1) * limit, page * limit),
-    [sortedRequests, page, limit],
+    () => sortedRequests.slice((page - 1) * pageSize, page * pageSize),
+    [sortedRequests, page, pageSize],
   );
 
   const getStatusBadge = (status: RefundRequest['status']) => {
-    const base = 'border-2 border-black px-3 py-1 text-[10px] font-black uppercase';
+    const base = 'inline-block max-w-full truncate border-2 border-black px-2 py-1 text-[9px] sm:text-[10px] font-black uppercase';
     if (status === 'PENDING') return <span className={`${base} bg-amber-300 text-black`}>Chờ duyệt</span>;
     if (status === 'APPROVED') return <span className={`${base} bg-emerald-300 text-black`}>Đã duyệt</span>;
     return <span className={`${base} bg-rose-300 text-black`}>Từ chối</span>;
@@ -234,23 +242,23 @@ export default function AdminRefundsPage() {
 
   return (
     <MainLayout role="ADMIN" allowedRoles={['ADMIN', 'STAFF']}>
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-8 sm:space-y-10">
         <div className="flex flex-col gap-6 border-b-8 border-black pb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
               <span className="bg-rose-500 text-white border-2 border-black px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-4 inline-block">
                 Refund Management
               </span>
-              <h1 className="text-6xl font-black uppercase text-black tracking-tighter leading-none italic">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase text-black tracking-tighter leading-none italic">
                 Quản lý Hoàn tiền
               </h1>
             </div>
-            <div className="flex bg-white border-4 border-black p-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex overflow-x-auto bg-white border-4 border-black p-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full md:w-auto">
               {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map((s) => (
                 <button
                   key={s}
                   onClick={() => setFilterStatus(s)}
-                  className={`px-5 py-2 text-xs font-black uppercase transition-all ${filterStatus === s ? 'bg-black text-white' : 'hover:bg-zinc-100'}`}
+                  className={`px-4 sm:px-5 py-2 text-[11px] sm:text-xs font-black uppercase whitespace-nowrap transition-all ${filterStatus === s ? 'bg-black text-white' : 'hover:bg-zinc-100'}`}
                 >
                   {s === 'ALL'
                     ? 'Tất cả'
@@ -294,7 +302,7 @@ export default function AdminRefundsPage() {
           </div>
         </div>
 
-        <div className="bg-white border-8 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
+        <div className="hidden md:block bg-white border-8 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
           {loading && refundRequests.length > 0 && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center animate-in fade-in duration-200">
               <div className="bg-black text-white px-6 py-3 border-4 border-black font-black uppercase italic tracking-widest shadow-[8px_8px_0px_0px_rgba(244,63,94,1)] animate-pulse">
@@ -305,13 +313,13 @@ export default function AdminRefundsPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-black text-white text-xs font-black uppercase tracking-widest italic border-b-4 border-black">
-                <th className="p-5 text-left border-r-2 border-white/20 w-20">ID</th>
-                <th className="p-5 text-left border-r-2 border-white/20 min-w-[200px]">Học viên</th>
-                <th className="p-5 text-left border-r-2 border-white/20">Khóa học</th>
-                <th className="p-5 text-right border-r-2 border-white/20 w-40">Số tiền</th>
-                <th className="p-5 text-center border-r-2 border-white/20 w-36">Trạng thái</th>
-                <th className="p-5 text-center border-r-2 border-white/20 w-36">Ngày gửi</th>
-                <th className="p-5 text-center w-24">Chi tiết</th>
+                <th className="p-4 text-left border-r-2 border-white/20 w-20">ID</th>
+                <th className="p-4 text-left border-r-2 border-white/20 min-w-[180px]">Học viên</th>
+                <th className="p-4 text-left border-r-2 border-white/20">Khóa học</th>
+                <th className="p-4 text-right border-r-2 border-white/20 w-36">Số tiền</th>
+                <th className="p-4 text-center border-r-2 border-white/20 w-32">Trạng thái</th>
+                <th className="p-4 text-center border-r-2 border-white/20 w-32">Ngày gửi</th>
+                <th className="p-4 text-center w-20">Chi tiết</th>
               </tr>
             </thead>
             <tbody className="divide-y-4 divide-black">
@@ -322,22 +330,22 @@ export default function AdminRefundsPage() {
               ) : (
                 paginatedRequests.map((request) => (
                   <tr key={request.id} className="hover:bg-zinc-50 transition-colors group">
-                    <td className="p-5 border-r-4 border-black font-black text-xs text-black whitespace-nowrap">#{request.id}</td>
-                    <td className="p-5 border-r-4 border-black">
+                    <td className="p-4 border-r-4 border-black font-black text-xs text-black whitespace-nowrap">#{request.id}</td>
+                    <td className="p-4 border-r-4 border-black">
                       <p className="font-black text-black uppercase text-xs leading-tight mb-1">{request.student?.full_name}</p>
                       <p className="text-[10px] font-black uppercase truncate text-black">{request.student?.email}</p>
                     </td>
-                    <td className="p-5 border-r-4 border-black">
+                    <td className="p-4 border-r-4 border-black">
                       <p className="font-black text-black uppercase text-xs line-clamp-2 italic tracking-tighter leading-tight">{request.course?.title}</p>
                     </td>
-                    <td className="p-5 border-r-4 border-black text-right font-black italic text-black whitespace-nowrap text-sm">
+                    <td className="p-4 border-r-4 border-black text-right font-black italic text-black whitespace-nowrap text-sm">
                       {new Intl.NumberFormat('vi-VN').format(request.amount)}
                     </td>
-                    <td className="p-5 border-r-4 border-black text-center">{getStatusBadge(request.status)}</td>
-                    <td className="p-5 border-r-4 border-black text-center font-black text-black italic text-xs">
+                    <td className="p-4 border-r-4 border-black text-center">{getStatusBadge(request.status)}</td>
+                    <td className="p-4 border-r-4 border-black text-center font-black text-black italic text-xs">
                       {new Date(request.created_at).toLocaleDateString('vi-VN')}
                     </td>
-                    <td className="p-5 text-center">
+                    <td className="p-4 text-center">
                       <button
                         onClick={() => {
                           setSelectedRequest(request);
@@ -355,9 +363,52 @@ export default function AdminRefundsPage() {
           </table>
         </div>
 
+        <div className="md:hidden space-y-3">
+          {paginatedRequests.length === 0 ? (
+            <div className="bg-white border-4 border-black p-8 text-center font-black uppercase text-black">
+              Không có yêu cầu nào
+            </div>
+          ) : (
+            paginatedRequests.map((request) => (
+              <div key={request.id} className="bg-white border-4 border-black p-4 space-y-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-mono font-black text-xs text-black">#{request.id}</p>
+                    <p className="text-[10px] font-black text-black/70 italic mt-1">{new Date(request.created_at).toLocaleDateString('vi-VN')}</p>
+                  </div>
+                  <div className="shrink-0 max-w-[42%]">{getStatusBadge(request.status)}</div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-black/60">Học viên</p>
+                  <p className="text-xs font-black uppercase text-black leading-tight">{request.student?.full_name}</p>
+                  <p className="text-[10px] font-black text-black/70 truncate">{request.student?.email}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-black/60">Khóa học</p>
+                  <p className="text-xs font-black uppercase italic text-black leading-tight line-clamp-2">{request.course?.title}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase text-black/60">Số tiền</p>
+                  <p className="text-base font-black italic text-black">{new Intl.NumberFormat('vi-VN').format(request.amount)}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedRequest(request);
+                    setIsModalOpen(true);
+                  }}
+                  className="w-full h-10 bg-black text-white border-2 border-black flex items-center justify-center gap-2 text-xs font-black uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                >
+                  <ArrowRightCircle size={16} />
+                  Xem chi tiết
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
         <Pagination
           currentPage={page}
-          totalPages={Math.max(1, Math.ceil(sortedRequests.length / limit))}
+          totalPages={Math.max(1, Math.ceil(sortedRequests.length / pageSize))}
           onPageChange={setPage}
         />
 

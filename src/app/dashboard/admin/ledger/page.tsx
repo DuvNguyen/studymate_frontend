@@ -23,23 +23,31 @@ export default function AdminLedgerPage() {
   const [type, setType] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [limit] = useState(15);
+  const [isMobile, setIsMobile] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedTx, setSelectedTx] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const statusTabs = [
+    { value: '', label: 'Tất cả' },
+    { value: 'AVAILABLE', label: 'Đã duyệt' },
+    { value: 'COMPLETED', label: 'Hoàn tất' },
+    { value: 'LOCKED', label: 'Chờ xử lý' },
+    { value: 'CANCELLED', label: 'Từ chối' },
+  ];
 
   const fetchLedger = useCallback(async () => {
     if (!isLoaded) return;
     setLoading(true);
     try {
+      const pageSize = isMobile ? 6 : 15;
       const token = await getToken();
       const params = new URLSearchParams({
         status,
         type,
         search,
         page: page.toString(),
-        limit: limit.toString(),
+        limit: pageSize.toString(),
       });
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/ledger?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -54,14 +62,25 @@ export default function AdminLedgerPage() {
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, getToken, status, type, search, page, limit]);
+  }, [isLoaded, getToken, status, type, search, page, isMobile]);
 
   useEffect(() => {
     fetchLedger();
   }, [fetchLedger]);
 
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [isMobile]);
+
   const getStatusBadge = (status: string) => {
-    const base = "border-2 border-black px-2 py-0.5 text-[10px] font-black uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)]";
+    const base = "inline-block max-w-full truncate border-2 border-black px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)]";
     switch (status) {
       case 'LOCKED': return <span className={`${base} bg-zinc-200 text-black`}>LOCKED</span>;
       case 'AVAILABLE': return <span className={`${base} bg-emerald-400 text-black font-bold tracking-widest`}>AVAILABLE</span>;
@@ -128,7 +147,7 @@ export default function AdminLedgerPage() {
 
   return (
     <MainLayout role="ADMIN" allowedRoles={['ADMIN', 'STAFF']}>
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 pb-32 font-bold text-black">
+      <div className="w-[calc(100%-12px)] sm:w-full max-w-7xl mx-auto px-2.5 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-24 sm:pb-32 font-bold text-black">
         
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b-8 border-black pb-6 md:pb-8">
@@ -141,24 +160,24 @@ export default function AdminLedgerPage() {
               </h1>
            </div>
            
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full md:w-auto">
-              <div className="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)]">
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 w-full md:w-auto">
+              <div className="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)] min-w-0">
                  <p className="text-[10px] font-black uppercase text-black mb-1">Gross Revenue</p>
-                 <p className="text-xl font-black tabular-nums">{new Intl.NumberFormat('vi-VN').format(stats?.gross_revenue || 0)}</p>
+                 <p className="text-lg sm:text-xl font-black tabular-nums leading-none">{new Intl.NumberFormat('vi-VN').format(stats?.gross_revenue || 0)}</p>
               </div>
-              <div className="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(239,68,68,1)]">
+              <div className="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(239,68,68,1)] min-w-0">
                  <p className="text-[10px] font-black uppercase text-black mb-1">Total Payouts</p>
-                 <p className="text-xl font-black tabular-nums text-rose-600">{new Intl.NumberFormat('vi-VN').format(stats?.total_payouts || 0)}</p>
+                 <p className="text-lg sm:text-xl font-black tabular-nums text-rose-600 leading-none">{new Intl.NumberFormat('vi-VN').format(stats?.total_payouts || 0)}</p>
               </div>
-              <div className="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)] hidden md:block">
+              <div className="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)] sm:col-span-2 md:col-span-1 min-w-0">
                  <p className="text-[10px] font-black uppercase text-black mb-1">Profit/Comm</p>
-                 <p className="text-xl font-black tabular-nums text-violet-700">{new Intl.NumberFormat('vi-VN').format(stats?.total_commissions || 0)}</p>
+                 <p className="text-lg sm:text-xl font-black tabular-nums text-violet-700 leading-none">{new Intl.NumberFormat('vi-VN').format(stats?.total_commissions || 0)}</p>
               </div>
            </div>
         </div>
 
         {/* Search & Filters */}
-        <div className="bg-zinc-50 border-4 border-black p-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+        <div className="bg-zinc-50 border-4 border-black p-3 sm:p-4 flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center min-w-0">
            <div className="relative flex-grow w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black" size={18} />
               <input 
@@ -166,10 +185,10 @@ export default function AdminLedgerPage() {
                 placeholder="TX-ID / MÃ ĐƠN..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border-4 border-black font-black uppercase text-xs outline-none focus:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black"
+                className="w-full pl-12 pr-4 py-3 border-4 border-black font-black uppercase text-[11px] sm:text-xs outline-none focus:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black"
               />
            </div>
-           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full md:w-auto">
               <select 
                 value={type} 
                 onChange={(e) => setType(e.target.value)}
@@ -196,6 +215,23 @@ export default function AdminLedgerPage() {
            </div>
         </div>
 
+        <div className="flex overflow-x-auto bg-white border-4 border-black p-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full">
+          {statusTabs.map((tab) => (
+            <button
+              key={tab.value || 'ALL'}
+              onClick={() => {
+                setStatus(tab.value);
+                setPage(1);
+              }}
+              className={`px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] font-black uppercase whitespace-nowrap transition-all ${
+                status === tab.value ? 'bg-black text-white' : 'hover:bg-zinc-100 text-black'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Ledger Table - Compact (desktop) */}
         <div className="hidden md:block bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
            {loading && items.length > 0 && (
@@ -209,11 +245,11 @@ export default function AdminLedgerPage() {
            <table className="w-full border-collapse">
               <thead>
                  <tr className="bg-black text-white text-[11px] font-black uppercase tracking-widest italic border-b-4 border-black">
-                    <th className="p-4 text-left border-r-2 border-white/20 uppercase">TX-ID / Ngày</th>
-                    <th className="p-4 text-left border-r-2 border-white/20 uppercase">DÒNG TIỀN (TỪ ➜ ĐẾN)</th>
-                    <th className="p-4 text-center border-r-2 border-white/20 uppercase">Loại GD</th>
-                    <th className="p-4 text-right border-r-2 border-white/20 uppercase">Giá trị</th>
-                    <th className="p-4 text-right border-r-2 border-white/20 uppercase">Số dư sau</th>
+                    <th className="p-3 text-left border-r-2 border-white/20 uppercase">TX-ID / Ngày</th>
+                    <th className="p-3 text-left border-r-2 border-white/20 uppercase">DÒNG TIỀN (TỪ ➜ ĐẾN)</th>
+                    <th className="p-3 text-center border-r-2 border-white/20 uppercase">Loại GD</th>
+                    <th className="p-3 text-right border-r-2 border-white/20 uppercase">Giá trị</th>
+                    <th className="p-3 text-right border-r-2 border-white/20 uppercase">Số dư sau</th>
                     <th className="p-4 text-center border-r-2 border-white/20 uppercase">Trạng thái</th>
                     <th className="p-4 text-center w-20 uppercase">Chi tiết</th>
                  </tr>
@@ -226,11 +262,11 @@ export default function AdminLedgerPage() {
                  ) : (
                     items.map((tx) => (
                        <tr key={tx.id} className="hover:bg-zinc-50 transition-colors group">
-                          <td className="p-4 border-r-4 border-black font-mono font-black text-black">
+                          <td className="p-3 border-r-4 border-black font-mono font-black text-black">
                              TX-{tx.id}
                              <p className="text-[11px] font-black text-black/70 italic tracking-tighter mt-1">{new Date(tx.created_at).toLocaleDateString('vi-VN')}</p>
                           </td>
-                          <td className="p-4 border-r-4 border-black">
+                          <td className="p-3 border-r-4 border-black">
                               <div className="flex items-center gap-2">
                                  <div className="flex flex-col">
                                     <span className="text-[9px] font-black uppercase text-black/50 leading-none mb-1">Từ (Nguồn)</span>
@@ -256,15 +292,15 @@ export default function AdminLedgerPage() {
                                  </span>
                               </div>
                            </td>
-                          <td className="p-4 border-r-4 border-black text-center whitespace-nowrap">
+                          <td className="p-3 border-r-4 border-black text-center whitespace-nowrap">
                              {getTypeBadge(tx.transaction_type)}
                           </td>
-                          <td className="p-4 border-r-4 border-black text-right whitespace-nowrap">
+                          <td className="p-3 border-r-4 border-black text-right whitespace-nowrap">
                              <p className={`text-base font-black italic tracking-tighter ${tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                                {tx.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN').format(tx.amount)}
                              </p>
                           </td>
-                          <td className="p-4 border-r-4 border-black text-right font-black text-black tabular-nums whitespace-nowrap text-xs">
+                          <td className="p-3 border-r-4 border-black text-right font-black text-black tabular-nums whitespace-nowrap text-xs">
                              {new Intl.NumberFormat('vi-VN').format(tx.balance_after || 0)}
                           </td>
                           <td className="p-4 border-r-4 border-black text-center whitespace-nowrap">
@@ -301,28 +337,28 @@ export default function AdminLedgerPage() {
             </div>
           ) : (
             items.map((tx) => (
-              <div key={tx.id} className="bg-white border-4 border-black p-4 space-y-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <div key={tx.id} className="bg-white border-4 border-black p-3.5 space-y-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-mono font-black text-black text-sm">TX-{tx.id}</p>
                     <p className="text-[10px] font-black text-black/70 italic mt-1">{new Date(tx.created_at).toLocaleDateString('vi-VN')}</p>
                   </div>
-                  {getStatusBadge(tx.status)}
+                  <div className="shrink-0 max-w-[42%]">{getStatusBadge(tx.status)}</div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-black uppercase text-black/60">Từ</span>
-                    <span className="text-[11px] font-black uppercase">{getTransactionSource(tx)}</span>
+                    <span className="text-[11px] font-black uppercase truncate">{getTransactionSource(tx)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <ArrowRight size={12} className="text-black/40" />
                     <span className="text-[9px] font-black uppercase text-black/60">Đến</span>
-                    <span className="text-[11px] font-black uppercase">{getTransactionDest(tx)}</span>
+                    <span className="text-[11px] font-black uppercase truncate">{getTransactionDest(tx)}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-2 min-w-0">
                   {getTypeBadge(tx.transaction_type)}
-                  <p className={`text-lg font-black italic tracking-tighter ${tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                  <p className={`text-sm font-black italic tracking-tight text-right truncate max-w-[48vw] ${tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                     {tx.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN').format(tx.amount)}
                   </p>
                 </div>
@@ -346,7 +382,7 @@ export default function AdminLedgerPage() {
 
         <Pagination 
            currentPage={page}
-           totalPages={Math.ceil(total / limit) || 1}
+           totalPages={Math.ceil(total / (isMobile ? 6 : 15)) || 1}
            onPageChange={setPage}
         />
 

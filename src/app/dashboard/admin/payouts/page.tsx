@@ -150,7 +150,7 @@ export default function AdminPayoutsPage() {
             <h3 className="text-xl font-black uppercase text-black tracking-widest">Không có yêu cầu nào</h3>
           </div>
         ) : (
-          <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <div className="hidden md:block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-[1024px] text-left border-collapse">
                 <thead>

@@ -42,7 +42,7 @@ export function NavbarUserMenu() {
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2 sm:gap-4">
       {/* Nút Cart - Chỉ cho STUDENT */}
       {user.role === 'STUDENT' && (
         <Link href="/cart" className="relative group">
@@ -69,8 +69,16 @@ export function NavbarUserMenu() {
       >
         Dashboard
       </Link>
-      <div className="flex items-center gap-3 border-l-4 border-black pl-4">
-          <div className="flex flex-col items-end gap-0.5">
+      <div className="flex items-center gap-2 sm:gap-3 border-l-4 border-black pl-2 sm:pl-4">
+          <div className="sm:hidden flex flex-col items-end">
+            <p className="text-[11px] leading-[1.15] font-black text-black uppercase max-w-[88px] truncate">
+              {user.firstName || user.email?.split('@')[0] || 'USER'}
+            </p>
+            <p className="mt-0.5 text-[9px] font-black uppercase tracking-wide bg-amber-300 border border-black px-1 py-0.5 text-black">
+              {user.role}
+            </p>
+          </div>
+          <div className="hidden sm:flex flex-col items-end gap-0.5">
             <div className="flex items-center gap-1.5 leading-none">
               <span className="text-[10px] font-black uppercase tracking-widest text-black/60">xin chào,</span>
               <p className="text-sm font-black text-black uppercase">

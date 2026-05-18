@@ -43,12 +43,13 @@ export default function OnboardingPage() {
         if (res.ok) {
           const { data } = await res.json();
           console.log('[Onboarding] Thành công:', data);
-          const role = data.role; 
-          
-          if (role === 'INSTRUCTOR') {
-             router.replace('/dashboard/instructor/kyc'); 
+          const shouldGoInstructorKyc = intendedRole === 'INSTRUCTOR';
+          window.localStorage.removeItem('intended_role');
+
+          if (shouldGoInstructorKyc) {
+             router.replace('/dashboard/instructor/kyc');
           } else {
-             router.replace('/dashboard'); 
+             router.replace('/dashboard');
           }
         } else if (res.status === 401 || res.status === 404 || res.status === 500) {
           console.warn(`[Onboarding] Backend chưa sẵn sàng (Status ${res.status}). Đang thử lại...`);

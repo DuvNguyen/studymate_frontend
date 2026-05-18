@@ -164,16 +164,19 @@ export default function QuizPlayerPage() {
     try {
       const token = await getToken();
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quizzes/${quizId}/attempts`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       });
       if (res.ok) {
         const data = await res.json();
         const list = data.data || data;
         setPastAttempts(list);
+        return list as QuizAttempt[];
       }
     } catch (err) {
       console.error('Lỗi khi tải lịch sử:', err);
     }
+    return [] as QuizAttempt[];
   }, [getToken, quizId]);
 
   useEffect(() => {
@@ -183,6 +186,14 @@ export default function QuizPlayerPage() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [fetchQuiz, fetchPastAttempts]);
+
+  useEffect(() => {
+    const onPageShow = () => {
+      void fetchPastAttempts();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, [fetchPastAttempts]);
 
   const handleHistoryReview = async (id: number) => {
     setShowHistory(false);
@@ -231,9 +242,11 @@ export default function QuizPlayerPage() {
       
       if (res.ok) {
         const data = await res.json();
-        setResult(data.data || data);
+        const submitted = data.data || data;
+        setResult(submitted);
         setStatus('RESULT');
-        fetchPastAttempts();
+        setPastAttempts((prev) => [submitted, ...prev.filter((it) => it.id !== submitted.id)]);
+        void fetchPastAttempts();
       } else {
         toast.error('Lỗi khi nộp bài');
       }
@@ -355,8 +368,11 @@ export default function QuizPlayerPage() {
 
                  {pastAttempts.length > 0 && (
                     <div className="flex items-center gap-0 w-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white group hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
-                       <button 
-                         onClick={() => setShowHistory(true)}
+                       <button
+                         onClick={async () => {
+                           await fetchPastAttempts();
+                           setShowHistory(true);
+                         }}
                          className="flex-1 h-14 sm:h-16 text-sm sm:text-lg font-black uppercase text-black hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 border-r-4 border-black"
                        >
                           <History size={20} /> XEM LỊCH SỬ

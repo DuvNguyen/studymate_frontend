@@ -27,6 +27,7 @@ export default function KycPage() {
 
   const [selectedFiles, setSelectedFiles] = useState<{ idCard?: File; documents: { [key: number]: File }; certificates: { [key: number]: File } }>({ documents: {}, certificates: {} });
   const [previewUrls, setPreviewUrls] = useState<{ idCard?: string; documents: { [key: number]: string }; certificates: { [key: number]: string } }>({ documents: {}, certificates: {} });
+  const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
   // Khóa form nếu:
   // 1. Đang chờ duyệt (PENDING/PENDING_UPDATE) -> Luôn khóa
@@ -172,8 +173,63 @@ export default function KycPage() {
     return data.url;
   };
 
+  const validateBeforeSubmit = () => {
+    const errors: string[] = [];
+    const accountName = kycData.bankAccountName.trim();
+    const accountNumber = kycData.bankAccountNumber.trim();
+    const bankName = kycData.bankName.trim();
+
+    if (!kycData.idCardUrl && !selectedFiles.idCard) {
+      errors.push('Bạn cần tải ảnh CMND/CCCD.');
+    }
+    if (!accountName) errors.push('Tên chủ tài khoản là bắt buộc.');
+    if (!bankName) errors.push('Tên ngân hàng là bắt buộc.');
+    if (!/^\d{8,20}$/.test(accountNumber)) {
+      errors.push('Số tài khoản phải là 8-20 chữ số.');
+    }
+    if (kycData.documents.length === 0) {
+      errors.push('Cần ít nhất 1 tài liệu bằng cấp/chứng chỉ.');
+    }
+
+    kycData.documents.forEach((doc, index) => {
+      if (!doc.title.trim()) {
+        errors.push(`Tài liệu #${index + 1} chưa có tiêu đề.`);
+      }
+      const hasOldFile = Boolean(doc.fileUrl?.trim());
+      const hasNewFile = Boolean(selectedFiles.documents[index]);
+      if (!hasOldFile && !hasNewFile) {
+        errors.push(`Tài liệu #${index + 1} chưa có tệp đính kèm.`);
+      }
+    });
+
+    kycData.certificates.forEach((cert, index) => {
+      if (!cert.title.trim()) {
+        errors.push(`Danh hiệu #${index + 1} không được để trống.`);
+      }
+    });
+
+    const files = [
+      selectedFiles.idCard,
+      ...Object.values(selectedFiles.documents),
+      ...Object.values(selectedFiles.certificates),
+    ].filter(Boolean) as File[];
+
+    files.forEach((file) => {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        errors.push(`Tệp "${file.name}" vượt quá 10MB.`);
+      }
+    });
+
+    return errors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors = validateBeforeSubmit();
+    if (errors.length > 0) {
+      toast.error(errors[0]);
+      return;
+    }
     setIsSubmitting(true);
     try {
       let finalIdCardUrl = kycData.idCardUrl;
