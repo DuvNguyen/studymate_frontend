@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { Pagination } from '@/components/Pagination';
+import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
 
 type Tab = 'ALL' | 'STUDENT' | 'INSTRUCTOR' | 'STAFF' | 'ADMIN';
 
@@ -28,12 +29,13 @@ interface BanReasonModalState {
 
 export default function AdminUsersPage() {
   const [activeTab, setActiveTab] = useState<Tab>('ALL');
+  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const { session } = useClerk();
   const { deleteUser, loading: isDeleting } = useDeleteUser();
   const [isActing, setIsActing] = useState(false);
   const { user: appUser, loading: appLoading } = useCurrentUser();
-  const { users, meta, loading, fetchUsers, updateStatus } = useAdminUsers();
+  const { users, meta, loading, fetchUsers } = useAdminUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
@@ -65,12 +67,13 @@ export default function AdminUsersPage() {
     if (session) {
       fetchUsers({ 
         page, 
-        limit: 10, 
+        limit: 5, 
         role: activeTab === 'ALL' ? undefined : activeTab, 
+        status: statusFilter || undefined,
         search: debouncedSearchTerm 
       });
     }
-  }, [session, activeTab, page, debouncedSearchTerm, fetchUsers]);
+  }, [session, activeTab, statusFilter, page, debouncedSearchTerm, fetchUsers]);
 
   const handleDelete = async (id: number, email: string) => {
     const confirm = window.confirm(`Bạn có CHẮC CHẮN muốn XÓA CỨNG người dùng [${email}] không?\n\nHành động này sẽ xóa dữ liệu trên Clerk và DB, KHÔNG THỂ KHÔI PHỤC!`);
@@ -170,6 +173,12 @@ export default function AdminUsersPage() {
     { value: 'STAFF',      label: 'Nhân viên (Staff)' },
     { value: 'ADMIN',      label: 'Quản trị viên' },
   ];
+  const statusTabs = [
+    { value: '', label: 'Tất cả' },
+    { value: 'ACTIVE', label: 'Hoạt động' },
+    { value: 'BANNED', label: 'Bị cấm' },
+    { value: 'SUSPENDED', label: 'Đình chỉ' },
+  ];
 
   if (appLoading) {
     return (
@@ -181,7 +190,7 @@ export default function AdminUsersPage() {
 
   return (
     <MainLayout role={appUser?.role} allowedRoles={['ADMIN', 'STAFF']}>
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="w-[calc(100%-12px)] sm:w-full max-w-7xl mx-auto space-y-6">
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Quản lý</p>
           <h1 className="text-2xl font-black text-gray-900 uppercase">Quản lý Người dùng</h1>
@@ -189,7 +198,7 @@ export default function AdminUsersPage() {
 
 
         {/* Search Bar */}
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex items-center gap-4">
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 min-w-0">
           <div className="flex-1 relative">
             <input
               type="text"
@@ -213,7 +222,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 min-w-0">
           {tabs.map(tab => (
             <button
               key={tab.value}
@@ -232,12 +241,22 @@ export default function AdminUsersPage() {
           ))}
         </div>
 
+        <AdminStatusTabs
+          items={statusTabs}
+          value={statusFilter}
+          onChange={(next) => {
+            setStatusFilter(next);
+            setPage(1);
+          }}
+          compact
+        />
+
         {loading ? (
           <div className="flex justify-center items-center h-40 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="animate-spin rounded-none h-10 w-10 border-4 border-black border-t-transparent"></div>
           </div>
         ) : (
-          <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <div className="hidden md:block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left border-collapse">
                 <thead>
@@ -330,6 +349,75 @@ export default function AdminUsersPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {!loading && (
+          <div className="md:hidden space-y-3">
+            {users.map((u) => {
+              const statusCfg = STATUS_CONFIG[u.status] ?? { label: u.status, cls: 'bg-gray-100 text-gray-600 border border-black' };
+              const isBanned = u.status === 'BANNED' || u.status === 'SUSPENDED';
+
+              return (
+                <div key={u.id} className="bg-white border-2 border-black p-3.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-black uppercase truncate">{u.fullName || 'Chưa cập nhật'}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isBanned) {
+                          setBanReasonModal({
+                            open: true,
+                            email: u.email,
+                            banReason: u.banReason ?? null,
+                            bannedAt: u.bannedAt ?? null,
+                            violationCount: u.violationCount || 0,
+                            status: u.status,
+                          });
+                        }
+                      }}
+                      className={`max-w-[48%] truncate px-2 py-1 flex justify-center items-center font-black text-[9px] uppercase tracking-wider ${statusCfg.cls} ${
+                        isBanned ? 'cursor-pointer' : 'cursor-default'
+                      }`}
+                    >
+                      {statusCfg.label}
+                    </button>
+                  </div>
+                  <p className="text-[11px] font-bold text-gray-700 truncate">{u.email}</p>
+                  {activeTab === 'INSTRUCTOR' && (
+                    <p className="text-[10px] font-black uppercase text-black">
+                      Vi phạm: <span className={u.violationCount > 0 ? 'text-red-600' : 'text-gray-500'}>{u.violationCount || 0}</span>
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    {isBanned ? (
+                      <button
+                        onClick={() => handleUnban(u.id, u.email)}
+                        disabled={isActing || u.role === 'ADMIN'}
+                        className="px-2 py-2 border border-black font-bold text-[10px] uppercase bg-emerald-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50"
+                      >
+                        Bỏ đình chỉ
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openBanModal(u.id, u.email)}
+                        disabled={isActing || u.role === 'ADMIN'}
+                        className="px-2 py-2 border border-black font-bold text-[10px] uppercase bg-amber-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50"
+                      >
+                        Cấm
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(u.id, u.email)}
+                      disabled={isDeleting || u.role === 'ADMIN'}
+                      className="px-2 py-2 border border-black font-bold text-[10px] uppercase bg-red-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50"
+                    >
+                      {isDeleting ? '...' : 'Xóa cứng'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

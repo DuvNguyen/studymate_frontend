@@ -5,6 +5,7 @@ import { useAdminCourses } from '@/hooks/useAdminCourses';
 import { useCategories } from '@/hooks/useCategories';
 import { Button } from '@/components/Button';
 import { Pagination } from '@/components/Pagination';
+import Link from 'next/link';
 
 export default function CourseManagementQueue() {
   const { courses, meta, loading, fetchCourses, approveCourse, rejectCourse, suspendCourse } = useAdminCourses();
@@ -22,7 +23,6 @@ export default function CourseManagementQueue() {
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendingCourseId, setSuspendingCourseId] = useState<number | null>(null);
 
-  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCourses({ page, limit: 5, status: activeTab, search: searchQuery, categoryId: filterCategory ? String(filterCategory) : '' });
@@ -74,8 +74,8 @@ export default function CourseManagementQueue() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex justify-between items-center">
+    <div className="w-[calc(100%-12px)] sm:w-full max-w-7xl mx-auto space-y-6">
+      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-black mb-1">Quản lý Khóa học</p>
           <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Admin Hub</h1>
@@ -86,7 +86,7 @@ export default function CourseManagementQueue() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 pb-2 overflow-x-auto">
+      <div className="flex gap-2 pb-2 overflow-x-auto w-full">
         {[
           { id: 'PENDING_REVIEW', label: 'CHỜ DUYỆT' },
           { id: 'PUBLISHED', label: 'ĐANG HOẠT ĐỘNG' },
@@ -96,7 +96,7 @@ export default function CourseManagementQueue() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ALL')}
-            className={`px-6 py-3 font-black uppercase text-sm border-2 border-black whitespace-nowrap transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
+            className={`px-3 sm:px-6 py-2.5 sm:py-3 font-black uppercase text-[11px] sm:text-sm border-2 border-black whitespace-nowrap transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
               activeTab === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
             }`}
           >
@@ -106,7 +106,7 @@ export default function CourseManagementQueue() {
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="bg-yellow-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex flex-col md:flex-row gap-4 items-end">
+      <div className="bg-yellow-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex flex-col md:flex-row gap-4 items-end min-w-0">
         <div className="flex-1 w-full">
           <label className="block text-xs font-black text-black uppercase mb-1">Tìm kiếm khóa học</label>
           <input 
@@ -186,7 +186,7 @@ export default function CourseManagementQueue() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-3 gap-6 text-sm mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-yellow-50 p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-sm mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-yellow-50 p-4 sm:p-6">
                     <div>
                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/80 block mb-1">Chương</span>
                       <strong className="text-base font-black text-black underline decoration-2">{course.sectionCount}</strong>
@@ -201,15 +201,13 @@ export default function CourseManagementQueue() {
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
-                    <Button 
-                      onClick={() => setExpandedId(expandedId === course.id ? null : course.id)} 
-                      variant={expandedId === course.id ? 'primary' : 'outline'}
-                      size="sm"
-                      className="text-[10px]"
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <Link
+                      href={`/dashboard/admin/courses/${course.id}`}
+                      className="inline-flex items-center justify-center px-4 py-2 bg-black text-white border-2 border-black font-black text-[10px] uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-px hover:translate-y-px hover:shadow-none transition-all"
                     >
-                      {expandedId === course.id ? 'Đóng chi tiết ∧' : 'Xem nội dung khóa học ∨'}
-                    </Button>
+                      Xem nội dung khóa học ↗
+                    </Link>
                     <a 
                       href={`/courses/${course.slug}/learn`}
                       target="_blank"
@@ -244,46 +242,6 @@ export default function CourseManagementQueue() {
                   )}
                 </div>
               </div>
-
-              {/* Chi tiết khóa học */}
-              {expandedId === course.id && (
-                <div className="bg-white border-x-2 border-b-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8 pt-12 mt-[-10px] space-y-8 relative z-0 animate-in slide-in-from-top-4 fade-in duration-300">
-                  <div className="space-y-4">
-                    <h4 className="font-black text-xs uppercase tracking-[0.3em] border-b-4 border-black pb-2 inline-block text-black">Nội dung chi tiết</h4>
-                    
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {course.sections?.map((section: any, index: number) => (
-                      <div key={section.id} className="border-2 border-black p-4 mb-4 bg-gray-50">
-                        <h5 className="font-black text-sm uppercase text-black mb-3">Chương {index + 1}: {section.title}</h5>
-                        <div className="space-y-2">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {section.lessons?.map((lesson: any, lIndex: number) => (
-                            <div key={lesson.id} className="bg-white border-2 border-black p-3 text-xs flex justify-between items-center relative overflow-hidden">
-                              <span className="font-black relative z-10 text-black">Bài {lIndex + 1}: {lesson.title}</span>
-                              <div className="flex gap-2">
-                                {lesson.isPreview && <span className="bg-blue-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase text-black">Preview</span>}
-                                {lesson.youtubeVideoId ? (
-                                  <span className="bg-emerald-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase text-black">Có Video</span>
-                                ) : (
-                                  <span className="bg-amber-200 border-2 border-black text-[9px] px-2 py-0.5 font-black uppercase text-black">Chưa có video</span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                          {(!section.lessons || section.lessons.length === 0) && (
-                            <p className="text-[10px] uppercase font-black text-black/50 italic p-2 border-2 border-dashed border-gray-300">Chương này chưa có bài học.</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    {(!course.sections || course.sections.length === 0) && (
-                      <div className="bg-yellow-50 border-2 border-black p-4 text-center">
-                        <p className="text-xs font-black uppercase italic text-black/60">Khóa học này đang trống, không có nội dung.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {activeCourseId === course.id && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">

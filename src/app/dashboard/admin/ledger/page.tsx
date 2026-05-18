@@ -24,6 +24,7 @@ export default function AdminLedgerPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedTx, setSelectedTx] = useState<any>(null);
@@ -40,7 +41,7 @@ export default function AdminLedgerPage() {
     if (!isLoaded) return;
     setLoading(true);
     try {
-      const pageSize = isMobile ? 6 : 15;
+      const pageSize = isMobile ? 5 : 15;
       const token = await getToken();
       const params = new URLSearchParams({
         status,
@@ -160,7 +161,15 @@ export default function AdminLedgerPage() {
               </h1>
            </div>
            
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 w-full md:w-auto">
+           <button
+             type="button"
+             onClick={() => setShowSummary((prev) => !prev)}
+             className="md:hidden text-[11px] font-black uppercase underline underline-offset-2 hover:text-zinc-700"
+           >
+             {showSummary ? 'Ẩn thông tin nhanh' : 'Hiện thông tin nhanh'}
+           </button>
+
+           <div className={`${showSummary ? 'grid' : 'hidden'} md:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 w-full md:w-auto`}>
               <div className="bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)] min-w-0">
                  <p className="text-[10px] font-black uppercase text-black mb-1">Gross Revenue</p>
                  <p className="text-lg sm:text-xl font-black tabular-nums leading-none">{new Intl.NumberFormat('vi-VN').format(stats?.gross_revenue || 0)}</p>
@@ -382,7 +391,7 @@ export default function AdminLedgerPage() {
 
         <Pagination 
            currentPage={page}
-           totalPages={Math.ceil(total / (isMobile ? 6 : 15)) || 1}
+           totalPages={Math.ceil(total / (isMobile ? 5 : 15)) || 1}
            onPageChange={setPage}
         />
 

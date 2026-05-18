@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import MainLayout from '@/components/MainLayout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
+import { Pagination } from '@/components/Pagination';
 
 export default function AdminPayoutsPage() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { payouts, loading, fetchAllPayouts, processPayout, exportPayouts, exportPayoutsCsv } = useWallet();
   const [filterStatus, setFilterStatus] = useState<string>('PENDING');
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
   const [adminNote, setAdminNote] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [exporting, setExporting] = useState<'XLSX' | 'CSV' | null>(null);
@@ -30,7 +33,12 @@ export default function AdminPayoutsPage() {
   // Reset selection when filter changes
   useEffect(() => {
     setSelectedIds(new Set());
+    setPage(1);
   }, [filterStatus]);
+
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(payouts.length / pageSize));
+  const pagedPayouts = payouts.slice((page - 1) * pageSize, page * pageSize);
 
   const handleProcess = async (id: number, status: 'COMPLETED' | 'REJECTED') => {
     setProcessingId(id);
@@ -57,10 +65,10 @@ export default function AdminPayoutsPage() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === payouts.length) {
+    if (selectedIds.size === pagedPayouts.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(payouts.map(p => p.id)));
+      setSelectedIds(new Set(pagedPayouts.map(p => p.id)));
     }
   };
 
@@ -116,7 +124,7 @@ export default function AdminPayoutsPage() {
           <div className="animate-spin rounded-none h-10 w-10 border-4 border-black border-t-transparent"></div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto space-y-6 pb-40 px-4 sm:px-6">
+        <div className="w-[calc(100%-12px)] sm:w-full max-w-7xl mx-auto space-y-6 pb-40 px-2.5 sm:px-6">
         {/* Header */}
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
           <p className="text-[10px] font-black uppercase tracking-widest text-black mb-1">Quản trị hệ thống</p>
@@ -124,21 +132,14 @@ export default function AdminPayoutsPage() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex flex-wrap gap-2">
-          {tabs.map(tab => (
-            <button
-              key={tab.value}
-              onClick={() => setFilterStatus(tab.value)}
-              className={`py-2 px-6 font-black text-xs uppercase tracking-widest border-2 border-black transition-all ${
-                filterStatus === tab.value
-                  ? 'bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-2px] translate-x-[-2px]'
-                  : 'bg-white text-black hover:bg-yellow-50 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <AdminStatusTabs
+          items={tabs}
+          value={filterStatus}
+          onChange={(next) => {
+            setFilterStatus(next);
+            setPage(1);
+          }}
+        />
 
         {/* Table */}
         {loading ? (
@@ -158,7 +159,7 @@ export default function AdminPayoutsPage() {
                     <th className="p-4 w-12">
                       <input
                         type="checkbox"
-                        checked={selectedIds.size === payouts.length && payouts.length > 0}
+                        checked={selectedIds.size === pagedPayouts.length && pagedPayouts.length > 0}
                         onChange={toggleSelectAll}
                         className="w-5 h-5 accent-emerald-400 cursor-pointer"
                       />
@@ -177,7 +178,7 @@ export default function AdminPayoutsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y-2 divide-black">
-                  {payouts.map((po) => (
+                  {pagedPayouts.map((po) => (
                     <tr key={po.id} className={`hover:bg-yellow-50 transition-colors ${selectedIds.has(po.id) ? 'bg-emerald-50' : ''}`}>
                       <td className="p-4">
                         <input
@@ -250,7 +251,7 @@ export default function AdminPayoutsPage() {
 
       {!loading && payouts.length > 0 && (
         <div className="md:hidden space-y-3">
-          {payouts.map((po) => (
+          {pagedPayouts.map((po) => (
             <div key={po.id} className={`bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3 ${selectedIds.has(po.id) ? 'bg-emerald-50' : ''}`}>
               <div className="flex items-start justify-between gap-3">
                 <span className="font-mono font-black text-black text-xs bg-yellow-100 border border-black px-2 py-0.5">
@@ -314,6 +315,14 @@ export default function AdminPayoutsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {!loading && payouts.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Bulk Action Bar — Fixed Bottom */}

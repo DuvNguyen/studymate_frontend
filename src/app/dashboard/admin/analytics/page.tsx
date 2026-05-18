@@ -193,8 +193,8 @@ const AdminAnalyticsDashboard = () => {
 
   return (
     <MainLayout role={user?.role || 'STUDENT'} allowedRoles={['ADMIN', 'STAFF']} loading={userLoading}>
-      <div className="space-y-8 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white border-4 border-black p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      <div className="w-[calc(100%-12px)] sm:w-full max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white border-4 border-black p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] min-w-0">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase italic tracking-tighter text-black flex items-center gap-3">
               <Zap className="w-10 h-10 fill-yellow-400" />

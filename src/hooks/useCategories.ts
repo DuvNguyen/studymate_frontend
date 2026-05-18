@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { API_V1 } from '@/constants/api';
 
 export interface SubCategory {
   id: number;
@@ -27,8 +28,6 @@ interface UseCategoriesReturn {
   error: string | null;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
-
 // Cache đơn giản tránh fetch lại mỗi lần mount
 let cachedCategories: Category[] | null = null;
 
@@ -45,7 +44,18 @@ export function useCategories(): UseCategoriesReturn {
       setLoading(true);
     }, 0);
 
-    fetch(`${API_BASE}/categories`, { signal: controller.signal })
+    const fetchWithRetry = async (retries = 1): Promise<Response> => {
+      try {
+        return await fetch(`${API_V1}/categories`, { signal: controller.signal });
+      } catch (err) {
+        if (retries > 0) {
+          return fetchWithRetry(retries - 1);
+        }
+        throw err;
+      }
+    };
+
+    fetchWithRetry(1)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

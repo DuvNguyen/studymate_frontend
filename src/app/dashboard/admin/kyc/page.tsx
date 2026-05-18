@@ -5,6 +5,7 @@ import { useClerk } from '@clerk/nextjs';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
 import Image from 'next/image';
+import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
 
 interface InstructorDocument {
   id: number;
@@ -42,6 +43,13 @@ export default function AdminKycPage() {
   const [activeTab, setActiveTab] = useState<KycStatusTab>('PENDING');
   const { session } = useClerk();
   const { user: appUser, loading: appLoading } = useCurrentUser();
+  const labelMap: Record<KycStatusTab, string> = {
+    PENDING: 'DUYỆT MỚI',
+    PENDING_UPDATE: 'CẬP NHẬT',
+    APPROVED: 'ĐÃ DUYỆT',
+    REJECTED: 'TỪ CHỐI',
+    ALL: 'TẤT CẢ',
+  };
 
   const fetchKycs = useCallback(async () => {
     try {
@@ -133,34 +141,16 @@ export default function AdminKycPage() {
           </button>
         </div>
 
-        <div className="flex gap-2 p-2 overflow-x-auto w-full">
-          {(['PENDING', 'PENDING_UPDATE', 'APPROVED', 'REJECTED', 'ALL'] as const).map(tabId => {
-            const labelMap: Record<KycStatusTab, string> = {
-              'PENDING': 'DUYÊT MỚI',
-              'PENDING_UPDATE': 'CẬP NHẬT',
-              'APPROVED': 'ĐÃ DUYỆT',
-              'REJECTED': 'TỪ CHỐI',
-              'ALL': 'TẤT CẢ'
-            };
-            const count = tabId === 'ALL' ? kycs.length : kycs.filter(u => u.instructorProfile?.kycStatus === tabId).length;
-            const hasUnread = count > 0 && activeTab !== tabId;
-
-            return (
-              <button
-                key={tabId}
-                onClick={() => setActiveTab(tabId)}
-                className={`group relative h-14 min-w-[108px] sm:min-w-[140px] flex items-center justify-center px-1 font-black uppercase text-[10px] sm:text-xs border-2 border-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
-                  activeTab === tabId ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-                }`}
-              >
-                <span className="text-center break-words leading-tight">{labelMap[tabId]}</span>
-                {hasUnread && (
-                  <span className="absolute -top-2 -right-1 w-4 h-4 bg-red-600 border-2 border-black rounded-full shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] animate-bounce z-20" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <AdminStatusTabs
+          items={(['PENDING', 'PENDING_UPDATE', 'APPROVED', 'REJECTED', 'ALL'] as const).map((tabId) => ({
+            value: tabId,
+            label: labelMap[tabId],
+            count: tabId === 'ALL' ? kycs.length : kycs.filter((u) => u.instructorProfile?.kycStatus === tabId).length,
+          }))}
+          value={activeTab}
+          onChange={(next) => setActiveTab(next as KycStatusTab)}
+          compact
+        />
         
         {loading ? (
           <div className="flex items-center justify-center h-40 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">

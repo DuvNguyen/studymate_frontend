@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { API_V1 } from '@/constants/api';
 
 export interface CourseInstructor {
   id: number;
@@ -61,8 +62,6 @@ export interface CourseFilters {
   sortOrder?: 'ASC' | 'DESC';
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
-
 export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
   const [courses, setCourses] = useState<Course[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
@@ -86,7 +85,18 @@ export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
     if (filters.sortBy) params.set('sortBy', filters.sortBy);
     if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
 
-    fetch(`${API_BASE}/courses?${params.toString()}`, { signal: controller.signal })
+    const fetchWithRetry = async (retries = 1): Promise<Response> => {
+      try {
+        return await fetch(`${API_V1}/courses?${params.toString()}`, { signal: controller.signal });
+      } catch (err) {
+        if (retries > 0) {
+          return fetchWithRetry(retries - 1);
+        }
+        throw err;
+      }
+    };
+
+    fetchWithRetry(1)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

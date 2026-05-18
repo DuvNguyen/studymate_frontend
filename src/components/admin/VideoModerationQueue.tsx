@@ -5,6 +5,7 @@ import { usePendingVideos, useReviewVideo } from '@/hooks/useVideos';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { Button } from '@/components/Button';
 import { Pagination } from '@/components/Pagination';
+import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
 
 export default function VideoModerationQueue() {
   const { videos, meta, loading, refetch } = usePendingVideos();
@@ -13,12 +14,14 @@ export default function VideoModerationQueue() {
 
   const [rejectReason, setRejectReason] = useState('');
   const [activeVideoId, setActiveVideoId] = useState<number | null>(null);
+  const [reasonViewerVideoId, setReasonViewerVideoId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   // Filters
   const [page, setPage] = useState(1);
   const [filterUploaderId, setFilterUploaderId] = useState<number | ''>('');
   const [filterVideoId, setFilterVideoId] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
     fetchInstructors({ role: 'INSTRUCTOR', limit: 100 });
@@ -30,8 +33,9 @@ export default function VideoModerationQueue() {
       limit: 5,
       uploaderId: filterUploaderId || undefined,
       id: filterVideoId ? Number(filterVideoId) : undefined,
+      status: filterStatus || undefined,
     });
-  }, [page, filterUploaderId, filterVideoId, refetch]);
+  }, [page, filterUploaderId, filterVideoId, filterStatus, refetch]);
 
   const handleFilter = () => {
     setPage(1);
@@ -70,21 +74,43 @@ export default function VideoModerationQueue() {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  const statusTabs = [
+    { value: '', label: 'Tất cả' },
+    { value: 'APPROVED', label: 'Đã duyệt' },
+    { value: 'PENDING_REVIEW', label: 'Chờ duyệt' },
+    { value: 'REJECTED', label: 'Từ chối' },
+  ];
+
+  const statusBadgeMap: Record<string, { label: string; cls: string }> = {
+    PENDING_REVIEW: { label: 'Chờ duyệt', cls: 'bg-amber-300 text-black' },
+    APPROVED: { label: 'Đã duyệt', cls: 'bg-emerald-300 text-black' },
+    REJECTED: { label: 'Từ chối', cls: 'bg-red-300 text-black' },
+  };
+
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="w-[calc(100%-12px)] sm:w-full max-w-7xl mx-auto space-y-6">
       {/* Sticky Header Style from KYC Page */}
-      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 flex justify-between items-center">
+      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-3 sm:p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Kiếm duyệt nội dung</p>
-          <h1 className="text-3xl font-black text-black uppercase tracking-tight leading-none">Hàng đợi Video</h1>
+          <h1 className="text-xl sm:text-3xl font-black text-black uppercase tracking-tight leading-none">Hàng đợi Video</h1>
         </div>
         <Button onClick={() => refetch()} variant="outline" size="sm">
           Làm mới ↻
         </Button>
       </div>
 
+      <AdminStatusTabs
+        items={statusTabs}
+        value={filterStatus}
+        onChange={(next) => {
+          setFilterStatus(next);
+          setPage(1);
+        }}
+      />
+
       {/* Filter Bar */}
-      <div className="bg-yellow-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex flex-col md:flex-row gap-4 items-end">
+      <div className="bg-yellow-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-3 sm:p-4 flex flex-col md:flex-row gap-3 sm:gap-4 items-end min-w-0">
         <div className="w-full md:w-64">
           <label className="block text-[10px] font-black text-black uppercase mb-1">Giảng viên</label>
           <select 
@@ -125,41 +151,60 @@ export default function VideoModerationQueue() {
       ) : videos.length === 0 ? (
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-16 text-center">
           <p className="text-xl font-black uppercase tracking-widest text-black/40 leading-none">
-            Không có video nào đang chờ duyệt.
+            Không có video nào phù hợp bộ lọc hiện tại.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 gap-4 sm:gap-8">
           {videos.map((vid) => (
             <div key={vid.id} className="relative z-0">
               {/* Item Card */}
-              <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8 flex flex-col md:flex-row gap-8 relative z-10">
+              <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-3.5 sm:p-8 flex flex-col md:flex-row gap-3 sm:gap-8 relative z-10">
                 <div className="flex-1">
-                  <div className="flex justify-between items-start gap-4 mb-2">
-                    <h3 className="text-2xl font-black text-black uppercase leading-tight">
+                  <div className="flex justify-between items-start gap-3 mb-1.5 sm:mb-2 min-w-0 overflow-hidden">
+                    <h3
+                      className="flex-1 min-w-0 w-0 overflow-hidden text-ellipsis whitespace-nowrap text-base sm:text-lg font-black text-black uppercase leading-tight"
+                      title={vid.title || 'Video chưa đặt tên'}
+                    >
                       {vid.title || 'Video chưa đặt tên'}
                     </h3>
-                    <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 bg-amber-300 text-black border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] whitespace-nowrap">
-                      Chờ duyệt
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 sm:px-3 py-1 sm:py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] whitespace-nowrap ${statusBadgeMap[vid.status]?.cls || 'bg-zinc-200 text-black'}`}>
+                        {statusBadgeMap[vid.status]?.label || vid.status}
+                      </span>
+                      {vid.status === 'REJECTED' && vid.rejectReason && (
+                        <button
+                          type="button"
+                          onClick={() => setReasonViewerVideoId(vid.id)}
+                          className="w-6 h-6 rounded-full bg-red-400 border-2 border-black text-black text-[10px] font-black leading-none flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500"
+                          title="Xem lý do từ chối"
+                          aria-label="Xem lý do từ chối"
+                        >
+                          !
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs font-black text-black/70 mb-6 uppercase tracking-widest">
+                  <p
+                    className="text-[11px] sm:text-xs font-black text-black/70 mb-3 sm:mb-6 uppercase tracking-wide sm:tracking-widest truncate"
+                    title={`Mã Video: V-${vid.id} • Tải lên: ${new Date(vid.uploadedAt).toLocaleString('vi-VN')}`}
+                  >
                     Mã Video: V-{vid.id} • Tải lên: {new Date(vid.uploadedAt).toLocaleString('vi-VN')}
                   </p>
                   
                   {/* Summary Grid */}
-                  <div className="grid grid-cols-3 gap-6 text-sm mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-yellow-50 p-6">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-6 text-[10px] sm:text-sm mb-3 sm:mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-yellow-50 p-2.5 sm:p-6">
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/80 block mb-1">Thời lượng</span>
-                      <strong className="text-base font-black text-black underline decoration-2">{formatDuration(vid.durationSecs)}</strong>
+                      <span className="text-[8px] font-black uppercase tracking-wide sm:tracking-[0.2em] text-black/80 block mb-0.5 sm:mb-1">Thời lượng</span>
+                      <strong className="text-sm sm:text-base font-black text-black underline decoration-2">{formatDuration(vid.durationSecs)}</strong>
                     </div>
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/80 block mb-1">Chất lượng</span>
-                      <strong className="text-base font-black text-black uppercase italic">{vid.definition || '—'}</strong>
+                      <span className="text-[8px] font-black uppercase tracking-wide sm:tracking-[0.2em] text-black/80 block mb-0.5 sm:mb-1">Chất lượng</span>
+                      <strong className="text-sm sm:text-base font-black text-black uppercase italic">{vid.definition || 'ĐANG CẬP NHẬT'}</strong>
                     </div>
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/80 block mb-1">Dung lượng</span>
-                      <strong className="text-base font-black text-black">{vid.fileSizeKb ? `${(vid.fileSizeKb / 1024).toFixed(1)} MB` : 'N/A'}</strong>
+                      <span className="text-[8px] font-black uppercase tracking-wide sm:tracking-[0.2em] text-black/80 block mb-0.5 sm:mb-1">Dung lượng</span>
+                      <strong className="text-sm sm:text-base font-black text-black">{vid.fileSizeKb ? `${(vid.fileSizeKb / 1024).toFixed(1)} MB` : 'ĐANG CẬP NHẬT'}</strong>
                     </div>
                   </div>
 
@@ -167,40 +212,44 @@ export default function VideoModerationQueue() {
                     onClick={() => setExpandedId(expandedId === vid.id ? null : vid.id)} 
                     variant={expandedId === vid.id ? 'primary' : 'outline'}
                     size="sm"
-                    className="text-[10px]"
+                    className="text-[9px] sm:text-[10px] py-1.5 sm:py-2"
                   >
                     {expandedId === vid.id ? 'Đóng trình xem ∧' : 'Xem video chi tiết ∨'}
                   </Button>
                 </div>
 
                 {/* Vertical Actions Column */}
-                <div className="flex flex-col justify-center gap-4 w-full md:w-48 border-t-4 border-black md:border-t-0 md:border-l-4 md:pl-8 pt-6 md:pt-0">
-                  <Button 
-                    onClick={() => handleApprove(vid.id)}
-                    disabled={reviewing}
-                    className="bg-emerald-400 py-4 hover:bg-emerald-500"
-                  >
-                    Phê Duyệt
-                  </Button>
-                  <Button 
-                    onClick={() => setActiveVideoId(vid.id)}
-                    disabled={reviewing}
-                    variant="danger"
-                    className="py-4 bg-red-400 text-black hover:bg-red-500"
-                  >
-                    Từ chối
-                  </Button>
-                </div>
+                {vid.status === 'PENDING_REVIEW' && (
+                  <div className="flex flex-col justify-center gap-2 sm:gap-4 w-full md:w-48 border-t-2 sm:border-t-4 border-black md:border-t-0 md:border-l-4 md:pl-8 pt-3 sm:pt-6 md:pt-0">
+                    <Button
+                      onClick={() => handleApprove(vid.id)}
+                      disabled={reviewing}
+                      className="bg-emerald-400 py-2.5 sm:py-4 text-xs sm:text-sm hover:bg-emerald-500"
+                    >
+                      Phê Duyệt
+                    </Button>
+                    <Button
+                      onClick={() => setActiveVideoId(vid.id)}
+                      disabled={reviewing}
+                      variant="danger"
+                      className="py-2.5 sm:py-4 text-xs sm:text-sm bg-red-400 text-black hover:bg-red-500"
+                    >
+                      Từ chối
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Expanded Video Preview */}
               {expandedId === vid.id && (
-                <div className="bg-white border-x-2 border-b-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8 pt-12 mt-[-10px] space-y-8 relative z-0 animate-in slide-in-from-top-4 fade-in duration-300">
-                  <div className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] aspect-video bg-black overflow-hidden relative">
+                <div className="bg-white border-x-2 border-b-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-8 sm:pt-10 mt-2 space-y-4 sm:space-y-8 relative z-20 pointer-events-auto animate-in slide-in-from-top-4 fade-in duration-300">
+                  <div className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] aspect-video bg-black overflow-hidden relative z-30 pointer-events-auto">
                     <iframe
                       src={`https://www.youtube.com/embed/${vid.youtubeVideoId}`}
                       title={vid.title || 'Video Preview'}
-                      className="absolute inset-0 w-full h-full"
+                      className="absolute inset-0 w-full h-full z-40 pointer-events-auto"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
                       allowFullScreen
                     />
                   </div>
@@ -224,6 +273,32 @@ export default function VideoModerationQueue() {
                       <p className="text-xs font-black text-black italic leading-relaxed bg-yellow-50 p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                         &quot;Nội dung video này sau khi phê duyệt sẽ được ánh xạ trực tiếp vào khóa học của Giảng viên. 
                         Vui lòng kiểm tra tính sư phạm và chất lượng âm thanh kỹ thuật.&quot;
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {reasonViewerVideoId === vid.id && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-6">
+                  <div className="bg-white border-4 border-black p-6 sm:p-8 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] w-full max-w-lg">
+                    <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-3">
+                      <h3 className="text-xl font-black uppercase tracking-tight">Lý do từ chối</h3>
+                      <button
+                        type="button"
+                        onClick={() => setReasonViewerVideoId(null)}
+                        className="text-xl font-black"
+                        aria-label="Đóng"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-black/60 mb-2">
+                      Video: {vid.title || `V-${vid.id}`}
+                    </p>
+                    <div className="bg-red-50 border-2 border-black p-4">
+                      <p className="text-sm font-black text-black leading-relaxed">
+                        {vid.rejectReason || 'Không có lý do cụ thể.'}
                       </p>
                     </div>
                   </div>

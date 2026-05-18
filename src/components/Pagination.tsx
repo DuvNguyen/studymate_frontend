@@ -32,7 +32,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           key={i}
           onClick={() => onPageChange(i)}
-          className={`w-12 h-12 border-4 font-black transition-all ${
+          className={`w-9 h-9 sm:w-12 sm:h-12 border-2 sm:border-4 font-black text-xs sm:text-sm transition-all ${
             currentPage === i
               ? 'bg-yellow-400 border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
               : 'bg-white border-black text-black hover:bg-yellow-400 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none translate-y-0 active:translate-y-1'
@@ -46,33 +46,33 @@ export const Pagination: React.FC<PaginationProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-12 mb-8">
+    <div className="flex items-center justify-center gap-2 sm:gap-4 mt-8 sm:mt-12 mb-6 sm:mb-8">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className={`w-12 h-12 flex items-center justify-center border-4 border-black transition-all ${
+        className={`w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center border-2 sm:border-4 border-black transition-all ${
           currentPage === 1
             ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-black/20'
             : 'bg-white text-black hover:bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1'
         }`}
       >
-        <ChevronLeft size={24} strokeWidth={4} />
+        <ChevronLeft size={18} strokeWidth={3} className="sm:w-6 sm:h-6" />
       </button>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {renderPageNumbers()}
       </div>
 
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className={`w-12 h-12 flex items-center justify-center border-4 border-black transition-all ${
+        className={`w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center border-2 sm:border-4 border-black transition-all ${
           currentPage === totalPages
             ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-black/20'
             : 'bg-white text-black hover:bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1'
         }`}
       >
-        <ChevronRight size={24} strokeWidth={4} />
+        <ChevronRight size={18} strokeWidth={3} className="sm:w-6 sm:h-6" />
       </button>
     </div>
   );
