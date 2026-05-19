@@ -8,6 +8,15 @@ export interface PaginationMeta {
   totalPages: number;
 }
 
+export type AdminCourseStatus =
+  | 'ALL'
+  | 'DRAFT'
+  | 'PENDING_REVIEW'
+  | 'PUBLISHED'
+  | 'REJECTED'
+  | 'SUSPENDED'
+  | 'ARCHIVED';
+
 export function useAdminCourses() {
   const { getToken } = useAuth();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,7 +26,13 @@ export function useAdminCourses() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchCourses = useCallback(async ({ page = 1, limit = 10, status = '', search = '', categoryId = '' }) => {
+  const fetchCourses = useCallback(async ({ page = 1, limit = 10, status = '', search = '', categoryId = '' }: {
+    page?: number;
+    limit?: number;
+    status?: AdminCourseStatus | '';
+    search?: string;
+    categoryId?: string;
+  }) => {
     setLoading(true);
     setError('');
     try {

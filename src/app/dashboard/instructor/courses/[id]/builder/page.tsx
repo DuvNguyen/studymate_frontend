@@ -9,7 +9,6 @@ import VideoPickerModal from '@/components/instructor/VideoPickerModal';
 import QuestionBankManager from '@/components/instructor/QuestionBankManager';
 import QuizSettingsModal from '@/components/instructor/QuizSettingsModal';
 import { BookOpen, FileQuestion, Settings2, Plus } from 'lucide-react';
-import { Button } from '@/components/Button';
 
 export default function CourseBuilderPage() {
   const { id } = useParams();
@@ -406,9 +405,11 @@ export default function CourseBuilderPage() {
                 </div>
               )}
 
-              {course?.status === 'REJECTED' && course?.rejectionReason && (
+              {(course?.status === 'REJECTED' || course?.status === 'SUSPENDED') && course?.rejectionReason && (
                 <div className="bg-red-50 border-2 border-dashed border-red-500 p-4 mt-2 max-w-2xl">
-                  <h4 className="text-red-900 font-black uppercase text-xs mb-1">Lý do từ chối:</h4>
+                  <h4 className="text-red-900 font-black uppercase text-xs mb-1">
+                    {course?.status === 'SUSPENDED' ? 'Lý do đình chỉ:' : 'Lý do từ chối:'}
+                  </h4>
                   <p className="text-red-900 text-sm font-black">{course?.rejectionReason}</p>
                 </div>
               )}
@@ -688,58 +689,60 @@ export default function CourseBuilderPage() {
           ) : (
             <button 
               onClick={() => setIsAddingSection(true)}
-              className="w-full bg-yellow-400 border-4 border-black p-5 text-center font-black uppercase tracking-widest text-black hover:bg-yellow-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all text-sm"
+              className="w-full bg-yellow-300 border-2 border-black py-3 px-4 text-center font-black uppercase tracking-wider text-black hover:bg-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-px active:translate-x-px active:shadow-none transition-all text-xs sm:text-sm"
             >
               + THÊM CHƯƠNG MỚI
             </button>
           )}
 
           {/* Final Quiz Section */}
-          <div className="mt-12 border-t-8 border-black pt-12 space-y-6">
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-black border-b-8 border-black pb-4">
-               <Settings2 size={40} className="text-black" /> BÀI KIỂM TRA CUỐI KHÓA
+          <div className="mt-8 border-t-4 border-black pt-6 space-y-4">
+            <h2 className="text-2xl sm:text-3xl font-black uppercase italic tracking-tight flex items-center gap-2 text-black border-b-4 border-black pb-2">
+               <Settings2 size={24} className="text-black" /> BÀI KIỂM TRA CUỐI KHÓA
             </h2>
-            <p className="font-black text-lg bg-yellow-400 border-4 border-black p-6 max-w-3xl italic text-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-10">
+            <p className="font-black text-sm sm:text-base bg-yellow-200 border-2 border-black p-4 max-w-3xl italic text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mb-4">
                LƯU Ý: ĐÂY LÀ ĐIỀU KIỆN BẮT BUỘC ĐỂ HỌC VIÊN HOÀN THÀNH KHÓA HỌC. HỌC VIÊN ĐƯỢC LÀM TỐI ĐA 2 LẦN.
             </p>
 
             {course?.finalQuiz ? (
-              <div className="bg-emerald-400 border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center group">
-                 <div className="flex items-center gap-6">
-                    <div className="bg-white p-4 border-4 border-black">
-                       <FileQuestion size={40} />
+              <div className="bg-emerald-300 border-2 border-black p-4 sm:p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                 <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    <div className="bg-white p-2 border-2 border-black shrink-0">
+                       <FileQuestion size={24} className="text-black" />
                     </div>
-                    <div>
-                       <h3 className="text-2xl font-black uppercase">{course.finalQuiz.title}</h3>
-                       <div className="flex gap-4 mt-2">
-                           <span className="text-xs font-black uppercase bg-black text-white px-3 py-1 italic shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">Thời gian: {course.finalQuiz.timeLimit}p</span>
-                           <span className="text-xs font-black uppercase bg-black text-white px-3 py-1 italic shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">Số câu hỏi: {course.finalQuiz.numQuestions}</span>
-                           <span className="text-xs font-black uppercase bg-black text-white px-3 py-1 italic shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">Điểm đạt: {course.finalQuiz.passingScore}%</span>
+                    <div className="min-w-0">
+                       <h3 className="text-lg sm:text-xl font-black uppercase text-black truncate">{course.finalQuiz.title}</h3>
+                       <div className="flex flex-wrap gap-2 mt-1.5">
+                           <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-1 shadow-[1px_1px_0px_0px_rgba(255,255,255,0.25)]">Thời gian: {course.finalQuiz.timeLimit}p</span>
+                           <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-1 shadow-[1px_1px_0px_0px_rgba(255,255,255,0.25)]">Số câu: {course.finalQuiz.numQuestions}</span>
+                           <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-1 shadow-[1px_1px_0px_0px_rgba(255,255,255,0.25)]">Điểm đạt: {course.finalQuiz.passingScore}%</span>
                        </div>
                     </div>
                  </div>
-                 <Button 
+                 <button 
                    onClick={() => {
                      setQuizToEdit(course.finalQuiz);
                      setSectionIdForQuiz(null);
                      setIsQuizSettingsOpen(true);
                    }}
-                   className="bg-white text-black hover:bg-yellow-400 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-16 px-8 text-lg font-black"
+                   className="self-start sm:self-auto bg-white text-black hover:bg-yellow-300 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] h-10 px-4 text-xs font-black uppercase tracking-wider"
                  >
                     CÀI ĐẶT
-                 </Button>
+                 </button>
               </div>
             ) : (
-              <div className="bg-white border-8 border-black border-dashed p-16 text-center group cursor-pointer hover:bg-emerald-400 transition-all shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] active:translate-x-2 active:translate-y-2 active:shadow-none"
+              <div className="bg-white border-2 border-black border-dashed p-8 sm:p-10 text-center group cursor-pointer hover:bg-emerald-200 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-px active:translate-y-px active:shadow-none"
                    onClick={() => {
                      setQuizToEdit(null);
                      setSectionIdForQuiz(null);
                      setIsQuizSettingsOpen(true);
                    }}
               >
-                 <Plus className="mx-auto mb-8 group-hover:rotate-90 transition-transform text-black" size={80} />
-                 <h3 className="text-3xl font-black uppercase text-black italic tracking-tighter">CHƯA CÓ BÀI KIỂM TRA CUỐI KHÓA</h3>
-                 <p className="text-xl font-black italic text-black mt-4 border-t-2 border-black pt-4 inline-block uppercase">Nhấp vào đây để thêm bài kiểm tra rèn luyện kiến thức tổng hợp</p>
+                 <Plus className="mx-auto mb-3 group-hover:rotate-90 transition-transform text-black" size={34} />
+                 <h3 className="text-xl sm:text-2xl font-black uppercase text-black italic tracking-tight">CHƯA CÓ BÀI KIỂM TRA CUỐI KHÓA</h3>
+                 <p className="text-sm font-black italic text-black mt-3 border-t-2 border-black pt-3 inline-block uppercase">
+                   Nhấp để thêm bài kiểm tra tổng hợp
+                 </p>
               </div>
             )}
           </div>

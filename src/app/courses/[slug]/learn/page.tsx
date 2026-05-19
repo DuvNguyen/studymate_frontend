@@ -178,21 +178,28 @@ export default function LearnPage() {
     );
   }
 
-  if (course?.status === 'ARCHIVED') {
+  if (course?.status === 'ARCHIVED' || course?.status === 'SUSPENDED') {
+    const isSuspended = course?.status === 'SUSPENDED';
     return (
       <MainLayout>
         <div className="p-16 text-center border-8 border-black m-12 bg-white shadow-[20px_20px_0px_0px_rgba(0,0,0,1)]">
-          <div className="w-24 h-24 bg-amber-400 border-4 border-black mx-auto mb-8 flex items-center justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -rotate-3">
+          <div className={`w-24 h-24 ${isSuspended ? 'bg-red-400' : 'bg-amber-400'} border-4 border-black mx-auto mb-8 flex items-center justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -rotate-3`}>
             <FolderArchive className="w-12 h-12 text-black" />
           </div>
-          <h1 className="text-5xl font-black mb-6 text-black tracking-tighter uppercase italic">Khóa học đang được lưu trữ</h1>
+          <h1 className="text-5xl font-black mb-6 text-black tracking-tighter uppercase italic">
+            {isSuspended ? 'Khóa học đang bị đình chỉ' : 'Khóa học đang được lưu trữ'}
+          </h1>
           <p className="text-xl font-black mb-12 text-black uppercase border-y-4 border-black py-4 inline-block">
-             GIẢNG VIÊN ĐÃ TẠM THỜI LƯU TRỮ KHÓA HỌC NÀY. BẠN HIỆN KHÔNG THỂ VÀO HỌC NỘI DUNG.
+            {isSuspended
+              ? 'KHÓA HỌC ĐÃ BỊ QUẢN TRỊ VIÊN ĐÌNH CHỈ. BẠN HIỆN KHÔNG THỂ VÀO HỌC NỘI DUNG.'
+              : 'GIẢNG VIÊN ĐÃ TẠM THỜI LƯU TRỮ KHÓA HỌC NÀY. BẠN HIỆN KHÔNG THỂ VÀO HỌC NỘI DUNG.'}
           </p>
           <div className="flex justify-center gap-4">
             <Button size="lg" onClick={() => router.push('/dashboard/student/courses')}>QUAY LẠI KHÓA HỌC CỦA TÔI</Button>
           </div>
-          <p className="mt-8 text-xs font-black opacity-30 uppercase tracking-[0.3em]">Status: COURSE_STATUS_ARCHIVED</p>
+          <p className="mt-8 text-xs font-black opacity-30 uppercase tracking-[0.3em]">
+            Status: {isSuspended ? 'COURSE_STATUS_SUSPENDED' : 'COURSE_STATUS_ARCHIVED'}
+          </p>
         </div>
       </MainLayout>
     );

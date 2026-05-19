@@ -12,7 +12,7 @@ export default function CourseManagementQueue() {
   const { categories, loading: categoriesLoading } = useCategories();
   
   // Tabs & Search states
-  const [activeTab, setActiveTab] = useState<'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ALL'>('PENDING_REVIEW');
+  const [activeTab, setActiveTab] = useState<'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'SUSPENDED' | 'ALL'>('PENDING_REVIEW');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<number | ''>('');
   const [page, setPage] = useState(1);
@@ -90,12 +90,13 @@ export default function CourseManagementQueue() {
         {[
           { id: 'PENDING_REVIEW', label: 'CHỜ DUYỆT' },
           { id: 'PUBLISHED', label: 'ĐANG HOẠT ĐỘNG' },
-          { id: 'REJECTED', label: 'TỪ CHỐI / ĐÌNH CHỈ' },
+          { id: 'REJECTED', label: 'TỪ CHỐI' },
+          { id: 'SUSPENDED', label: 'ĐÌNH CHỈ' },
           { id: 'ALL', label: 'TẤT CẢ' }
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ALL')}
+            onClick={() => setActiveTab(tab.id as 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'SUSPENDED' | 'ALL')}
             className={`px-3 sm:px-6 py-2.5 sm:py-3 font-black uppercase text-[11px] sm:text-sm border-2 border-black whitespace-nowrap transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:translate-x-px hover:shadow-none ${
               activeTab === tab.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
             }`}
@@ -170,6 +171,7 @@ export default function CourseManagementQueue() {
                       course.status === 'PENDING_REVIEW' ? 'bg-amber-300' :
                       course.status === 'PUBLISHED' ? 'bg-emerald-300' :
                       course.status === 'REJECTED' ? 'bg-red-300' :
+                      course.status === 'SUSPENDED' ? 'bg-red-500 text-white' :
                       course.status === 'ARCHIVED' ? 'bg-gray-300' : 'bg-gray-100'
                     }`}>
                       {course.status}
@@ -181,7 +183,9 @@ export default function CourseManagementQueue() {
                   
                   {course.rejectionReason && (
                     <div className="mb-6 bg-red-50 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-4">
-                      <span className="text-[10px] font-black uppercase text-red-600 mb-1 block">Lý do từ chối/đình chỉ:</span>
+                      <span className="text-[10px] font-black uppercase text-red-600 mb-1 block">
+                        {course.status === 'SUSPENDED' ? 'Lý do đình chỉ:' : 'Lý do từ chối:'}
+                      </span>
                       <p className="text-sm font-black text-black">{course.rejectionReason}</p>
                     </div>
                   )}
@@ -239,6 +243,11 @@ export default function CourseManagementQueue() {
                     <Button onClick={() => handleApprove(course.id)} className="bg-amber-400 py-4 hover:bg-amber-500 text-black">
                       Duyệt Lại
                     </Button>
+                  )}
+                  {course.status === 'SUSPENDED' && (
+                    <div className="px-3 py-3 text-center text-[10px] font-black uppercase tracking-wider border-2 border-black bg-red-100 text-black">
+                      Đã đình chỉ
+                    </div>
                   )}
                 </div>
               </div>

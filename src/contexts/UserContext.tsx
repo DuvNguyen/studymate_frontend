@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { useSession, useClerk } from '@clerk/nextjs';
+import { useSession } from '@clerk/nextjs';
 
 export interface CurrentUser {
   id: number;
@@ -33,7 +33,6 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { session, isLoaded } = useSession();
-  const { signOut } = useClerk();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +58,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.message || 'Lỗi không xác định');
+        const message = json.message || 'Lỗi không xác định';
+        const normalized = String(message).toLowerCase();
+        const isRestricted =
+          res.status === 401 &&
+          (normalized.includes('khóa vĩnh viễn') ||
+            normalized.includes('đình chỉ') ||
+            normalized.includes('bị khóa'));
+
+        if (isRestricted) {
+          setUser(null);
+          setError(message);
+          if (window.location.pathname !== '/access-restricted') {
+            window.location.href = '/access-restricted';
+          }
+          return;
+        }
+
+        throw new Error(message);
       }
 
       const json = await res.json();
@@ -68,14 +84,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       const errorObj = err instanceof Error ? err : new Error(String(err));
       setError(errorObj.message);
-      const errorMsg = errorObj.message.toLocaleLowerCase();
-      if (errorMsg.includes('khóa vĩnh viễn') || errorMsg.includes('đình chỉ')) {
-        signOut();
-      }
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, session, signOut]);
+  }, [isLoaded, session]);
 
   useEffect(() => {
     fetchUser();

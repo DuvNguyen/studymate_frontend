@@ -86,7 +86,7 @@ export default function StudentCoursesPage() {
                       />
                     </div>
                     
-                    {enrollment.course.status === 'REJECTED' || enrollment.course.status === 'ARCHIVED' ? (
+                    {enrollment.course.status === 'REJECTED' || enrollment.course.status === 'SUSPENDED' || enrollment.course.status === 'ARCHIVED' ? (
                       <div className="w-full bg-amber-100 text-black border-2 border-black font-black uppercase tracking-widest py-3 text-center">
                         Khóa học tạm ngưng
                       </div>

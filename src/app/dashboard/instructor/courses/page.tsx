@@ -273,7 +273,9 @@ export default function InstructorCoursesPage() {
                          <div className="border-2 border-black px-3 py-1 bg-zinc-100 text-[10px] font-black uppercase tracking-widest text-black flex items-center gap-1">
                             {course.status === 'PUBLISHED' ? 'ĐANG BÁN' : 
                              course.status === 'DRAFT' ? 'BẢN NHÁP' : 
-                             course.status === 'PENDING_REVIEW' ? 'ĐANG CHỜ DUYỆT' : 'ĐÃ LƯU TRỮ'}
+                             course.status === 'PENDING_REVIEW' ? 'ĐANG CHỜ DUYỆT' :
+                             course.status === 'REJECTED' ? 'BỊ TỪ CHỐI' :
+                             course.status === 'SUSPENDED' ? 'BỊ ĐÌNH CHỈ' : 'ĐÃ LƯU TRỮ'}
                          </div>
                          <div className="border-2 border-black px-3 py-1 bg-white text-[10px] font-black uppercase tracking-widest text-black">
                             DANH MỤC: {course.category?.name || 'CHƯA PHÂN LOẠI'}
