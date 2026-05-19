@@ -63,6 +63,8 @@ export interface CourseFilters {
 }
 
 export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
+  const REQUEST_TIMEOUT_MS = 10000;
+  const RETRY_DELAY_MS = 1200;
   const [courses, setCourses] = useState<Course[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -86,14 +88,36 @@ export function useCourses(filters: CourseFilters = {}): UseCoursesReturn {
     if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
 
     const fetchWithRetry = async (retries = 1): Promise<Response> => {
-      try {
-        return await fetch(`${API_V1}/courses?${params.toString()}`, { signal: controller.signal });
-      } catch (err) {
-        if (retries > 0) {
-          return fetchWithRetry(retries - 1);
+      let lastError: unknown = null;
+
+      for (let attempt = 0; attempt <= retries; attempt += 1) {
+        if (controller.signal.aborted) {
+          throw new DOMException('Request aborted', 'AbortError');
         }
-        throw err;
+
+        const timeoutController = new AbortController();
+        const timeoutId = setTimeout(() => timeoutController.abort(), REQUEST_TIMEOUT_MS);
+        const abortBridge = () => timeoutController.abort();
+        controller.signal.addEventListener('abort', abortBridge);
+
+        try {
+          return await fetch(`${API_V1}/courses?${params.toString()}`, {
+            signal: timeoutController.signal,
+          });
+        } catch (err) {
+          if (controller.signal.aborted) throw err;
+          lastError = err;
+
+          if (attempt < retries) {
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+          }
+        } finally {
+          clearTimeout(timeoutId);
+          controller.signal.removeEventListener('abort', abortBridge);
+        }
       }
+
+      throw lastError ?? new Error('Failed to fetch courses');
     };
 
     fetchWithRetry(1)

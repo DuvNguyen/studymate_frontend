@@ -32,6 +32,8 @@ interface UseCategoriesReturn {
 let cachedCategories: Category[] | null = null;
 
 export function useCategories(): UseCategoriesReturn {
+  const REQUEST_TIMEOUT_MS = 10000;
+  const RETRY_DELAY_MS = 1200;
   const [categories, setCategories] = useState<Category[]>(cachedCategories ?? []);
   const [loading, setLoading] = useState<boolean>(!cachedCategories);
   const [error, setError] = useState<string | null>(null);
@@ -45,14 +47,34 @@ export function useCategories(): UseCategoriesReturn {
     }, 0);
 
     const fetchWithRetry = async (retries = 1): Promise<Response> => {
-      try {
-        return await fetch(`${API_V1}/categories`, { signal: controller.signal });
-      } catch (err) {
-        if (retries > 0) {
-          return fetchWithRetry(retries - 1);
+      let lastError: unknown = null;
+
+      for (let attempt = 0; attempt <= retries; attempt += 1) {
+        if (controller.signal.aborted) {
+          throw new DOMException('Request aborted', 'AbortError');
         }
-        throw err;
+
+        const timeoutController = new AbortController();
+        const timeoutId = setTimeout(() => timeoutController.abort(), REQUEST_TIMEOUT_MS);
+        const abortBridge = () => timeoutController.abort();
+        controller.signal.addEventListener('abort', abortBridge);
+
+        try {
+          return await fetch(`${API_V1}/categories`, { signal: timeoutController.signal });
+        } catch (err) {
+          if (controller.signal.aborted) throw err;
+          lastError = err;
+
+          if (attempt < retries) {
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+          }
+        } finally {
+          clearTimeout(timeoutId);
+          controller.signal.removeEventListener('abort', abortBridge);
+        }
       }
+
+      throw lastError ?? new Error('Failed to fetch categories');
     };
 
     fetchWithRetry(1)
