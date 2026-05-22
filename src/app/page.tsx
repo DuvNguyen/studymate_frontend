@@ -9,28 +9,29 @@ export default async function HomePage() {
     <PublicLayout>
       <div className="bg-gray-50 text-black font-sans selection:bg-emerald-300 selection:text-black">
         {/* Hero Section */}
-        <section className="-mt-36 relative pt-36 pb-20 lg:pt-44 lg:pb-24 overflow-hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 border-b-4 border-black bg-white shadow-[0px_8px_0px_0px_rgba(0,0,0,1)] mb-16">
+        <section className="-mt-36 relative pt-28 sm:pt-32 lg:pt-44 pb-14 sm:pb-20 lg:pb-24 overflow-hidden mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 border-b-4 border-black bg-white shadow-[0px_8px_0px_0px_rgba(0,0,0,1)] mb-10 sm:mb-16">
           
           <div className="text-center max-w-4xl mx-auto">
-            <p className="text-sm font-black uppercase tracking-widest text-emerald-700 mb-6 bg-emerald-100 border-2 border-emerald-900 inline-block px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -rotate-2">
+            <p className="text-[11px] sm:text-sm font-black uppercase tracking-wide sm:tracking-widest text-emerald-700 mb-4 sm:mb-6 bg-emerald-100 border-2 border-emerald-900 inline-block px-3 sm:px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -rotate-2">
               Nền tảng học tập thế hệ mới
             </p>
-            <h1 className="text-5xl lg:text-7xl font-black tracking-tighter text-black mb-8 uppercase leading-[1.15]">
-              Học tập không giới hạn cùng <br />
-              <span className="bg-amber-300 px-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] inline-block mt-2">StudyMate</span>
+            <h1 className="text-[2.35rem] sm:text-5xl lg:text-7xl font-black text-black mb-5 sm:mb-8 uppercase leading-[1.08] sm:leading-[1.15]">
+              <span className="block">Học tập không</span>
+              <span className="block">giới hạn cùng</span>
+              <span className="bg-amber-300 px-2 sm:px-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] inline-block mt-2">StudyMate</span>
             </h1>
-            <p className="text-lg lg:text-xl text-gray-800 font-bold mb-12 max-w-2xl mx-auto border-2 border-black p-4 bg-gray-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-800 font-bold mb-9 sm:mb-12 max-w-2xl mx-auto border-2 border-black p-4 bg-gray-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               Khám phá hàng ngàn khóa học chất lượng cao từ các chuyên gia hàng đầu. Nâng tầm kỹ năng và kiến thức của bạn ngay hôm nay.
             </p>
             
             <HeroActionButtons />
             
-            <div className="mt-16 flex flex-wrap items-center justify-center gap-6 text-sm font-black uppercase tracking-widest text-black">
-              <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <div className="mt-12 sm:mt-16 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm font-black uppercase tracking-wide sm:tracking-widest text-black">
+              <div className="flex items-center justify-center gap-3 bg-white border-2 border-black px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 <span className="w-6 h-6 border-2 border-black bg-emerald-400 flex items-center justify-center -rotate-6">✓</span>
                 Học mọi lúc mọi nơi
               </div>
-              <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center justify-center gap-3 bg-white border-2 border-black px-4 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 <span className="w-6 h-6 border-2 border-black bg-emerald-400 flex items-center justify-center rotate-6">✓</span>
                 Chứng chỉ hoàn thành
               </div>

@@ -366,22 +366,20 @@ export default function QuizPlayerPage() {
                     BẮT ĐẦU LÀM BÀI <ArrowRight className="ml-2" />
                  </Button>
 
-                 {pastAttempts.length > 0 && (
-                    <div className="flex items-center gap-0 w-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white group hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
-                       <button
-                         onClick={async () => {
-                           await fetchPastAttempts();
-                           setShowHistory(true);
-                         }}
-                         className="flex-1 h-14 sm:h-16 text-sm sm:text-lg font-black uppercase text-black hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 border-r-4 border-black"
-                       >
-                          <History size={20} /> XEM LỊCH SỬ
-                       </button>
-                       <div className="px-6 h-16 flex items-center justify-center bg-black text-white font-black italic">
-                          {pastAttempts.length} LẦN
-                       </div>
+                 <div className="flex items-center gap-0 w-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white group hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                    <button
+                      onClick={async () => {
+                        await fetchPastAttempts();
+                        setShowHistory(true);
+                      }}
+                      className="flex-1 h-14 sm:h-16 text-sm sm:text-lg font-black uppercase text-black hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 border-r-4 border-black"
+                    >
+                       <History size={20} /> XEM LỊCH SỬ LÀM BÀI
+                    </button>
+                    <div className="px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-center bg-black text-white font-black italic text-xs sm:text-base whitespace-nowrap">
+                       {pastAttempts.length} LẦN
                     </div>
-                 )}
+                 </div>
               </div>
               
               <button

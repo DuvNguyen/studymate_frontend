@@ -27,13 +27,13 @@ export function NavbarUserMenu() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <Link href="/sign-in" className="text-xs font-black uppercase tracking-widest text-black hover:bg-amber-300 px-3 py-2 border-2 border-transparent hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hidden sm:block">
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <Link href="/sign-in" className="inline-flex h-9 items-center justify-center px-2.5 sm:px-3 text-[10px] sm:text-xs font-black uppercase tracking-wide sm:tracking-widest text-black border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-amber-300 transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none whitespace-nowrap">
           Đăng nhập
         </Link>
         <Link 
           href="/sign-up?role=student" 
-          className="bg-emerald-400 text-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xs font-black uppercase tracking-widest py-2 px-5 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
+          className="inline-flex h-9 items-center justify-center bg-emerald-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-[10px] sm:text-xs font-black uppercase tracking-wide sm:tracking-widest px-2.5 sm:px-5 transition-all hover:bg-emerald-500 active:translate-y-0.5 active:translate-x-0.5 active:shadow-none whitespace-nowrap"
         >
           Đăng ký
         </Link>
