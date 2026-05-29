@@ -57,11 +57,11 @@ export function HeroActionButtons() {
           Dạy trên StudyMate
         </Link>
       ) : (
-        <StudentSignupButton 
+        <InstructorSignupButton 
           className="w-full sm:w-auto min-h-14 px-5 sm:px-8 py-3 sm:py-4 bg-white hover:bg-gray-100 text-black font-black uppercase tracking-wide sm:tracking-wider text-base sm:text-xl border-4 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] sm:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1.5 active:translate-x-1.5 active:shadow-none"
         >
           Dạy trên StudyMate
-        </StudentSignupButton>
+        </InstructorSignupButton>
       )}
     </div>
   );
