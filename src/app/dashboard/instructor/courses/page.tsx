@@ -10,10 +10,12 @@ import { BookPlus, Search, Layout, PlayCircle, FolderArchive, FolderOpen, Plus }
 import Image from 'next/image';
 import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/Button';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export default function InstructorCoursesPage() {
   const { getToken } = useAuth();
   const router = useRouter();
+  const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { categories, loading: categoriesLoading } = useCategories();
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,16 +155,13 @@ export default function InstructorCoursesPage() {
     }
   };
 
-  if (loading && courses.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin rounded-none" />
-      </div>
-    );
-  }
-
   return (
-    <MainLayout role="INSTRUCTOR" allowedRoles={['INSTRUCTOR']}>
+    <MainLayout role={currentUser?.role} kycStatus={currentUser?.kycStatus} allowedRoles={['INSTRUCTOR']}>
+      {(loading && courses.length === 0 || userLoading) ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin rounded-none" />
+        </div>
+      ) : (
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border-4 border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
           <div>
@@ -383,6 +382,7 @@ export default function InstructorCoursesPage() {
           )}
         </div>
       </div>
+      )}
 
       {/* Modal - Giữ nguyên logic cũ nhưng wrap đẹp */}
       {isModalOpen && (

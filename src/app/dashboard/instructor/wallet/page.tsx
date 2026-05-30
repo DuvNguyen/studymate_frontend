@@ -77,7 +77,7 @@ export default function InstructorWalletPage() {
   };
 
   return (
-    <MainLayout role="INSTRUCTOR" allowedRoles={['INSTRUCTOR']}>
+    <MainLayout role={currentUser?.role} kycStatus={currentUser?.kycStatus} allowedRoles={['INSTRUCTOR']}>
       {((userLoading && !currentUser) || (loading && !wallet)) ? (
         <LoadingScreen 
           title="ĐANG TẢI DỮ LIỆU TÀI CHÍNH..."

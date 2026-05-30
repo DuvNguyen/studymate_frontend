@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useUser } from '@clerk/nextjs';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { updateProfileSchema } from '@/lib/validation/profile';
 
 export default function ProfilePage() {
   const { profile, loading, error, updateProfile, updating } = useUserProfile();
   const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
+  const { user: appUser } = useCurrentUser();
 
   const [bio, setBio] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -44,7 +46,7 @@ export default function ProfilePage() {
 
   if (loading || !clerkLoaded) {
     return (
-      <MainLayout role="STUDENT">
+      <MainLayout role={appUser?.role ?? 'STUDENT'}>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin rounded-none" />
@@ -57,7 +59,7 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return (
-      <MainLayout role="STUDENT">
+      <MainLayout role={appUser?.role ?? 'STUDENT'}>
         <div className="bg-red-50 border-2 border-red-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-4 text-red-800 font-bold text-sm">
           {error || 'Không tải được hồ sơ'}
         </div>
@@ -66,7 +68,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <MainLayout role={profile.role}>
+    <MainLayout role={appUser?.role ?? profile.role}>
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Header card */}

@@ -100,6 +100,7 @@ const navByRole: Record<string, { href: string; label: string; icon: React.React
   ],
   USER: [
     { href: '/dashboard/instructor/kyc', label: 'Hồ sơ Giảng viên', icon: <IconProfile /> },
+    { href: '/dashboard/profile',        label: 'Hồ sơ cá nhân',   icon: <IconProfile /> },
   ],
 };
 
@@ -122,17 +123,23 @@ export default function MainLayout({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const pathname = usePathname();
 
+  const isUnauthorized = allowedRoles && !allowedRoles.includes(role);
+
+  // USER role (Pending Instructor): chỉ được vào /dashboard, /dashboard/profile và /dashboard/instructor/kyc
+  const isDashboardRoot = pathname === '/dashboard';
+  const isKycRoute = pathname.startsWith('/dashboard/instructor/kyc');
+  const isProfileRoute = pathname.startsWith('/dashboard/profile');
+  const isPendingUserRoleBlocked = role === 'USER' && !isDashboardRoot && !isKycRoute && !isProfileRoute;
+
+  // INSTRUCTOR chưa được duyệt KYC: chặn mọi trang trừ /kyc
   const isLockedInstructor = role === 'INSTRUCTOR' && kycStatus !== null && kycStatus !== 'APPROVED' && kycStatus !== 'PENDING_UPDATE';
-  const isPendingUserRole = role === 'USER';
-  const isKycRoute = pathname.includes('/kyc');
+  const isLockedInstructorBlocked = isLockedInstructor && !isKycRoute;
 
   const navItems = navByRole[role] ?? navByRole['STUDENT'];
-  const displayedNavItems = isLockedInstructor || isPendingUserRole
-    ? navItems.filter(item => item.href.includes('/kyc')) 
+  const displayedNavItems = (isLockedInstructor || role === 'USER')
+    ? navItems.filter(item => item.href.includes('/kyc') || item.href.includes('/profile'))
     : navItems;
   const roleCfg = ROLE_CONFIG[role] ?? ROLE_CONFIG['STUDENT'];
-
-  const isUnauthorized = allowedRoles && !allowedRoles.includes(role);
 
   return (
     <div className="flex flex-col h-screen bg-white overflow-hidden">
@@ -246,27 +253,66 @@ export default function MainLayout({
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-white flex flex-col">
           <div className="flex-1 p-3 sm:p-4 md:p-6 flex flex-col">
-            {(!isKycRoute && (isLockedInstructor || isPendingUserRole)) ? (
+            {/* Case 1: USER role (Pending Instructor) cố vào trang không được phép */}
+            {isPendingUserRoleBlocked ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg text-center space-y-6">
+                  <div className="w-16 h-16 mx-auto bg-amber-300 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3">
+                    <span className="text-3xl font-black text-black">!</span>
+                  </div>
+                  <h2 className="text-2xl font-black uppercase text-black">Không có quyền truy cập</h2>
+                  <p className="text-sm font-black text-black">
+                    Tài khoản của bạn đang chờ cấp phép giảng viên. Vui lòng hoàn thiện hồ sơ KYC trước khi sử dụng tính năng này.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link
+                      href="/dashboard"
+                      className="inline-block px-6 py-3 bg-black text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform"
+                    >
+                      Về Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/instructor/kyc"
+                      className="inline-block px-6 py-3 bg-indigo-500 text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform"
+                    >
+                      Đến trang KYC
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+            /* Case 2: INSTRUCTOR chưa được duyệt KYC vào trang không phải /kyc */
+            ) : isLockedInstructorBlocked ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg text-center space-y-6">
                    <div className="w-16 h-16 mx-auto bg-amber-300 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3">
                       <span className="text-3xl font-black text-black">!</span>
                    </div>
                    <h2 className="text-2xl font-black uppercase text-black">
-                     {kycStatus === 'PENDING' ? 'Hồ sơ đang được duyệt' : 
-                      kycStatus === 'REJECTED' ? 'Hồ sơ bị từ chối' : 
+                     {kycStatus === 'PENDING' ? 'Hồ sơ đang được duyệt' :
+                      kycStatus === 'REJECTED' ? 'Hồ sơ bị từ chối' :
                       'Hồ sơ chưa hoàn thiện'}
                    </h2>
                    <p className="text-sm font-black text-black">
-                     {kycStatus === 'PENDING' ? 'Hồ sơ của bạn đang được duyệt, vui lòng đợi. Hồ sơ sẽ được duyệt trong khoảng 2 đến 3 ngày làm việc.' : 
-                      kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Bạn vui lòng tạo lại một tài khoản mới nếu muốn tham gia giảng dạy sau này.' : 
+                     {kycStatus === 'PENDING' ? 'Hồ sơ của bạn đang được duyệt, vui lòng đợi. Hồ sơ sẽ được duyệt trong khoảng 2 đến 3 ngày làm việc.' :
+                      kycStatus === 'REJECTED' ? 'Hồ sơ của bạn không hợp lệ. Bạn vui lòng tạo lại một tài khoản mới nếu muốn tham gia giảng dạy sau này.' :
                       'Vui lòng hoàn thiện hồ sơ đăng ký KYC để được cấp phép kinh doanh khóa học!'}
                    </p>
-                   <Link href="/dashboard/instructor/kyc" className="inline-block px-6 py-3 bg-indigo-500 text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform">
-                     {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Kiểm tra trạng thái'}
-                   </Link>
+                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                     <Link
+                       href="/dashboard"
+                       className="inline-block px-6 py-3 bg-black text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform"
+                     >
+                       Về Dashboard
+                     </Link>
+                     <Link href="/dashboard/instructor/kyc" className="inline-block px-6 py-3 bg-indigo-500 text-white font-black uppercase tracking-wider border-2 border-black hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform">
+                       {kycStatus === 'UNSUBMITTED' ? 'Bắt đầu điền hồ sơ' : 'Kiểm tra trạng thái'}
+                     </Link>
+                   </div>
                 </div>
               </div>
+
+            /* Case 3: allowedRoles không khớp (403) */
             ) : (isUnauthorized && !loading) ? (
               <div className="flex-1 flex items-center justify-center">
                  <div className="bg-white border-8 border-black p-12 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] max-w-2xl text-center space-y-8 rotate-1">
