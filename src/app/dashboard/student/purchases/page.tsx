@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { Suspense, useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import MainLayout from '@/components/MainLayout';
 
@@ -10,8 +11,9 @@ import { HelpCircle } from 'lucide-react';
 import { FinancialDetailModal } from '@/components/FinancialDetailModal';
 import { Pagination } from '@/components/Pagination';
 
-export default function PurchasesPage() {
+function PurchasesPageContent() {
   const { getToken, isLoaded } = useAuth();
+  const searchParams = useSearchParams();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +26,7 @@ export default function PurchasesPage() {
   const [dateTo, setDateTo] = useState('');
   const [sortBy, setSortBy] = useState<'time' | 'price'>('time');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const targetRefundId = searchParams.get('refundId');
   
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -58,6 +61,12 @@ export default function PurchasesPage() {
   useEffect(() => {
     fetchPurchases();
   }, [fetchPurchases]);
+
+  useEffect(() => {
+    if (searchParams.get('tab') === 'refunds') {
+      setStatusFilter('REFUND_DONE');
+    }
+  }, [searchParams]);
 
   const filteredPurchases = useMemo(() => {
     const filtered = purchases.filter(p => {
@@ -105,6 +114,13 @@ export default function PurchasesPage() {
   useEffect(() => {
     setPage(1);
   }, [searchQuery, statusFilter, dateFrom, dateTo, sortBy, sortDirection]);
+
+  useEffect(() => {
+    if (!targetRefundId || loading) return;
+    const target = document.getElementById('refund-' + targetRefundId);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [loading, paginatedPurchases, targetRefundId]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const canRefund = (enrollment: any) => {
@@ -261,7 +277,7 @@ export default function PurchasesPage() {
                 </tr>
               ) : (
                 paginatedPurchases.map((purchase) => (
-                  <tr key={purchase.id} className="hover:bg-zinc-50 transition-colors group">
+                  <tr key={purchase.id} id={purchase.refund_request?.id ? `refund-${purchase.refund_request.id}` : undefined} className="hover:bg-zinc-50 transition-colors group scroll-mt-24">
                     <td className="p-4 border-r-4 border-black font-mono font-black text-xs text-black">
                       #{purchase.order_item?.order?.order_number?.split('-').slice(-1)[0] || purchase.id}
                       <p className="text-[10px] font-black text-black/70 italic tracking-tighter mt-1">
@@ -307,7 +323,7 @@ export default function PurchasesPage() {
             </div>
           ) : (
             paginatedPurchases.map((purchase) => (
-              <div key={purchase.id} className="bg-white border-4 border-black p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-3">
+              <div key={purchase.id} id={purchase.refund_request?.id ? `refund-${purchase.refund_request.id}` : undefined} className="bg-white border-4 border-black p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-3 scroll-mt-24">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-mono font-black text-xs text-black">
@@ -403,5 +419,13 @@ export default function PurchasesPage() {
       </div>
       )}
     </MainLayout>
+  );
+}
+
+export default function PurchasesPage() {
+  return (
+    <Suspense fallback={<LoadingScreen title="ĐANG TẢI LỊCH SỬ..." description="STUDYMATE ĐANG CHUẨN BỊ DỮ LIỆU THANH TOÁN." />}>
+      <PurchasesPageContent />
+    </Suspense>
   );
 }

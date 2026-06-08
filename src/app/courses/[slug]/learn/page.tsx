@@ -1,8 +1,8 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useEffect, useMemo, useCallback, useTransition } from 'react';
+import { Suspense, useState, useEffect, useMemo, useCallback, useTransition } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useCourseLearn } from '@/hooks/useCourseLearn';
@@ -34,12 +34,13 @@ import { toast } from 'react-hot-toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
-export default function LearnPage() {
+function LearnPageContent() {
   const { slug } = useParams() as { slug: string };
   const { course, loading: courseLoading, error: courseError } = useCourseLearn(slug);
   const { enrollments, loading: enrollLoading } = useEnrolledCourses();
   const { user } = useCurrentUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
 
@@ -69,6 +70,10 @@ export default function LearnPage() {
   const { discussions, addDiscussion, loading: discussionsLoading, markBestAnswer, deleteDiscussion, updateDiscussion, voteDiscussion } = useDiscussions(activeLesson?.id);
   const [qaSearch, setQaSearch] = useState('');
   const [newQuestion, setNewQuestion] = useState('');
+  const targetDiscussionId = useMemo(() => {
+    const value = searchParams.get('discussion');
+    return value ? Number(value) : null;
+  }, [searchParams]);
   const [isAsking, setIsAsking] = useState(false);
   
   const granularProgress = useMemo(() => {
@@ -94,10 +99,23 @@ export default function LearnPage() {
   // Set initial active lesson
   useEffect(() => {
     if (course && course.sections.length > 0 && !activeLesson) {
+      const lessonParam = searchParams.get('lesson');
+      const targetLesson = lessonParam
+        ? allLessons.find((lesson) => lesson.id === Number(lessonParam))
+        : null;
       const firstLesson = course.sections[0].lessons[0];
-      if (firstLesson) setTimeout(() => setActiveLesson(firstLesson), 0);
+      const nextLesson = targetLesson || firstLesson;
+      if (nextLesson) setTimeout(() => setActiveLesson(nextLesson), 0);
+      if (targetDiscussionId) setActiveTab('qa');
     }
-  }, [course, activeLesson]);
+  }, [course, activeLesson, allLessons, searchParams, targetDiscussionId]);
+
+  useEffect(() => {
+    if (!targetDiscussionId || discussionsLoading || activeTab !== 'qa') return;
+    const target = document.getElementById(`discussion-${targetDiscussionId}`);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeTab, discussions, discussionsLoading, targetDiscussionId]);
 
   // Handle section expansion
   useEffect(() => {
@@ -459,6 +477,7 @@ export default function LearnPage() {
                              toast.success('PHẢN HỒI THÀNH CÔNG!');
                           }}
                           currentUser={user}
+                          highlightDiscussionId={targetDiscussionId}
                         />
                         ))
                       )}
@@ -602,5 +621,13 @@ export default function LearnPage() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+export default function LearnPage() {
+  return (
+    <Suspense fallback={<LoadingScreen title="KHỞI TẠO NHIỆM VỤ..." description="ĐANG TẢI DỮ LIỆU BÀI HỌC." fullScreen={false} />}>
+      <LearnPageContent />
+    </Suspense>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { toast } from 'react-hot-toast';
 import VideoPickerModal from '@/components/instructor/VideoPickerModal';
@@ -10,10 +10,12 @@ import QuestionBankManager from '@/components/instructor/QuestionBankManager';
 import QuizSettingsModal from '@/components/instructor/QuizSettingsModal';
 import { BookOpen, FileQuestion, Settings2, Plus } from 'lucide-react';
 
-export default function CourseBuilderPage() {
+function CourseBuilderPageContent() {
   const { id } = useParams();
   const { getToken } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const shouldShowRejectedNotice = searchParams.get('notice') === 'rejected';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [course, setCourse] = useState<any>(null);
@@ -59,6 +61,13 @@ export default function CourseBuilderPage() {
     fetchCourseDetail();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    if (!shouldShowRejectedNotice || loading) return;
+    const target = document.getElementById('course-rejection-notice');
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [loading, shouldShowRejectedNotice]);
 
   const fetchCourseDetail = async () => {
     try {
@@ -406,7 +415,7 @@ export default function CourseBuilderPage() {
               )}
 
               {(course?.status === 'REJECTED' || course?.status === 'SUSPENDED') && course?.rejectionReason && (
-                <div className="bg-red-50 border-2 border-dashed border-red-500 p-4 mt-2 max-w-2xl">
+                <div id="course-rejection-notice" className={`${shouldShowRejectedNotice ? 'bg-red-100 border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' : 'bg-red-50 border-2 border-dashed border-red-500'} p-4 mt-2 max-w-2xl scroll-mt-24`}>
                   <h4 className="text-red-900 font-black uppercase text-xs mb-1">
                     {course?.status === 'SUSPENDED' ? 'Lý do đình chỉ:' : 'Lý do từ chối:'}
                   </h4>
@@ -778,5 +787,13 @@ export default function CourseBuilderPage() {
         />
       )}
     </MainLayout>
+  );
+}
+
+export default function CourseBuilderPage() {
+  return (
+    <Suspense fallback={<div className="p-8 font-black uppercase text-black">Đang tải trình dựng khóa học...</div>}>
+      <CourseBuilderPageContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -79,7 +80,7 @@ function timeAgo(dateString: string) {
 
 export function NotificationBell() {
   const { user } = useCurrentUser();
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, loading, markAllAsRead, openNotification } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -136,7 +137,7 @@ export function NotificationBell() {
             </span>
             {unreadCount > 0 && (
               <button
-                onClick={markAllAsRead}
+                onClick={() => markAllAsRead()}
                 className="text-[10px] font-black uppercase tracking-wide text-amber-300 hover:text-amber-200 transition-colors"
               >
                 Đọc tất cả
@@ -160,7 +161,7 @@ export function NotificationBell() {
               recent.map((notif) => (
                 <button
                   key={notif.id}
-                  onClick={() => !notif.isRead && markAsRead(notif.id)}
+                  onClick={() => openNotification(notif)}
                   className={`w-full text-left px-3 py-2.5 flex items-start gap-2.5 transition-colors ${
                     notif.isRead ? 'bg-white hover:bg-gray-50' : 'bg-amber-50 hover:bg-amber-100'
                   }`}
@@ -173,7 +174,7 @@ export function NotificationBell() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className={`font-black text-black leading-tight ${isMobile ? 'text-xs' : 'text-sm'} ${notif.isRead ? 'opacity-60' : ''}`}>
+                    <p className={`font-black text-black leading-tight ${isMobile ? 'text-xs' : 'text-sm'} ${notif.isRead ? 'text-gray-700' : 'text-black'}`}>
                        {notif.title}
                     </p>
                     <p className="text-[11px] font-bold text-black mt-0.5 leading-relaxed line-clamp-2">
@@ -194,13 +195,15 @@ export function NotificationBell() {
           </div>
 
           {/* Footer */}
-          {notifications.length > 8 && (
-            <div className="border-t-2 border-black p-3 text-center">
-              <span className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                Xem thêm {notifications.length - 8} thông báo cũ hơn...
-              </span>
-            </div>
-          )}
+          <div className="border-t-2 border-black p-3 text-center">
+            <Link
+              href="/notifications"
+              onClick={() => setIsOpen(false)}
+              className="inline-block text-[10px] font-black uppercase tracking-widest text-black hover:bg-amber-300 border-2 border-black px-3 py-2 transition-colors"
+            >
+              Xem tất cả{notifications.length > 8 ? ` (+${notifications.length - 8})` : ''}
+            </Link>
+          </div>
         </div>
       )}
     </div>

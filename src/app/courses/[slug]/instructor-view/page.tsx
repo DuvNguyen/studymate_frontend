@@ -1,7 +1,7 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useCourseLearn } from '@/hooks/useCourseLearn';
@@ -30,15 +30,20 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
  * Tách biệt hoàn toàn với lộ trình học của học viên.
  * Không check enrollment, không lưu progress.
  */
-export default function InstructorViewPage() {
+function InstructorViewPageContent() {
   const { slug } = useParams() as { slug: string };
   const { course, loading: courseLoading, error: courseError } = useCourseLearn(slug);
   const { user, loading: userLoading } = useCurrentUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'qa'>('overview');
   const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
+  const targetDiscussionId = useMemo(() => {
+    const value = searchParams.get('discussion');
+    return value ? Number(value) : null;
+  }, [searchParams]);
   
   // Sử dụng hook riêng cho giảng viên để quản lý thảo luận (có quyền xóa, mark best, etc)
   const { 
@@ -64,8 +69,8 @@ export default function InstructorViewPage() {
   // Set initial active lesson
   useEffect(() => {
     if (course && course.sections.length > 0 && !activeLesson) {
-      const searchParams = new URLSearchParams(window.location.search);
       const lessonId = searchParams.get('lesson');
+      if (targetDiscussionId) setActiveTab('qa');
       
       if (lessonId) {
         const targetLesson = allLessons.find(l => l.id === Number(lessonId));
@@ -78,7 +83,14 @@ export default function InstructorViewPage() {
       const firstLesson = course.sections[0].lessons[0];
       if (firstLesson) setTimeout(() => setActiveLesson(firstLesson), 0);
     }
-  }, [course, activeLesson, allLessons]);
+  }, [course, activeLesson, allLessons, searchParams, targetDiscussionId]);
+
+  useEffect(() => {
+    if (!targetDiscussionId || discussionsLoading || activeTab !== 'qa') return;
+    const target = document.getElementById('discussion-' + targetDiscussionId);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeTab, discussions, discussionsLoading, targetDiscussionId]);
 
   // Handle section expansion
   useEffect(() => {
@@ -275,6 +287,7 @@ export default function InstructorViewPage() {
                                toast.success('ĐÃ GỬI PHẢN HỒI GIẢNG VIÊN!');
                             }}
                             currentUser={user}
+                            highlightDiscussionId={targetDiscussionId}
                           />
                         ))
                       )}
@@ -337,5 +350,13 @@ export default function InstructorViewPage() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+export default function InstructorViewPage() {
+  return (
+    <Suspense fallback={<LoadingScreen title="ĐANG CHUẨN BỊ PHÒNG ĐIỀU KHIỂN..." description="ĐANG TẢI DỮ LIỆU KHÓA HỌC." fullScreen={false} />}>
+      <InstructorViewPageContent />
+    </Suspense>
   );
 }

@@ -21,6 +21,7 @@ interface DiscussionItemProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentUser: any;
   level?: number;
+  highlightDiscussionId?: number | null;
 }
 
 export function DiscussionItem({ 
@@ -31,12 +32,14 @@ export function DiscussionItem({
   onUpdate,
   onReply, 
   currentUser,
-  level = 0 
+  level = 0,
+  highlightDiscussionId = null,
 }: DiscussionItemProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(discussion.content);
+  const isHighlighted = highlightDiscussionId === discussion.id;
 
   if (discussion.is_deleted) {
     return (
@@ -47,7 +50,7 @@ export function DiscussionItem({
   }
 
   return (
-    <div className={`space-y-4 animate-in slide-in-from-left-2 duration-300 ${level > 0 ? 'ml-12 border-l-4 border-black/10 pl-6 mt-4' : ''}`}>
+    <div id={`discussion-${discussion.id}`} className={`space-y-4 animate-in slide-in-from-left-2 duration-300 scroll-mt-28 ${isHighlighted ? 'bg-yellow-200 border-4 border-black p-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' : ''} ${level > 0 ? 'ml-12 border-l-4 border-black/10 pl-6 mt-4' : ''}`}>
       <div className="flex gap-4 group">
         <div className="flex-shrink-0">
            <div className="w-10 h-10 bg-black border-2 border-black overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] relative">
@@ -200,7 +203,8 @@ export function DiscussionItem({
               onUpdate={onUpdate}
               onReply={onReply} 
               currentUser={currentUser}
-              level={level + 1} 
+              level={level + 1}
+              highlightDiscussionId={highlightDiscussionId}
             />
           ))}
         </div>
