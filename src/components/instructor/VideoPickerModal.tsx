@@ -4,18 +4,17 @@ import { API_BASE } from '@/constants/api';
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
+import type { VideoItem } from '@/types';
 
 interface VideoPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSelect: (videoId: number, videoData: any) => void;
+  onSelect: (videoId: number, videoData: VideoItem) => void;
 }
 
 export default function VideoPickerModal({ isOpen, onClose, onSelect }: VideoPickerModalProps) {
   const { getToken } = useAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [videos, setVideos] = useState<any[]>([]);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
 
 

@@ -2,16 +2,15 @@
 
 import { API_BASE } from '@/constants/api';
 import { useState, useEffect } from 'react';
+import type { PortfolioCertificate, PortfolioCourse } from '@/types';
 
 export interface InstructorPortfolio {
   id: number;
   fullName: string;
   avatarUrl: string | null;
   bio: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  certificates: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  courses: any[];
+  certificates: PortfolioCertificate[];
+  courses: PortfolioCourse[];
   totalCourses: number;
   createdAt: string;
 }

@@ -1,11 +1,11 @@
 import { API_BASE } from '@/constants/api';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import type { Enrollment } from '@/types';
 
 export function useEnrolledCourses() {
   const { getToken, isLoaded } = useAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

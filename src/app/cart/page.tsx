@@ -10,17 +10,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
-interface CartItem {
-  id: number;
-  course: {
-    id: number;
-    title: string;
-    price: string | number;
-    thumbnailUrl?: string;
-    instructor_name?: string;
-  };
-}
-
+import type { CartItem } from '@/types';
 export default function CartPage() {
   const { user, loading: userLoading } = useCurrentUser();
   const { 
@@ -55,7 +45,7 @@ export default function CartPage() {
     }
   };
 
-  const subtotal = cart?.cart_items?.reduce((sum: number, item: CartItem) => sum + Number(item.course.price), 0) || 0;
+  const subtotal = cart?.cart_items?.reduce((sum: number, item: CartItem) => sum + Number(item.course?.price || 0), 0) || 0;
   const finalTotal = subtotal - discountAmount;
   const itemCount = cart?.cart_items?.length || 0;
 
@@ -153,7 +143,7 @@ export default function CartPage() {
 
                     <div className="text-right sm:w-32 flex-shrink-0 flex flex-col justify-start">
                       <div className="text-xl font-black text-black tabular-nums">
-                        {Number(item.course.price).toLocaleString('vi-VN')} đ
+                        {Number(item.course?.price || 0).toLocaleString('vi-VN')} đ
                       </div>
                     </div>
                   </div>

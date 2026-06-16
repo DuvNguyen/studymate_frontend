@@ -53,9 +53,8 @@ export default function ReconciliationPage() {
     try {
       const result = await reconcilePayouts(file);
       setResults(result);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Có lỗi khi đối soát');
     } finally {
       setProcessing(false);
     }

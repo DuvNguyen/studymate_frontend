@@ -4,17 +4,23 @@ import { API_BASE } from '@/constants/api';
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useUserContext } from './UserContext';
+import type { Cart, CartItem } from '@/types';
+
+export interface CheckoutOrder {
+  id?: number;
+  order_number?: string;
+  checkoutUrl?: string;
+  status?: string;
+}
 
 interface CartContextType {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cart: any;
+  cart: Cart | null;
   loading: boolean;
   error: string;
   fetchCart: () => Promise<void>;
   addToCart: (courseId: number) => Promise<{ success: boolean; error?: string }>;
   removeFromCart: (itemId: number) => Promise<void>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  checkout: () => Promise<{ success: boolean; order?: any; error?: string }>;
+  checkout: () => Promise<{ success: boolean; order?: CheckoutOrder; error?: string }>;
   checkoutLoading: boolean;
   appliedCoupon: string | null;
   discountAmount: number;
@@ -27,8 +33,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const { getToken, isSignedIn } = useAuth();
   const { user, loading: userLoading, refetchUser } = useUserContext();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [cart, setCart] = useState<any>(null);
+  const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState('');
@@ -96,8 +101,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotal = manualSubtotal;
     } else {
       if (!cart || cart.cart_items.length === 0) return { success: false, error: 'Giỏ hàng trống' };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      subtotal = cart.cart_items.reduce((acc: number, item: any) => acc + Number(item.course?.price || 0), 0);
+      subtotal = cart.cart_items.reduce((acc: number, item: CartItem) => acc + Number(item.course?.price || 0), 0);
     }
     
     if (isNaN(subtotal)) return { success: false, error: 'Không thể xác định số tiền đơn hàng' };

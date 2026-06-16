@@ -70,7 +70,7 @@ function InstructorViewPageContent() {
   useEffect(() => {
     if (course && course.sections.length > 0 && !activeLesson) {
       const lessonId = searchParams.get('lesson');
-      if (targetDiscussionId) setActiveTab('qa');
+      if (targetDiscussionId) setTimeout(() => setActiveTab('qa'), 0);
       
       if (lessonId) {
         const targetLesson = allLessons.find(l => l.id === Number(lessonId));

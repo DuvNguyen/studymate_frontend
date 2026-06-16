@@ -13,6 +13,8 @@ import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { Pagination } from '@/components/Pagination';
 import { HelpCircle, Activity } from 'lucide-react';
 
+import type { Transaction } from '@/hooks/useWallet';
+
 export default function InstructorWalletPage() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const {
@@ -29,8 +31,7 @@ export default function InstructorWalletPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [page, setPage] = useState(1);
   const [limit] = useState(6);
 

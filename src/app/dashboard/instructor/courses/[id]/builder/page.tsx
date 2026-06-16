@@ -10,6 +10,7 @@ import VideoPickerModal from '@/components/instructor/VideoPickerModal';
 import QuestionBankManager from '@/components/instructor/QuestionBankManager';
 import QuizSettingsModal from '@/components/instructor/QuizSettingsModal';
 import { BookOpen, FileQuestion, Settings2, Plus } from 'lucide-react';
+import type { CourseDetail, CourseVideo, QuizSettings, CourseSection, CourseLesson } from '@/types';
 
 function CourseBuilderPageContent() {
   const { id } = useParams();
@@ -18,8 +19,7 @@ function CourseBuilderPageContent() {
   const searchParams = useSearchParams();
   const shouldShowRejectedNotice = searchParams.get('notice') === 'rejected';
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [course, setCourse] = useState<any>(null);
+  const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState('');
@@ -33,10 +33,8 @@ function CourseBuilderPageContent() {
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
   const [editLessonTitle, setEditLessonTitle] = useState('');
   const [editLessonIsPreview, setEditLessonIsPreview] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [editSelectedVideo, setEditSelectedVideo] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [editSelectedVideo, setEditSelectedVideo] = useState<CourseVideo | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<CourseVideo | null>(null);
   const [newLessonIsPreview, setNewLessonIsPreview] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerMode, setPickerMode] = useState<'NEW' | 'EDIT' | 'COURSE_PREVIEW'>('NEW');
@@ -47,14 +45,12 @@ function CourseBuilderPageContent() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [editCoursePreviewVideo, setEditCoursePreviewVideo] = useState<any>(null);
+  const [editCoursePreviewVideo, setEditCoursePreviewVideo] = useState<CourseVideo | null>(null);
 
   // Quiz states
   const [isBankManagerOpen, setIsBankManagerOpen] = useState(false);
   const [isQuizSettingsOpen, setIsQuizSettingsOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [quizToEdit, setQuizToEdit] = useState<any>(null);
+  const [quizToEdit, setQuizToEdit] = useState<QuizSettings | null>(null);
   const [sectionIdForQuiz, setSectionIdForQuiz] = useState<number | null>(null);
 
 
@@ -449,8 +445,8 @@ function CourseBuilderPageContent() {
         </div>
 
         <div className="space-y-6">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {course?.sections?.map((section: any, index: number) => (
+          {/* Section map with typed annotation */}
+          {course?.sections?.map((section: CourseSection, index: number) => (
             <div key={section.id} className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6">
               <div className="flex justify-between items-center mb-4 border-b-2 border-black pb-2">
                 {editingSectionId === section.id ? (
@@ -487,8 +483,7 @@ function CourseBuilderPageContent() {
                 )}
               </div>
               <div className="space-y-3 mb-4">
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {section.lessons?.map((lesson: any, lIndex: number) => (
+                {section.lessons?.map((lesson: CourseLesson, lIndex: number) => (
                   <div key={lesson.id} className="bg-gray-50 border-2 border-black p-4">
                     {editingLessonId === lesson.id ? (
                       <div className="space-y-4">
@@ -637,7 +632,7 @@ function CourseBuilderPageContent() {
                       </div>
                       <button 
                         onClick={() => {
-                          setQuizToEdit(section.quiz);
+                          setQuizToEdit(section.quiz ?? null);
                           setSectionIdForQuiz(section.id);
                           setIsQuizSettingsOpen(true);
                         }}
@@ -731,7 +726,7 @@ function CourseBuilderPageContent() {
                  </div>
                  <button 
                    onClick={() => {
-                     setQuizToEdit(course.finalQuiz);
+                     setQuizToEdit(course.finalQuiz ?? null);
                      setSectionIdForQuiz(null);
                      setIsQuizSettingsOpen(true);
                    }}

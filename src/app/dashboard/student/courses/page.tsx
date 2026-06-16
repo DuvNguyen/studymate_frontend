@@ -58,7 +58,7 @@ export default function StudentCoursesPage() {
                 {/* Thumbnail */}
                 <div className="relative h-48 border-b-4 border-black overflow-hidden group">
                   <Image
-                    src={enrollment.course.thumbnail || '/placeholder-course.jpg'}
+                    src={enrollment.course.thumbnailUrl || '/placeholder-course.jpg'}
                     alt={enrollment.course.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"

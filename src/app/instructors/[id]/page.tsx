@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useInstructorPortfolio } from '@/hooks/useInstructorPortfolio';
+import type { PortfolioCertificate, PortfolioCourse } from '@/types';
 import PublicLayout from '@/components/PublicLayout';
 import { Button } from '@/components/Button';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -155,8 +156,7 @@ export default function InstructorPortfolioPage() {
                  </h2>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {instructor.certificates && instructor.certificates.length > 0 ? (
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      instructor.certificates.map((cert: any, idx: number) => (
+                      instructor.certificates.map((cert: PortfolioCertificate, idx: number) => (
                         <div 
                           key={idx} 
                           className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform group cursor-pointer"
@@ -201,8 +201,7 @@ export default function InstructorPortfolioPage() {
              </h2>
              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                {instructor.courses && instructor.courses.length > 0 ? (
-                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  instructor.courses.map((course: any) => (
+                  instructor.courses.map((course: PortfolioCourse) => (
                    <div 
                      key={course.id} 
                      className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer group flex flex-col h-full"
@@ -236,7 +235,7 @@ export default function InstructorPortfolioPage() {
                             {course.level}
                           </span>
                           <span className="text-xl font-black italic text-black">
-                            {course.price === 0 ? 'MIỄN PHÍ' : `${course.price.toLocaleString('vi-VN')}Đ`}
+                            {course.price === 0 ? 'MIỄN PHÍ' : `${(course.price ?? 0).toLocaleString('vi-VN')}Đ`}
                           </span>
                         </div>
                       </div>

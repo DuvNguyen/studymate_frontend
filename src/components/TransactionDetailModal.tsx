@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { X, User, Calendar, CreditCard, ArrowRightLeft, ShieldCheck } from 'lucide-react';
+import type { LedgerTransaction } from '@/types';
 
 interface TransactionDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transaction: any;
+  transaction: LedgerTransaction | null;
 }
 
 export function TransactionDetailModal({ isOpen, onClose, transaction }: TransactionDetailModalProps) {
@@ -30,8 +30,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
     return date.toLocaleDateString('vi-VN');
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getTransactionSource = (tx: any) => {
+  const getTransactionSource = (tx: LedgerTransaction) => {
     switch (tx.transaction_type) {
       case 'PURCHASE':
         return tx.order_item?.order?.student?.profile?.fullName || 'Học viên';
@@ -48,8 +47,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getTransactionDest = (tx: any) => {
+  const getTransactionDest = (tx: LedgerTransaction) => {
     switch (tx.transaction_type) {
       case 'PURCHASE':
         return 'StudyMate Platform';
@@ -160,14 +158,14 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
                    <p className={`font-black text-xl ${transaction.amount > 0 ? 'text-emerald-700' : 'text-rose-600'} tabular-nums tracking-tighter`}>
                      {transaction.amount > 0 ? '+' : ''}{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(transaction.amount)}
                    </p>
-                   {transaction.transaction_type === 'EARNING' && transaction.order_item && (
-                     <div className="mt-2 pt-2 border-t border-black/10">
-                        <p className="text-[8px] font-black text-black/50 uppercase italic">Tỷ lệ sau phí (Net share)</p>
-                        <p className="text-sm font-black text-emerald-600">
-                          {((1 - transaction.order_item.commission_rate) * 100).toFixed(0)}%
-                        </p>
-                     </div>
-                   )}
+                    {transaction.transaction_type === 'EARNING' && transaction.order_item && (
+                      <div className="mt-2 pt-2 border-t border-black/10">
+                         <p className="text-[8px] font-black text-black/50 uppercase italic">Tỷ lệ sau phí (Net share)</p>
+                         <p className="text-sm font-black text-emerald-600">
+                           {((1 - (transaction.order_item.commission_rate ?? 0)) * 100).toFixed(0)}%
+                         </p>
+                      </div>
+                    )}
                 </div>
             </div>
           </div>

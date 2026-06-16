@@ -17,11 +17,11 @@ export type AdminCourseStatus =
   | 'REJECTED'
   | 'SUSPENDED'
   | 'ARCHIVED';
+import type { AdminCourse } from '@/types';
 
 export function useAdminCourses() {
   const { getToken } = useAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [total, setTotal] = useState(0);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(false);
