@@ -1,3 +1,4 @@
+import { API_BASE } from '@/constants/api';
 import { useState } from 'react';
 import { useClerk } from '@clerk/nextjs';
 
@@ -13,7 +14,7 @@ export function useDeleteUser() {
       const token = await session?.getToken();
       if (!token) throw new Error('Không có quyền truy cập');
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}`, {
+      const res = await fetch(`${API_BASE}/users/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

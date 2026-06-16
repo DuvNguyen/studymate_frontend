@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useEffect } from 'react';
 import { Course } from './useCourses';
 
@@ -43,7 +44,6 @@ interface UseCourseDetailReturn {
   error: string | null;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
 export function useCourseDetail(slug: string): UseCourseDetailReturn {
   const [course, setCourse] = useState<CourseDetail | null>(null);

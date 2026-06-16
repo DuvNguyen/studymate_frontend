@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useCallback } from 'react';
 import { useSession } from '@clerk/nextjs';
 
@@ -73,7 +74,7 @@ export function useWallet() {
     setLoading(true);
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/me`, {
+      const res = await fetch(`${API_BASE}/wallets/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Không thể lấy thông tin ví');
@@ -92,7 +93,7 @@ export function useWallet() {
     if (!session) return;
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/me/transactions?page=${page}&limit=${limit}`, {
+      const res = await fetch(`${API_BASE}/wallets/me/transactions?page=${page}&limit=${limit}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Không thể lấy lịch sử giao dịch');
@@ -114,7 +115,7 @@ export function useWallet() {
     if (!session) return;
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/me/payouts`, {
+      const res = await fetch(`${API_BASE}/wallets/me/payouts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Không thể lấy danh sách yêu cầu rút tiền');
@@ -133,7 +134,7 @@ export function useWallet() {
   }) => {
     if (!session) return;
     const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/payout-request`, {
+    const res = await fetch(`${API_BASE}/wallets/payout-request`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -155,7 +156,7 @@ export function useWallet() {
     setLoading(true);
     try {
       const token = await session.getToken();
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/wallets/payouts${status ? `?status=${status}` : ''}`;
+      const url = `${API_BASE}/wallets/payouts${status ? `?status=${status}` : ''}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -172,7 +173,7 @@ export function useWallet() {
   const processPayout = async (id: number, status: string, adminNote?: string) => {
     if (!session) return;
     const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/payouts/${id}/process`, {
+    const res = await fetch(`${API_BASE}/wallets/payouts/${id}/process`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -190,7 +191,7 @@ export function useWallet() {
   const exportPayouts = async (ids: number[]) => {
     if (!session) return;
     const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/payouts/export`, {
+    const res = await fetch(`${API_BASE}/wallets/payouts/export`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -214,7 +215,7 @@ export function useWallet() {
   const exportPayoutsCsv = async (ids: number[]) => {
     if (!session) return;
     const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/payouts/export-csv`, {
+    const res = await fetch(`${API_BASE}/wallets/payouts/export-csv`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -240,7 +241,7 @@ export function useWallet() {
     const token = await session.getToken();
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/payouts/reconcile`, {
+    const res = await fetch(`${API_BASE}/wallets/payouts/reconcile`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

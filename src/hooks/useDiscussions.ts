@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 
@@ -31,7 +32,6 @@ export interface Discussion {
   children: Discussion[];
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
 export function useDiscussions(lessonId?: number) {
   const { getToken } = useAuth();

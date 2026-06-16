@@ -19,7 +19,7 @@ interface RefundRequestModalProps {
       final_price: number;
     };
   };
-  onSuccess: () => void;
+  onSuccess: (refundRequest?: { id?: number; status?: string; reason?: string; created_at?: string }) => void;
 }
 
 const SUPPORTED_BANKS = [
@@ -51,19 +51,20 @@ export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: R
 
     setError(null);
     try {
-      await requestRefund({
+      const response = await requestRefund({
         enrollmentId: enrollment.id,
         reason,
         bankName,
         bankAccountNumber,
         bankAccountName,
       });
+      const payload = response?.data || response;
       toast.success('Yêu cầu hoàn tiền đã được gửi thành công!');
       
       // Refresh notifications bell
       fetchNotifications();
       
-      onSuccess();
+      onSuccess(payload);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

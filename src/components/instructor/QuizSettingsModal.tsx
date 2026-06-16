@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
@@ -36,7 +37,7 @@ export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, 
   const fetchBanks = useCallback(async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses/${courseId}/question-banks`, {
+      const res = await fetch(`${API_BASE}/instructor/courses/${courseId}/question-banks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -66,7 +67,7 @@ export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, 
     setLoading(true);
     try {
       const token = await getToken();
-      const url = quiz ? `${process.env.NEXT_PUBLIC_API_URL}/instructor/quizzes/${quiz.id}` : `${process.env.NEXT_PUBLIC_API_URL}/instructor/quizzes`;
+      const url = quiz ? `${API_BASE}/instructor/quizzes/${quiz.id}` : `${API_BASE}/instructor/quizzes`;
       const method = quiz ? 'PUT' : 'POST';
 
       const res = await fetch(url, {

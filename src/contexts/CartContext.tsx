@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useUserContext } from './UserContext';
@@ -45,7 +46,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         console.warn('[CartContext] No token available, skipping fetch');
         return;
       }
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/carts?t=${Date.now()}`, {
+      const res = await fetch(`${API_BASE}/carts?t=${Date.now()}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store'
       });
@@ -102,7 +103,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (isNaN(subtotal)) return { success: false, error: 'Không thể xác định số tiền đơn hàng' };
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/validate?code=${code}&subtotal=${subtotal}`);
+      const res = await fetch(`${API_BASE}/coupons/validate?code=${code}&subtotal=${subtotal}`);
       const result = await res.json();
       
       if (!res.ok) {
@@ -127,7 +128,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const token = await getToken();
       if (!token) throw new Error('Vui lòng đăng nhập để thêm vào giỏ hàng');
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/carts`, {
+      const res = await fetch(`${API_BASE}/carts`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -156,7 +157,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const token = await getToken();
       if (!token) throw new Error('Vui lòng đăng nhập để thanh toán');
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/checkout`, {
+      const res = await fetch(`${API_BASE}/orders/checkout`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -190,7 +191,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const token = await getToken();
       if (!token) return;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/carts/${itemId}`, {
+      const res = await fetch(`${API_BASE}/carts/${itemId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

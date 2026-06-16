@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
@@ -49,7 +50,7 @@ export default function AdminCourseDetailPage() {
       setLoading(true);
       try {
         const token = await getToken();
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${id}`, {
+        const res = await fetch(`${API_BASE}/admin/courses/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const json = await res.json();

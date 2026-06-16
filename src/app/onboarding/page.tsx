@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useEffect, useState, useRef } from 'react';
 import { useUser, useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -29,7 +30,7 @@ export default function OnboardingPage() {
         const intendedRole = window.localStorage.getItem('intended_role') || 'STUDENT';
         console.log(`[Onboarding] Intended Role from LocalStorage: ${intendedRole}`);
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/onboard`, {
+        const res = await fetch(`${API_BASE}/auth/onboard`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useEffect, useState } from 'react';
 import { useSession, useClerk } from '@clerk/nextjs';
 
@@ -35,7 +36,7 @@ export default function AccessRestrictedPage() {
 
       try {
         const token = await session.getToken();
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/access-status`, {
+        const res = await fetch(`${API_BASE}/auth/access-status`, {
           headers: { Authorization: `Bearer ${token}` },
           cache: 'no-store',
         });

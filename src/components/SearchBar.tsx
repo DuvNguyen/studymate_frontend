@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -28,8 +29,7 @@ export default function SearchBar() {
       }
       setLoading(true);
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-        const res = await fetch(`${apiUrl}/courses/suggest?q=${encodeURIComponent(debouncedQuery)}`);
+        const res = await fetch(`${API_BASE}/courses/suggest?q=${encodeURIComponent(debouncedQuery)}`);
         const data: CourseSuggestion[] = await res.json();
         setSuggestions(data);
       } catch (error) {

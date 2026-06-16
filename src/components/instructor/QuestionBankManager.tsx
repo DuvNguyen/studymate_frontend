@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
@@ -40,7 +41,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses/${courseId}/question-banks`, {
+      const res = await fetch(`${API_BASE}/instructor/courses/${courseId}/question-banks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -62,7 +63,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     if (!newBankName.trim()) return;
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/question-banks`, {
+      const res = await fetch(`${API_BASE}/instructor/question-banks`, {
         method: 'POST',
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -85,7 +86,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     setIsDetailLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/question-banks/${bankId}`, {
+      const res = await fetch(`${API_BASE}/instructor/question-banks/${bankId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -116,8 +117,8 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     try {
       const token = await getToken();
       const url = editingQuestion 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/instructor/questions/${editingQuestion.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/instructor/question-banks/${selectedBank.id}/questions`;
+        ? `${API_BASE}/instructor/questions/${editingQuestion.id}`
+        : `${API_BASE}/instructor/question-banks/${selectedBank.id}/questions`;
       
       const method = editingQuestion ? 'PUT' : 'POST';
 
@@ -153,7 +154,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
     if (!confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) return;
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/questions/${qId}`, {
+      const res = await fetch(`${API_BASE}/instructor/questions/${qId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

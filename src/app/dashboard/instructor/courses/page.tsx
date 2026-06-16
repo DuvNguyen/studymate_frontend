@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -53,7 +54,7 @@ export default function InstructorCoursesPage() {
       params.append('page', page.toString());
       params.append('limit', '10');
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses?${params.toString()}`, {
+      const res = await fetch(`${API_BASE}/instructor/courses?${params.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -96,7 +97,7 @@ export default function InstructorCoursesPage() {
     try {
       const token = await getToken();
       const endpoint = isArchived ? 'unarchive' : 'archive';
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses/${courseId}/${endpoint}`, {
+      const res = await fetch(`${API_BASE}/instructor/courses/${courseId}/${endpoint}`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -128,7 +129,7 @@ export default function InstructorCoursesPage() {
     setIsSubmitting(true);
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructor/courses`, {
+      const res = await fetch(`${API_BASE}/instructor/courses`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useSession } from '@clerk/nextjs';
 
@@ -51,7 +52,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
       const token = await session.getToken();
       const timestamp = new Date().getTime();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me?t=${timestamp}`, {
+      const res = await fetch(`${API_BASE}/auth/me?t=${timestamp}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
       });

@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useEffect, useState } from 'react';
 import { useClerk } from '@clerk/nextjs';
 import { useDeleteUser } from '@/hooks/useDeleteUser';
@@ -98,7 +99,7 @@ export default function AdminUsersPage() {
     try {
       setIsActing(true);
       const token = await session?.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${banModal.userId}/status`, {
+      const res = await fetch(`${API_BASE}/users/${banModal.userId}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -127,7 +128,7 @@ export default function AdminUsersPage() {
     try {
       setIsActing(true);
       const token = await session?.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}/status`, {
+      const res = await fetch(`${API_BASE}/users/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

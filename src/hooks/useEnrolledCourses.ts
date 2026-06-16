@@ -1,3 +1,4 @@
+import { API_BASE } from '@/constants/api';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 
@@ -20,7 +21,7 @@ export function useEnrolledCourses() {
       }
 
       const now = Date.now();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/my-courses?t=${now}`, {
+      const res = await fetch(`${API_BASE}/enrollments/my-courses?t=${now}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
       });

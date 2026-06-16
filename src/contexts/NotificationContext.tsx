@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { useSession } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -35,6 +36,7 @@ interface FetchNotificationOptions {
   limit?: number;
   category?: NotificationCategory;
   status?: 'read' | 'unread';
+  syncGlobal?: boolean;
 }
 
 interface NotificationContextType {
@@ -51,9 +53,9 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 function getApiUrl() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiUrl = API_BASE;
   if (!apiUrl) {
-    throw new Error('NEXT_PUBLIC_API_URL is not configured');
+    throw new Error('API_BASE is not configured');
   }
   return apiUrl.replace(/\/+$/, '');
 }
@@ -92,7 +94,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const fetchNotifications = useCallback(async (options: FetchNotificationOptions = {}) => {
     if (!session) return { data: [] };
-    setLoading(true);
+
+    const shouldSyncGlobal =
+      options.syncGlobal === true ||
+      (!options.page && !options.limit && !options.category && !options.status);
+
+    if (shouldSyncGlobal) setLoading(true);
     try {
       const token = await session.getToken();
       const params = new URLSearchParams();
@@ -112,6 +119,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       if (!res.ok) {
         const errorText = await res.text();
         console.warn(`Failed to fetch notifications: ${res.status} ${res.statusText}`, errorText);
+        // QUAN TRỌNG: Reset state khi fetch fail để tránh hiển thị data stale của tài khoản cũ
+        if (shouldSyncGlobal) {
+          setNotifications([]);
+          setUnreadCount(0);
+        }
         return { data: [] };
       }
 
@@ -120,16 +132,21 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const data: Notification[] = Array.isArray(payload) ? payload : payload.data || [];
       const meta: NotificationMeta | undefined = Array.isArray(payload) ? undefined : payload.meta;
 
-      if (!options.category && !options.status && (!options.page || options.page === 1)) {
+      if (shouldSyncGlobal) {
         setNotifications(data);
         setUnreadCount(data.filter((n) => !n.isRead).length);
       }
 
       return { data, meta };
     } catch {
+      // Reset khi có lỗi network/exception
+      if (shouldSyncGlobal) {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
       return { data: [] };
     } finally {
-      setLoading(false);
+      if (shouldSyncGlobal) setLoading(false);
     }
   }, [session]);
 
@@ -201,14 +218,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [markAsRead, router]);
 
+  // Reset NGAY khi session thay đổi (đăng xuất / đổi tài khoản) — trước khi fetch
+  // Đây là fix cốt lõi: nếu backend DOWN, fetch sẽ fail và state không được cập nhật,
+  // dẫn đến hiển thị data stale của tài khoản cũ.
   useEffect(() => {
+    // Clear state NGAY LẬP TỨC khi session thay đổi
+    setNotifications([]);
+    setUnreadCount(0);
+
     if (session) {
       fetchNotifications();
-    } else {
-      setNotifications([]);
-      setUnreadCount(0);
     }
-  }, [session, fetchNotifications]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]); // Chủ ý: không thêm fetchNotifications vào deps để tránh loop
 
   useEffect(() => {
     if (!session) return;

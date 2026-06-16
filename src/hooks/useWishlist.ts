@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { Course } from './useCourses';
@@ -11,9 +12,6 @@ export interface WishlistItem {
   course: Course;
   addedAt: string;
 }
-
-const DEFAULT_API_BASE = 'http://localhost:3001/api/v1';
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE).replace(/\/+$/, '');
 
 export function useWishlist() {
   const { getToken, isLoaded } = useAuth();

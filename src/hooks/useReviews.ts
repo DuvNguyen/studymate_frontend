@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useCallback } from 'react';
 import { useSession } from '@clerk/nextjs';
 
@@ -32,7 +33,7 @@ export function useReviews(courseId?: number) {
     setLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/reviews/course/${targetId}`
+        `${API_BASE}/reviews/course/${targetId}`
       );
       if (!res.ok) throw new Error('Failed to fetch reviews');
       const json = await res.json();
@@ -53,7 +54,7 @@ export function useReviews(courseId?: number) {
     setSubmitting(true);
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/reviews`, {
+      const res = await fetch(`${API_BASE}/reviews`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

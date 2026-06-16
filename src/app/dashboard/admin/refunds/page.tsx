@@ -147,7 +147,7 @@ function RefundDetailModal({
 }
 
 export default function AdminRefundsPage() {
-  const { refundRequests, fetchAllRefundRequests, processRefund, loading } = useRefund();
+  const { refundRequests, fetchAllRefundRequests, processRefund, loading, error } = useRefund();
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -238,6 +238,24 @@ export default function AdminRefundsPage() {
         title="ĐANG TẢI DỮ LIỆU..."
         description="HỆ THỐNG ĐANG LIỆT KÊ CÁC YÊU CẦU HOÀN TIỀN CẦN XỬ LÝ."
       />
+    );
+
+  if (error && refundRequests.length === 0)
+    return (
+      <MainLayout role="ADMIN" allowedRoles={['ADMIN', 'STAFF']}>
+        <div className="max-w-3xl mx-auto px-4 py-24 text-center">
+          <div className="bg-red-100 border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <p className="text-xs font-black uppercase tracking-widest text-black mb-2">Lỗi tải dữ liệu</p>
+            <p className="text-sm font-black text-black mb-6">{error}</p>
+            <button
+              onClick={() => fetchAllRefundRequests(filterStatus === 'ALL' ? undefined : filterStatus, dateFrom || undefined, dateTo || undefined)}
+              className="bg-black text-white border-2 border-black px-6 py-3 font-black uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+            >
+              Thử lại
+            </button>
+          </div>
+        </div>
+      </MainLayout>
     );
 
   return (

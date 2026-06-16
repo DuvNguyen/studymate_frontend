@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { CourseDetail } from './useCourseDetail';
@@ -11,7 +12,6 @@ interface UseCourseLearnReturn {
   refresh: () => Promise<void>;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
 export function useCourseLearn(slug: string): UseCourseLearnReturn {
   const { getToken, isLoaded } = useAuth();

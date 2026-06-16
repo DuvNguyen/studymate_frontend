@@ -69,12 +69,31 @@ export default function NotificationsPage() {
   }, [category, fetchNotifications, page, status]);
 
   useEffect(() => {
-    loadNotifications();
+    const timeout = window.setTimeout(() => {
+      void loadNotifications();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [loadNotifications]);
 
-  useEffect(() => {
+  const handleCategoryChange = (value: NotificationCategory | 'ALL') => {
+    setActiveCategory(value);
     setPage(1);
-  }, [activeCategory, status]);
+  };
+
+  const handleStatusChange = (value: 'all' | 'unread') => {
+    setStatus(value);
+    setPage(1);
+  };
+
+  const handleOpenNotification = async (item: Notification) => {
+    await openNotification(item);
+    setItems((prev) =>
+      prev.map((notification) =>
+        notification.id === item.id ? { ...notification, isRead: true } : notification,
+      ),
+    );
+  };
 
   const handleMarkAll = async () => {
     setIsMutating(true);
@@ -134,7 +153,7 @@ export default function NotificationsPage() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setStatus(value)}
+                  onClick={() => handleStatusChange(value)}
                   className={`px-4 py-2 text-sm font-black rounded-none border-2 border-black transition-colors ${
                     status === value ? 'bg-black text-white' : 'bg-white text-black hover:bg-amber-300'
                   }`}
@@ -149,7 +168,7 @@ export default function NotificationsPage() {
                 <button
                   key={tab.value}
                   type="button"
-                  onClick={() => setActiveCategory(tab.value)}
+                  onClick={() => handleCategoryChange(tab.value)}
                   className={`shrink-0 h-10 border-2 border-black px-3 font-black text-xs uppercase tracking-widest inline-flex items-center gap-2 transition-all ${
                     activeCategory === tab.value ? 'bg-amber-300 text-black' : 'bg-white text-black hover:bg-gray-100'
                   }`}
@@ -185,7 +204,7 @@ export default function NotificationsPage() {
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => openNotification(item)}
+                      onClick={() => handleOpenNotification(item)}
                       className={`group w-full px-2 py-3 text-left transition-colors ${
                         item.isRead ? 'bg-white hover:bg-gray-100' : 'bg-amber-50 hover:bg-amber-100'
                       }`}

@@ -1,3 +1,4 @@
+import { API_BASE } from '@/constants/api';
 import { useState, useCallback } from 'react';
 import { useSession } from '@clerk/nextjs';
 
@@ -37,20 +38,29 @@ export interface RefundRequest {
 export function useRefund() {
   const { session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
 
   const fetchMyRefunds = useCallback(async () => {
     if (!session) return;
     setLoading(true);
+    setError(null);
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refunds/my`, {
+      const res = await fetch(`${API_BASE}/refunds/my`, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       });
       const json = await res.json();
-      setRefundRequests(json.data || json);
+      if (!res.ok) {
+        setError(json.message || 'Lỗi tải dữ liệu hoàn tiền');
+        return;
+      }
+      const data = json.data;
+      setRefundRequests(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
+      console.error('[useRefund] fetchMyRefunds error:', err);
+      setError(err instanceof Error ? err.message : 'Lỗi kết nối');
     } finally {
       setLoading(false);
     }
@@ -63,6 +73,7 @@ export function useRefund() {
   ) => {
     if (!session) return;
     setLoading(true);
+    setError(null);
     try {
       const token = await session.getToken();
       const params = new URLSearchParams();
@@ -70,15 +81,24 @@ export function useRefund() {
       if (dateFrom) params.set('dateFrom', dateFrom);
       if (dateTo) params.set('dateTo', dateTo);
       const query = params.toString();
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/refunds/admin/all${query ? `?${query}` : ''}`;
+      const url = `${API_BASE}/refunds/admin/all${query ? `?${query}` : ''}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
       });
       const json = await res.json();
-      setRefundRequests(json.data || json);
+      if (!res.ok) {
+        setError(json.message || 'Lỗi tải danh sách hoàn tiền');
+        setRefundRequests([]);
+        return;
+      }
+      const data = json.data;
+      // Guard: chỉ set nếu là array, tránh crash [...refundRequests]
+      setRefundRequests(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
+      console.error('[useRefund] fetchAllRefundRequests error:', err);
+      setError(err instanceof Error ? err.message : 'Lỗi kết nối');
+      setRefundRequests([]);
     } finally {
       setLoading(false);
     }
@@ -95,7 +115,7 @@ export function useRefund() {
     setLoading(true);
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refunds/request`, {
+      const res = await fetch(`${API_BASE}/refunds/request`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -118,7 +138,7 @@ export function useRefund() {
     setLoading(true);
     try {
         const token = await session.getToken();
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refunds/admin/${id}/process`, {
+        const res = await fetch(`${API_BASE}/refunds/admin/${id}/process`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -138,6 +158,7 @@ export function useRefund() {
 
   return {
     loading,
+    error,
     refundRequests,
     fetchMyRefunds,
     fetchAllRefundRequests,

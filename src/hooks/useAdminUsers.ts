@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useCallback } from 'react';
 import { useSession } from '@clerk/nextjs';
 
@@ -56,7 +57,7 @@ export function useAdminUsers() {
       if (params.search) queryParams.append('search', params.search);
 
       const qs = queryParams.toString();
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/users${qs ? `?${qs}` : ''}`;
+      const url = `${API_BASE}/users${qs ? `?${qs}` : ''}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -83,7 +84,7 @@ export function useAdminUsers() {
     if (!session) return;
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}/status`, {
+      const res = await fetch(`${API_BASE}/users/${id}/status`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -107,7 +108,7 @@ export function useAdminUsers() {
     if (!session) return;
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}/role`, {
+      const res = await fetch(`${API_BASE}/users/${id}/role`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,

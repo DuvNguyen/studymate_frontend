@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useCallback } from 'react';
 import { useSession } from '@clerk/nextjs';
 
@@ -33,7 +34,7 @@ export function useCoupons() {
     setValidating(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/coupons/validate?code=${encodeURIComponent(code)}&subtotal=${subtotal}`
+        `${API_BASE}/coupons/validate?code=${encodeURIComponent(code)}&subtotal=${subtotal}`
       );
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Mã giảm giá không hợp lệ');
@@ -46,7 +47,7 @@ export function useCoupons() {
   const fetchMyCoupons = useCallback(async () => {
     if (!session) return;
     const token = await session.getToken();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/me`, {
+    const res = await fetch(`${API_BASE}/coupons/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const json = await res.json();
@@ -58,7 +59,7 @@ export function useCoupons() {
     setCreating(true);
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons`, {
+      const res = await fetch(`${API_BASE}/coupons`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

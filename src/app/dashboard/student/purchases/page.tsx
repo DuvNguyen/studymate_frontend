@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { Suspense, useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
@@ -40,7 +41,7 @@ function PurchasesPageContent() {
       const token = await getToken();
       if (!token) return;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/my-purchases`, {
+      const res = await fetch(`${API_BASE}/enrollments/my-purchases`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
       });
@@ -396,7 +397,7 @@ function PurchasesPageContent() {
             isOpen={isRefundModalOpen}
             onClose={() => setIsRefundModalOpen(false)}
             enrollment={selectedEnrollment}
-            onSuccess={() => {
+            onSuccess={(refundRequest) => {
               setPurchases((prev) =>
                 prev.map((item) =>
                   item.id === selectedEnrollment.id
@@ -404,15 +405,30 @@ function PurchasesPageContent() {
                         ...item,
                         refund_request: {
                           ...(item.refund_request || {}),
-                          status: 'PENDING',
-                          created_at: new Date().toISOString(),
+                          ...(refundRequest || {}),
+                          status: refundRequest?.status || 'PENDING',
+                          created_at:
+                            refundRequest?.created_at || new Date().toISOString(),
                         },
                       }
                     : item,
                 ),
               );
+              setSelectedEnrollment((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      refund_request: {
+                        ...(prev.refund_request || {}),
+                        ...(refundRequest || {}),
+                        status: refundRequest?.status || 'PENDING',
+                        created_at:
+                          refundRequest?.created_at || new Date().toISOString(),
+                      },
+                    }
+                  : prev,
+              );
               setIsRefundModalOpen(false);
-              fetchPurchases();
             }}
           />
         )}

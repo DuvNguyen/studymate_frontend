@@ -33,6 +33,11 @@ export default function CartPage() {
   const handleCheckout = async () => {
     const result = await checkout();
     if (result.success && result.order) {
+      if (typeof result.order.checkoutUrl === 'string' && result.order.checkoutUrl) {
+        window.location.assign(result.order.checkoutUrl);
+        return;
+      }
+
       router.push(`/checkout/pending?orderId=${result.order.id}`); 
     } else {
       toast.error(result.error || 'Lỗi thanh toán');
@@ -190,7 +195,7 @@ export default function CartPage() {
                 </Button>
 
                 <p className="text-[10px] font-black text-center text-black/60 uppercase">
-                  Số tiền sẽ được thanh toán qua VNPay
+                  Số tiền sẽ được thanh toán qua PayOs
                 </p>
 
                 <div className="mt-8 border-t-2 border-black pt-6">

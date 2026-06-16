@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useEffect, useState } from 'react';
 import { useSession } from '@clerk/nextjs';
 
@@ -34,7 +35,7 @@ export function useUserProfile() {
       try {
         const token = await session!.getToken();
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/me`,
+          `${API_BASE}/users/me`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -68,7 +69,7 @@ export function useUserProfile() {
     setError(null);
     try {
       const token = await session.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
+      const res = await fetch(`${API_BASE}/users/me`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,

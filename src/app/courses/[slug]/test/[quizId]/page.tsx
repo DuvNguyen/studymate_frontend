@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
@@ -143,7 +144,7 @@ export default function QuizPlayerPage() {
   const fetchQuiz = useCallback(async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quizzes/${quizId}`, {
+      const res = await fetch(`${API_BASE}/quizzes/${quizId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -163,7 +164,7 @@ export default function QuizPlayerPage() {
   const fetchPastAttempts = useCallback(async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quizzes/${quizId}/attempts`, {
+      const res = await fetch(`${API_BASE}/quizzes/${quizId}/attempts`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
       });
@@ -200,7 +201,7 @@ export default function QuizPlayerPage() {
     setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quizzes/attempts/${id}`, {
+      const res = await fetch(`${API_BASE}/quizzes/attempts/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -231,7 +232,7 @@ export default function QuizPlayerPage() {
     
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quizzes/attempts/${attempt.id}/submit`, {
+      const res = await fetch(`${API_BASE}/quizzes/attempts/${attempt.id}/submit`, {
         method: 'POST',
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -284,7 +285,7 @@ export default function QuizPlayerPage() {
     setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quizzes/${quizId}/start`, {
+      const res = await fetch(`${API_BASE}/quizzes/${quizId}/start`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });

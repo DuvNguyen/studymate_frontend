@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import MainLayout from '@/components/MainLayout';
@@ -50,7 +51,7 @@ export default function AdminLedgerPage() {
         page: page.toString(),
         limit: pageSize.toString(),
       });
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallets/ledger?${params}`, {
+      const res = await fetch(`${API_BASE}/wallets/ledger?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();

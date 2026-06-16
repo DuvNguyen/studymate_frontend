@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useEffect, useState, useCallback } from 'react';
 import { useClerk } from '@clerk/nextjs';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -57,7 +58,7 @@ export default function AdminKycPage() {
       const token = await session?.getToken();
       if (!token) return;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/kyc-requests`, {
+      const res = await fetch(`${API_BASE}/users/kyc-requests`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const json = await res.json();
@@ -94,7 +95,7 @@ export default function AdminKycPage() {
     try {
       setActionLoading(id);
       const token = await session?.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}/kyc-status`, {
+      const res = await fetch(`${API_BASE}/users/${id}/kyc-status`, {
         method: 'PATCH',
         headers: { 
           'Authorization': `Bearer ${token}`, 

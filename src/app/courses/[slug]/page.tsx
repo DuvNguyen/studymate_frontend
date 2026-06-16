@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useParams } from 'next/navigation';
 import { Suspense, useState, useRef, useEffect, useMemo } from 'react';
 import { useCourseDetail } from '@/hooks/useCourseDetail';
@@ -260,7 +261,7 @@ function CourseDetailContent() {
     setIsEnrolling(true);
     try {
       const token = await session?.getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/enrollments/direct`, {
+      const res = await fetch(`${API_BASE}/enrollments/direct`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

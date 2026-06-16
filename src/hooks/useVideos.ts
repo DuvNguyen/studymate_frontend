@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import { useSession } from '@clerk/nextjs';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -32,7 +33,7 @@ interface FetchVideosParams {
   status?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL + '/videos';
+const API_URL = `${API_BASE}/videos`;
 
 // ─── Hook: Giảng viên upload video ───
 export function useUploadVideo() {

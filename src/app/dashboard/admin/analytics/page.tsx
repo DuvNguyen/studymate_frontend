@@ -1,5 +1,6 @@
 'use client';
 
+import { API_BASE } from '@/constants/api';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useSession } from '@clerk/nextjs';
@@ -94,10 +95,10 @@ const AdminAnalyticsDashboard = () => {
       };
 
       const [statsRes, chartRes, catRes, analyticsRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/statistics/dashboard`, config),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/statistics/revenue-chart`, config),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/statistics/categories`, config),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/statistics/analytics`, config)
+        axios.get(`${API_BASE}/statistics/dashboard`, config),
+        axios.get(`${API_BASE}/statistics/revenue-chart`, config),
+        axios.get(`${API_BASE}/statistics/categories`, config),
+        axios.get(`${API_BASE}/statistics/analytics`, config)
       ]);
 
       setStats(statsRes.data.data);
@@ -116,7 +117,7 @@ const AdminAnalyticsDashboard = () => {
     setExporting(true);
     try {
       const token = await session.getToken();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/statistics/export/excel?startDate=${startDate}&endDate=${endDate}`, {
+      const response = await fetch(`${API_BASE}/statistics/export/excel?startDate=${startDate}&endDate=${endDate}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const blob = await response.blob();
