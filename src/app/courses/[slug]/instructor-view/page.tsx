@@ -54,7 +54,7 @@ function InstructorViewPageContent() {
     deleteDiscussion, 
     updateDiscussion, 
     voteDiscussion 
-  } = useInstructorDiscussions();
+  } = useInstructorDiscussions(activeLesson?.id);
 
   const allLessons = useMemo(() => {
     if (!course) return [];

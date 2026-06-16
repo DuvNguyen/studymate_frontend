@@ -41,6 +41,7 @@ export interface Enrollment {
     title: string;
     instructor_name?: string;
     slug?: string;
+    thumbnail?: string | null;
     thumbnailUrl?: string | null;
     status?: string;
   };
