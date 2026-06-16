@@ -11,12 +11,12 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { HelpCircle } from 'lucide-react';
 import { FinancialDetailModal } from '@/components/FinancialDetailModal';
 import { Pagination } from '@/components/Pagination';
+import type { Enrollment } from '@/types';
 
 function PurchasesPageContent() {
   const { getToken, isLoaded } = useAuth();
   const searchParams = useSearchParams();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [purchases, setPurchases] = useState<any[]>([]);
+  const [purchases, setPurchases] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -31,8 +31,7 @@ function PurchasesPageContent() {
   
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedEnrollment, setSelectedEnrollment] = useState<any>(null);
+  const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
 
   const fetchPurchases = useCallback(async () => {
     if (!isLoaded) return;
@@ -123,8 +122,7 @@ function PurchasesPageContent() {
     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [loading, paginatedPurchases, targetRefundId]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const canRefund = (enrollment: any) => {
+  const canRefund = (enrollment: Enrollment) => {
     if (!enrollment.is_active || enrollment.refund_request?.status === 'PENDING' || enrollment.refund_request?.status === 'APPROVED') {
       return { eligible: false };
     }
@@ -139,8 +137,7 @@ function PurchasesPageContent() {
     return { eligible: true };
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getStatusBadge = (enrollment: any) => {
+  const getStatusBadge = (enrollment: Enrollment) => {
     const base = "border-2 border-black px-2 py-1 text-[9px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] inline-block min-w-[120px] leading-tight";
     
     if (enrollment.refund_request) {
@@ -166,10 +163,7 @@ function PurchasesPageContent() {
     );
   };
 
-  const getFinancialStatus = (enrollment: {
-    is_active: boolean;
-    refund_request?: { status?: string };
-  }) => {
+  const getFinancialStatus = (enrollment: Enrollment) => {
     if (enrollment.refund_request?.status === 'PENDING') return 'REFUND_PENDING';
     if (enrollment.refund_request?.status === 'REJECTED') return 'REFUND_REJECTED';
     if (!enrollment.is_active || enrollment.refund_request?.status === 'APPROVED') return 'REFUNDED';

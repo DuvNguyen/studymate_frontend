@@ -2,11 +2,38 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
+interface YTPlayer {
+  getCurrentTime: () => number;
+  getDuration: () => number;
+  seekTo: (seconds: number) => void;
+  destroy: () => void;
+}
+
+interface YTPlayerEvent {
+  target: YTPlayer;
+  data: number;
+}
+
+interface YTAPI {
+  Player: new (
+    element: HTMLElement,
+    options: {
+      height: string;
+      width: string;
+      videoId: string;
+      playerVars?: Record<string, number>;
+      events?: {
+        onReady?: (event: YTPlayerEvent) => void;
+        onStateChange?: (event: YTPlayerEvent) => void;
+      };
+    }
+  ) => YTPlayer;
+}
+
 declare global {
   interface Window {
     onYouTubeIframeAPIReady: () => void;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    YT: any;
+    YT: YTAPI;
   }
 }
 
@@ -25,8 +52,7 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   onEnd,
   className = ''
 }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<YTPlayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [apiReady, setApiReady] = useState(false);
@@ -101,14 +127,12 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         showinfo: 0,
       },
       events: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onReady: (event: any) => {
+        onReady: (event: YTPlayerEvent) => {
           if (initialTime > 0) {
             event.target.seekTo(initialTime);
           }
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onStateChange: (event: any) => {
+        onStateChange: (event: YTPlayerEvent) => {
           // 1 is PLAYING
           if (event.data === 1) {
             startTracking();

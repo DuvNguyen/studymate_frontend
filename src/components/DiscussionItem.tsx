@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Discussion } from '@/hooks/useDiscussions';
 import { Button } from './Button';
+import type { MinimalUser } from '@/types';
 
 interface DiscussionItemProps {
   discussion: Discussion;
@@ -18,8 +19,7 @@ interface DiscussionItemProps {
   onDelete: (id: number) => void;
   onUpdate: (id: number, content: string) => void;
   onReply: (content: string) => Promise<void>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  currentUser: any;
+  currentUser: MinimalUser | null;
   level?: number;
   highlightDiscussionId?: number | null;
 }
@@ -40,6 +40,9 @@ export function DiscussionItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(discussion.content);
   const isHighlighted = highlightDiscussionId === discussion.id;
+  const userRoleName = typeof currentUser?.role === 'object' && currentUser?.role
+    ? currentUser.role.roleName
+    : (currentUser?.role as string) || '';
 
   if (discussion.is_deleted) {
     return (
@@ -75,7 +78,7 @@ export function DiscussionItem({
                 {discussion.user.fullName || 'ANONYMOUS'}
               </span>
               <span className="text-[8px] font-black px-1.5 py-0.5 bg-black text-white rounded-sm uppercase shrink-0">
-                {discussion.user.role?.roleName || 'STUDENT'}
+                {typeof discussion.user.role === 'object' ? discussion.user.role?.roleName : discussion.user.role || 'STUDENT'}
               </span>
               {discussion.is_edited && (
                 <span className="text-[8px] font-black text-emerald-600 uppercase italic shrink-0"> (ĐÃ SỬA)</span>
@@ -109,7 +112,7 @@ export function DiscussionItem({
             </div>
 
             <div className="absolute top-2 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 rounded-lg p-1.5 min-h-[30px] items-center">
-               {!discussion.is_deleted && (currentUser?.id === discussion.user.id || ['ADMIN', 'STAFF', 'INSTRUCTOR'].includes(currentUser?.role?.roleName || '')) && (
+               {!discussion.is_deleted && (currentUser?.id === discussion.user.id || ['ADMIN', 'STAFF', 'INSTRUCTOR'].includes(userRoleName)) && (
                   <>
                     {currentUser?.id === discussion.user.id && !isEditing && (
                       <button onClick={() => { setIsEditing(true); setEditContent(discussion.content); }} className="hover:text-amber-600 transition-colors"><Pencil size={12} /></button>
@@ -151,7 +154,7 @@ export function DiscussionItem({
                 </button>
               </div>
               
-              {currentUser?.role?.roleName === 'INSTRUCTOR' && (
+              {userRoleName === 'INSTRUCTOR' && (
                 <button 
                   onClick={() => onMarkBest(discussion.id)}
                   className={`text-[10px] font-black uppercase tracking-tight hover:underline transition-colors ${discussion.is_best_answer ? 'text-emerald-600' : 'text-black/60'}`}

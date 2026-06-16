@@ -6,19 +6,12 @@ import { Button } from './Button';
 import { useRefund } from '@/hooks/useRefund';
 import { useNotifications } from '@/hooks/useNotifications';
 
+import type { Enrollment } from '@/types';
+
 interface RefundRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  enrollment: {
-    id: number;
-    course: {
-      title: string;
-      id: number;
-    };
-    order_item: {
-      final_price: number;
-    };
-  };
+  enrollment: Enrollment;
   onSuccess: (refundRequest?: { id?: number; status?: string; reason?: string; created_at?: string }) => void;
 }
 
@@ -84,7 +77,7 @@ export function RefundRequestModal({ isOpen, onClose, enrollment, onSuccess }: R
             <p className="text-[10px] font-black uppercase text-black mb-1">Khóa học</p>
             <p className="text-lg font-black text-black">{enrollment.course.title}</p>
             <p className="text-sm font-black text-black mt-2 underline decoration-rose-500 decoration-4">
-              SỐ TIỀN HOÀN TRẢ: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(enrollment.order_item.final_price)}
+              SỐ TIỀN HOÀN TRẢ: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(enrollment.order_item?.final_price ?? 0)}
             </p>
           </div>
 

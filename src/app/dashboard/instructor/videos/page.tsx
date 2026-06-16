@@ -19,8 +19,7 @@ export default function InstructorVideosPage() {
   }
 
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <MainLayout role={appUser?.role} kycStatus={(appUser as any)?.instructorProfile?.kycStatus} allowedRoles={['INSTRUCTOR']}>
+    <MainLayout role={appUser?.role} kycStatus={appUser?.kycStatus} allowedRoles={['INSTRUCTOR']}>
       <InstructorVideoManager />
     </MainLayout>
   );

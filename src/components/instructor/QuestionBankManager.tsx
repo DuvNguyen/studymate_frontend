@@ -7,6 +7,25 @@ import { toast } from 'react-hot-toast';
 import { Plus, Trash2, Edit3, Save, X, CheckCircle2, Circle } from 'lucide-react';
 import { Button } from '@/components/Button';
 
+interface QuestionOption {
+  id?: number;
+  optionText: string;
+  isCorrect: boolean;
+}
+
+interface BankQuestion {
+  id: number;
+  questionText: string;
+  difficulty?: string;
+  options: QuestionOption[];
+}
+
+interface QuestionBank {
+  id: number;
+  title?: string;
+  questions?: BankQuestion[];
+}
+
 interface QuestionBankManagerProps {
   courseId: number;
   onClose: () => void;
@@ -14,10 +33,8 @@ interface QuestionBankManagerProps {
 
 export default function QuestionBankManager({ courseId, onClose }: QuestionBankManagerProps) {
   const { getToken } = useAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [banks, setBanks] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedBank, setSelectedBank] = useState<any>(null);
+  const [banks, setBanks] = useState<QuestionBank[]>([]);
+  const [selectedBank, setSelectedBank] = useState<QuestionBank | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingBank, setIsAddingBank] = useState(false);
   const [newBankName, setNewBankName] = useState('');
@@ -26,8 +43,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
 
   // Question editing state
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [editingQuestion, setEditingQuestion] = useState<any>(null);
+  const [editingQuestion, setEditingQuestion] = useState<BankQuestion | null>(null);
   const [questionText, setQuestionText] = useState('');
   const [difficulty, setDifficulty] = useState('EASY');
   const [options, setOptions] = useState<{ text: string; isCorrect: boolean }[]>([
@@ -116,9 +132,13 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
 
     try {
       const token = await getToken();
+      if (!selectedBank && !editingQuestion) {
+        toast.error('Vui lòng chọn ngân hàng câu hỏi');
+        return;
+      }
       const url = editingQuestion 
         ? `${API_BASE}/instructor/questions/${editingQuestion.id}`
-        : `${API_BASE}/instructor/question-banks/${selectedBank.id}/questions`;
+        : `${API_BASE}/instructor/question-banks/${selectedBank!.id}/questions`; // safe: guarded above
       
       const method = editingQuestion ? 'PUT' : 'POST';
 
@@ -143,7 +163,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
         setQuestionText('');
         setDifficulty('EASY');
         setOptions([{ text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }]);
-        fetchBankDetail(selectedBank.id);
+        if (selectedBank) fetchBankDetail(selectedBank.id);
       }
     } catch {
       toast.error('Lỗi khi lưu câu hỏi');
@@ -160,7 +180,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
       });
       if (res.ok) {
         toast.success('Đã xóa câu hỏi');
-        fetchBankDetail(selectedBank.id);
+        if (selectedBank) fetchBankDetail(selectedBank.id);
       }
     } catch {
       toast.error('Lỗi khi xóa');
@@ -348,8 +368,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                     </div>
                   ) : (
                     <div className="space-y-4">
-                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                       {selectedBank.questions?.map((q: any, idx: number) => (
+                       {selectedBank.questions?.map((q: BankQuestion, idx: number) => (
                          <div key={q.id} className="border-4 border-black p-6 hover:bg-gray-50 transition-colors group">
                             <div className="flex justify-between items-start mb-4">
                                <div className="flex-1">
@@ -369,8 +388,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                       setEditingQuestion(q);
                                       setQuestionText(q.questionText);
                                       setDifficulty(q.difficulty || 'EASY');
-                                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                      setOptions(q.options.map((o: any) => ({ text: o.optionText, isCorrect: o.isCorrect })));
+                                      setOptions(q.options.map((o: QuestionOption) => ({ text: o.optionText, isCorrect: o.isCorrect })));
                                       setIsAddingQuestion(true);
                                     }}
                                     className="bg-yellow-300 border-2 border-black p-2 hover:translate-y-px shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none"
@@ -386,8 +404,7 @@ export default function QuestionBankManager({ courseId, onClose }: QuestionBankM
                                </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                               {q.options?.map((opt: any) => (
+                               {q.options?.map((opt: QuestionOption) => (
                                  <div key={opt.id} className={`p-3 border-2 border-black flex items-center justify-between ${opt.isCorrect ? 'bg-emerald-100 border-emerald-600 border-[3px]' : 'bg-gray-50 border-gray-200'}`}>
                                     <span className="font-bold text-sm text-black">{opt.optionText}</span>
                                     {opt.isCorrect && <CheckCircle2 size={14} className="text-emerald-600" />}

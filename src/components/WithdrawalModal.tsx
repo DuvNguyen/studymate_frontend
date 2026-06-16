@@ -4,14 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { useWallet } from '@/hooks/useWallet';
+import type { Wallet } from '@/hooks/useWallet';
+import type { CurrentUser } from '@/contexts/UserContext';
 
 interface WithdrawalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  wallet: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  currentUser: any;
+  wallet: Wallet | null;
+  currentUser: CurrentUser | null;
   onSuccess?: () => void;
 }
 

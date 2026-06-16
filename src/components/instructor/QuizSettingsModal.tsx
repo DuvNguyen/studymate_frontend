@@ -7,19 +7,25 @@ import { toast } from 'react-hot-toast';
 import { X, Save, Clock, Target, ListChecks } from 'lucide-react';
 import { Button } from '@/components/Button';
 
+import type { QuizSettings } from '@/types';
+
+interface QuestionBank {
+  id: number;
+  title?: string;
+  name?: string;
+}
+
 interface QuizSettingsModalProps {
   courseId: number;
   sectionId: number | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  quiz: any; // Existing quiz if editing
+  quiz: QuizSettings | null;
   onClose: () => void;
   onSaved: () => void;
 }
 
 export default function QuizSettingsModal({ courseId, sectionId, quiz, onClose, onSaved }: QuizSettingsModalProps) {
   const { getToken } = useAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [banks, setBanks] = useState<any[]>([]);
+  const [banks, setBanks] = useState<QuestionBank[]>([]);
   const [title, setTitle] = useState(quiz?.title || (sectionId ? 'BÀI KIỂM TRA CHƯƠNG' : 'BÀI KIỂM TRA CUỐI KHÓA'));
   const [passingScore, setPassingScore] = useState(quiz?.passingScore || 80);
   const [timeLimit, setTimeLimit] = useState(quiz?.timeLimit || 30);

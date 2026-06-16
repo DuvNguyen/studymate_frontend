@@ -10,13 +10,12 @@ import { Search, HelpCircle, ArrowRight } from 'lucide-react';
 import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { Pagination } from '@/components/Pagination';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import type { LedgerTransaction, LedgerStats } from '@/types';
 
 export default function AdminLedgerPage() {
   const { getToken, isLoaded } = useAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [items, setItems] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [stats, setStats] = useState<any>(null);
+  const [items, setItems] = useState<LedgerTransaction[]>([]);
+  const [stats, setStats] = useState<LedgerStats | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   
@@ -27,8 +26,7 @@ export default function AdminLedgerPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [selectedTx, setSelectedTx] = useState<LedgerTransaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const statusTabs = [
     { value: '', label: 'Tất cả' },
@@ -92,8 +90,7 @@ export default function AdminLedgerPage() {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getTransactionSource = (tx: any) => {
+  const getTransactionSource = (tx: LedgerTransaction) => {
     switch (tx.transaction_type) {
       case 'PURCHASE':
         return tx.order_item?.order?.student?.profile?.fullName || 'Học viên';
@@ -110,8 +107,7 @@ export default function AdminLedgerPage() {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getTransactionDest = (tx: any) => {
+  const getTransactionDest = (tx: LedgerTransaction) => {
     switch (tx.transaction_type) {
       case 'PURCHASE':
         return 'StudyMate Platform';

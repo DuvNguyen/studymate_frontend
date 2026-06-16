@@ -12,6 +12,7 @@ import Image from 'next/image';
 import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/Button';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import type { InstructorCourse } from '@/types';
 
 export default function InstructorCoursesPage() {
   const { getToken } = useAuth();
@@ -19,8 +20,7 @@ export default function InstructorCoursesPage() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { categories, loading: categoriesLoading } = useCategories();
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<InstructorCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Search & Filter states

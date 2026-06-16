@@ -10,6 +10,13 @@ import toast from 'react-hot-toast';
 import PublicLayout from '@/components/PublicLayout';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
+interface Order {
+  order_number: string;
+  status: string;
+  total_amount: number;
+  payment_gateway_id?: string;
+}
+
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId') || searchParams.get('orderCode');
@@ -20,8 +27,7 @@ function CheckoutContent() {
     searchParams.get('code') === '00' &&
     searchParams.get('status') === 'PAID' &&
     searchParams.get('cancel') !== 'true';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [fetching, setFetching] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const redirectingRef = useRef(false);

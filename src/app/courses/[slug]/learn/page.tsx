@@ -106,7 +106,7 @@ function LearnPageContent() {
       const firstLesson = course.sections[0].lessons[0];
       const nextLesson = targetLesson || firstLesson;
       if (nextLesson) setTimeout(() => setActiveLesson(nextLesson), 0);
-      if (targetDiscussionId) setActiveTab('qa');
+      if (targetDiscussionId) setTimeout(() => setActiveTab('qa'), 0);
     }
   }, [course, activeLesson, allLessons, searchParams, targetDiscussionId]);
 
@@ -614,7 +614,7 @@ function LearnPageContent() {
                     <span className="text-[10px] font-black uppercase tracking-widest text-black">ENROLLMENT_VERIFIED</span>
                     <CheckCircle className="w-4 h-4 text-black" />
                  </div>
-                 <div className="text-[8px] font-bold opacity-30 break-all">SM-SYS-UID-{enrollment.id}-AUTH-HASH-VALID</div>
+                 <div className="text-[8px] font-bold opacity-30 break-all">SM-SYS-UID-{enrollment?.id}-AUTH-HASH-VALID</div>
               </div>
             </div>
           </div>
