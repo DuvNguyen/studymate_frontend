@@ -58,10 +58,15 @@ export default function StudentCoursesPage() {
                 {/* Thumbnail */}
                 <div className="relative h-48 border-b-4 border-black overflow-hidden group">
                   <Image
-                    src={enrollment.course.thumbnailUrl || '/placeholder-course.jpg'}
+                    src={enrollment.course.thumbnail || enrollment.course.thumbnailUrl || '/placeholder-course.jpg'}
                     alt={enrollment.course.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder-course.jpg';
+                    }}
                   />
                   <div className="absolute top-4 right-4 bg-emerald-400 border-2 border-black px-3 py-1 text-[10px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     {enrollment.progress_percent}% HOÀN THÀNH

@@ -92,6 +92,20 @@ export function useDiscussions(lessonId?: number) {
   };
 
   const markBestAnswer = async (id: number) => {
+    // Optimistic Update
+    const toggleBestAnswerInTree = (nodes: Discussion[]): Discussion[] => {
+      return nodes.map(node => {
+        if (node.id === id) {
+          return { ...node, is_best_answer: !node.is_best_answer };
+        }
+        if (node.children) {
+          return { ...node, children: toggleBestAnswerInTree(node.children) };
+        }
+        return node;
+      });
+    };
+    setDiscussions(prev => toggleBestAnswerInTree(prev));
+
     try {
       const token = await getToken();
       const res = await fetch(`${API_BASE}/discussions/${id}/best-answer`, {
@@ -101,9 +115,12 @@ export function useDiscussions(lessonId?: number) {
       if (res.ok) {
         await fetchDiscussions();
         return true;
+      } else {
+        await fetchDiscussions(); // Rollback
       }
     } catch (err) {
       console.error('Error marking best answer:', err);
+      await fetchDiscussions(); // Rollback
     }
   };
 
