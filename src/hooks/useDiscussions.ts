@@ -27,6 +27,7 @@ export interface Discussion {
   upvotes: number;
   downvotes: number;
   userVote: number;
+  is_read?: boolean;
   created_at: string;
   updated_at: string;
   children: Discussion[];
