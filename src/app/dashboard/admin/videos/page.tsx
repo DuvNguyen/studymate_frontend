@@ -1,11 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
 import PendingInstructorsList from '@/components/admin/PendingInstructorsList';
+import VideoModerationQueue from '@/components/admin/VideoModerationQueue';
 
 export default function AdminVideosPage() {
   const { user: appUser, loading } = useCurrentUser();
+  const [viewMode, setViewMode] = useState<'INSTRUCTOR' | 'ALL_VIDEOS'>('INSTRUCTOR');
 
   if (loading) {
     return (
@@ -20,7 +23,37 @@ export default function AdminVideosPage() {
 
   return (
     <MainLayout role={appUser?.role} allowedRoles={['ADMIN', 'STAFF']}>
-      <PendingInstructorsList />
+      <div className="w-[calc(100%-12px)] sm:w-full max-w-7xl mx-auto mb-6 px-1.5 sm:px-0">
+        {/* Toggle View Mode */}
+        <div className="flex bg-white border-2 border-black p-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full sm:w-fit">
+          <button
+            onClick={() => setViewMode('INSTRUCTOR')}
+            className={`flex-1 sm:flex-initial px-6 py-2 text-xs font-black uppercase tracking-wider transition-all ${
+              viewMode === 'INSTRUCTOR'
+                ? 'bg-black text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            Theo giảng viên
+          </button>
+          <button
+            onClick={() => setViewMode('ALL_VIDEOS')}
+            className={`flex-1 sm:flex-initial px-6 py-2 text-xs font-black uppercase tracking-wider transition-all ${
+              viewMode === 'ALL_VIDEOS'
+                ? 'bg-black text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            Tất cả video
+          </button>
+        </div>
+      </div>
+
+      {viewMode === 'INSTRUCTOR' ? (
+        <PendingInstructorsList />
+      ) : (
+        <VideoModerationQueue />
+      )}
     </MainLayout>
   );
 }

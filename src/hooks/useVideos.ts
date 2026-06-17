@@ -31,6 +31,7 @@ interface FetchVideosParams {
   uploaderId?: number;
   id?: number;
   status?: string;
+  q?: string;
 }
 
 const API_URL = `${API_BASE}/videos`;
@@ -141,6 +142,7 @@ export function usePendingVideos() {
       if (params.uploaderId) queryParams.set('uploaderId', params.uploaderId.toString());
       if (params.id) queryParams.set('id', params.id.toString());
       if (params.status) queryParams.set('status', params.status);
+      if (params.q) queryParams.set('q', params.q);
 
       const res = await fetch(`${API_URL}/pending?${queryParams.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
