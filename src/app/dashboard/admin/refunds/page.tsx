@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { X, ArrowRightCircle } from 'lucide-react';
 
 import { Pagination } from '@/components/Pagination';
+import AdminSearchBar from '@/components/admin/AdminSearchBar';
 
 interface RefundDetailModalProps {
   isOpen: boolean;
@@ -29,7 +30,43 @@ function RefundDetailModal({
   if (!isOpen || !request) return null;
 
   const generateVietQR = (req: RefundRequest) => {
-    const bankId = req.bank_name.toUpperCase().replace(/\s/g, '');
+    const BANK_MAP: Record<string, string> = {
+      'vietcombank': 'VCB',
+      'vietinbank': 'CTG',
+      'bidv': 'BIDV',
+      'agribank': 'VBA',
+      'acb': 'ACB',
+      'mbbank': 'MB',
+      'mb': 'MB',
+      'techcombank': 'TCB',
+      'sacombank': 'STB',
+      'vpbank': 'VPB',
+      'tpbank': 'TPB',
+      'vib': 'VIB',
+      'hdbank': 'HDB',
+      'eximbank': 'EIB',
+      'msb(maritimebank)': 'MSB',
+      'msb': 'MSB',
+      'ocb': 'OCB',
+      'scb': 'SCB',
+      'lienvietpostbank': 'LPB',
+      'dongabank': 'DAB',
+      'seabank': 'SEAB',
+      'shb': 'SHB',
+      'kienlongbank': 'KLB',
+      'ncb': 'NCB',
+      'namabank': 'NAB',
+      'bacabank': 'BAB',
+      'abbank': 'ABB',
+      'oceanbank': 'OJB',
+      'baovietbank': 'BVB',
+      'vietabank': 'VAB',
+      'pvcombank': 'PVC',
+      'cbbank': 'CBB'
+    };
+
+    const cleanBankInput = req.bank_name.toLowerCase().replace(/\s+/g, '');
+    const bankId = BANK_MAP[cleanBankInput] || req.bank_name.toUpperCase().replace(/\s/g, '');
     const amount = Math.round(req.amount);
     const description = `Refund Studymate Order ${req.id}`;
     return `https://img.vietqr.io/image/${bankId}-${req.bank_account_number}-compact.png?amount=${amount}&addInfo=${description}&accountName=${encodeURIComponent(req.bank_account_name)}`;
@@ -156,6 +193,7 @@ export default function AdminRefundsPage() {
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<RefundRequest | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchEmail, setSearchEmail] = useState('');
   const [page, setPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const pageSize = isMobile ? 6 : 10;
@@ -165,6 +203,11 @@ export default function AdminRefundsPage() {
     setPage(1);
   }, [fetchAllRefundRequests, filterStatus, dateFrom, dateTo]);
 
+  // Reset page when search term changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchEmail]);
+
   useEffect(() => {
     const update = () => setIsMobile(window.innerWidth < 768);
     update();
@@ -172,8 +215,15 @@ export default function AdminRefundsPage() {
     return () => window.removeEventListener('resize', update);
   }, []);
 
+  const filteredRequests = useMemo(() => {
+    return refundRequests.filter((req) => {
+      if (!searchEmail.trim()) return true;
+      return req.student?.email?.toLowerCase().includes(searchEmail.toLowerCase().trim());
+    });
+  }, [refundRequests, searchEmail]);
+
   const sortedRequests = useMemo(() => {
-    const items = [...refundRequests];
+    const items = [...filteredRequests];
     items.sort((a, b) => {
       const aValue =
         sortBy === 'time'
@@ -187,7 +237,7 @@ export default function AdminRefundsPage() {
       return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
     });
     return items;
-  }, [refundRequests, sortBy, sortDirection]);
+  }, [filteredRequests, sortBy, sortDirection]);
 
   const paginatedRequests = useMemo(
     () => sortedRequests.slice((page - 1) * pageSize, page * pageSize),
@@ -320,6 +370,14 @@ export default function AdminRefundsPage() {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <AdminSearchBar
+          value={searchEmail}
+          onChange={setSearchEmail}
+          placeholder="Tìm kiếm theo Email học viên..."
+          borderSize={4}
+        />
+
         <div className="hidden md:block bg-white border-8 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] overflow-hidden relative">
           {loading && refundRequests.length > 0 && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center animate-in fade-in duration-200">
@@ -341,7 +399,7 @@ export default function AdminRefundsPage() {
               </tr>
             </thead>
             <tbody className="divide-y-4 divide-black">
-              {refundRequests.length === 0 ? (
+              {sortedRequests.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-24 text-center font-black text-black/20 uppercase italic text-2xl">Không có yêu cầu nào</td>
                 </tr>

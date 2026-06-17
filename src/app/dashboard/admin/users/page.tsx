@@ -9,6 +9,7 @@ import MainLayout from '@/components/MainLayout';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { Pagination } from '@/components/Pagination';
 import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
+import AdminSearchBar from '@/components/admin/AdminSearchBar';
 
 type Tab = 'ALL' | 'STUDENT' | 'INSTRUCTOR' | 'STAFF' | 'ADMIN';
 
@@ -196,28 +197,12 @@ export default function AdminUsersPage() {
 
 
         {/* Search Bar */}
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 min-w-0">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo Email người dùng..."
-              className="w-full pl-10 pr-4 py-3 border-2 border-black font-bold text-sm focus:outline-none focus:bg-yellow-50 placeholder-black/30"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-black/50">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </div>
-          </div>
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="px-4 py-3 border-2 border-black bg-white font-black text-xs uppercase hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]"
-            >
-              Xóa
-            </button>
-          )}
-        </div>
+        <AdminSearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Tìm kiếm theo Email người dùng..."
+          borderSize={2}
+        />
 
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 min-w-0">

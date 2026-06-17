@@ -6,12 +6,14 @@ import MainLayout from '@/components/MainLayout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
 import { Pagination } from '@/components/Pagination';
+import AdminSearchBar from '@/components/admin/AdminSearchBar';
 
 export default function AdminPayoutsPage() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { payouts, loading, fetchAllPayouts, processPayout, exportPayouts, exportPayoutsCsv } = useWallet();
   const [filterStatus, setFilterStatus] = useState<string>('PENDING');
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const [searchEmail, setSearchEmail] = useState('');
   const [page, setPage] = useState(1);
   const [adminNote, setAdminNote] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -36,9 +38,19 @@ export default function AdminPayoutsPage() {
     setPage(1);
   }, [filterStatus]);
 
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchEmail]);
+
+  const filteredPayouts = payouts.filter(p => {
+    if (!searchEmail.trim()) return true;
+    return p.instructor?.email?.toLowerCase().includes(searchEmail.toLowerCase().trim());
+  });
+
   const pageSize = 5;
-  const totalPages = Math.max(1, Math.ceil(payouts.length / pageSize));
-  const pagedPayouts = payouts.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredPayouts.length / pageSize));
+  const pagedPayouts = filteredPayouts.slice((page - 1) * pageSize, page * pageSize);
 
   const handleProcess = async (id: number, status: 'COMPLETED' | 'REJECTED') => {
     setProcessingId(id);
@@ -138,19 +150,27 @@ export default function AdminPayoutsPage() {
           }}
         />
 
+        {/* Search Bar */}
+        <AdminSearchBar
+          value={searchEmail}
+          onChange={setSearchEmail}
+          placeholder="Tìm kiếm theo Email giảng viên..."
+          borderSize={2}
+        />
+
         {/* Table */}
         {loading ? (
           <div className="flex justify-center items-center h-40 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="animate-spin rounded-none h-10 w-10 border-4 border-black border-t-transparent"></div>
           </div>
-        ) : payouts.length === 0 ? (
+        ) : filteredPayouts.length === 0 ? (
           <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-16 text-center">
             <h3 className="text-xl font-black uppercase text-black tracking-widest">Không có yêu cầu nào</h3>
           </div>
         ) : (
           <div className="hidden md:block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-[1024px] text-left border-collapse">
+              <table className="w-full min-w-[1024px] text-left border-collapse">
                 <thead>
                   <tr className="bg-black text-white border-b-2 border-black">
                     <th className="p-4 w-12">
@@ -314,7 +334,7 @@ export default function AdminPayoutsPage() {
         </div>
       )}
 
-      {!loading && payouts.length > 0 && (
+      {!loading && filteredPayouts.length > 0 && (
         <Pagination
           currentPage={page}
           totalPages={totalPages}

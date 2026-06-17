@@ -1,21 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { usePendingVideos, useReviewVideo } from '@/hooks/useVideos';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { Button } from '@/components/Button';
 import { Pagination } from '@/components/Pagination';
 import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
 
-export default function VideoModerationQueue() {
+interface VideoModerationQueueProps {
+  uploaderId?: number;
+}
+
+export default function VideoModerationQueue({ uploaderId }: VideoModerationQueueProps = {}) {
   const { videos, meta, loading, refetch } = usePendingVideos();
   const { review, reviewing } = useReviewVideo();
-  const { users: instructors, fetchUsers: fetchInstructors } = useAdminUsers();
+  const { users: instructors, fetchUsers: fetchInstructors, fetchUserById } = useAdminUsers();
+  const [instructorInfo, setInstructorInfo] = useState<any | null>(null);
 
   const [rejectReason, setRejectReason] = useState('');
   const [activeVideoId, setActiveVideoId] = useState<number | null>(null);
   const [reasonViewerVideoId, setReasonViewerVideoId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Helpers to retrieve active modal video details
+  const reasonVideo = videos.find((v) => v.id === reasonViewerVideoId);
+  const rejectVideo = videos.find((v) => v.id === activeVideoId);
 
   // Filters
   const [page, setPage] = useState(1);
@@ -24,18 +34,24 @@ export default function VideoModerationQueue() {
   const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
-    fetchInstructors({ role: 'INSTRUCTOR', limit: 100 });
-  }, [fetchInstructors]);
+    if (uploaderId) {
+      fetchUserById(uploaderId).then((data) => {
+        if (data) setInstructorInfo(data);
+      });
+    } else {
+      fetchInstructors({ role: 'INSTRUCTOR', limit: 100 });
+    }
+  }, [uploaderId, fetchInstructors, fetchUserById]);
 
   useEffect(() => {
     refetch({
       page,
       limit: 5,
-      uploaderId: filterUploaderId || undefined,
+      uploaderId: uploaderId || filterUploaderId || undefined,
       id: filterVideoId ? Number(filterVideoId) : undefined,
       status: filterStatus || undefined,
     });
-  }, [page, filterUploaderId, filterVideoId, filterStatus, refetch]);
+  }, [page, filterUploaderId, filterVideoId, filterStatus, refetch, uploaderId]);
 
   const handleFilter = () => {
     setPage(1);
@@ -92,12 +108,25 @@ export default function VideoModerationQueue() {
       {/* Sticky Header Style from KYC Page */}
       <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-3 sm:p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Kiếm duyệt nội dung</p>
-          <h1 className="text-xl sm:text-3xl font-black text-black uppercase tracking-tight leading-none">Hàng đợi Video</h1>
+          <p className="text-[10px] font-black uppercase tracking-widest text-black/70 mb-1">Kiểm duyệt nội dung</p>
+          <h1 className="text-xl sm:text-3xl font-black text-black uppercase tracking-tight leading-none">
+            {uploaderId 
+              ? `Video: ${instructorInfo?.fullName || instructorInfo?.email || 'Đang tải...'}`
+              : 'Hàng đợi Video'}
+          </h1>
         </div>
-        <Button onClick={() => refetch()} variant="outline" size="sm">
-          Làm mới ↻
-        </Button>
+        <div className="flex gap-2">
+          {uploaderId && (
+            <Link href="/dashboard/admin/videos">
+              <Button variant="outline" size="sm">
+                ← Quay lại
+              </Button>
+            </Link>
+          )}
+          <Button onClick={() => refetch()} variant="outline" size="sm">
+            Làm mới ↻
+          </Button>
+        </div>
       </div>
 
       <AdminStatusTabs
@@ -111,21 +140,23 @@ export default function VideoModerationQueue() {
 
       {/* Filter Bar */}
       <div className="bg-yellow-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-3 sm:p-4 flex flex-col md:flex-row gap-3 sm:gap-4 items-end min-w-0">
-        <div className="w-full md:w-64">
-          <label className="block text-[10px] font-black text-black uppercase mb-1">Giảng viên</label>
-          <select 
-            value={filterUploaderId}
-            onChange={(e) => setFilterUploaderId(e.target.value ? Number(e.target.value) : '')}
-            className="w-full bg-white border-2 border-black px-4 py-2 font-black text-xs text-black outline-none focus:bg-yellow-100"
-          >
-            <option value="">-- TẤT CẢ GIẢNG VIÊN --</option>
-            {instructors.map((ins) => (
-              <option key={ins.id} value={ins.id}>
-                {ins.fullName || ins.email} (ID: {ins.id})
-              </option>
-            ))}
-          </select>
-        </div>
+        {!uploaderId && (
+          <div className="w-full md:w-64">
+            <label className="block text-[10px] font-black text-black uppercase mb-1">Giảng viên</label>
+            <select 
+              value={filterUploaderId}
+              onChange={(e) => setFilterUploaderId(e.target.value ? Number(e.target.value) : '')}
+              className="w-full bg-white border-2 border-black px-4 py-2 font-black text-xs text-black outline-none focus:bg-yellow-100"
+            >
+              <option value="">-- TẤT CẢ GIẢNG VIÊN --</option>
+              {instructors.map((ins) => (
+                <option key={ins.id} value={ins.id}>
+                  {ins.fullName || ins.email} (ID: {ins.id})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="w-full md:w-48">
           <label className="block text-[10px] font-black text-black uppercase mb-1">Mã Video (Hệ thống)</label>
           <input 
@@ -278,65 +309,6 @@ export default function VideoModerationQueue() {
                   </div>
                 </div>
               )}
-
-              {reasonViewerVideoId === vid.id && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-6">
-                  <div className="bg-white border-4 border-black p-6 sm:p-8 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] w-full max-w-lg">
-                    <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-3">
-                      <h3 className="text-xl font-black uppercase tracking-tight">Lý do từ chối</h3>
-                      <button
-                        type="button"
-                        onClick={() => setReasonViewerVideoId(null)}
-                        className="text-xl font-black"
-                        aria-label="Đóng"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-black/60 mb-2">
-                      Video: {vid.title || `V-${vid.id}`}
-                    </p>
-                    <div className="bg-red-50 border-2 border-black p-4">
-                      <p className="text-sm font-black text-black leading-relaxed">
-                        {vid.rejectReason || 'Không có lý do cụ thể.'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Rejection Overlay */}
-              {activeVideoId === vid.id && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
-                  <div className="bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
-                    <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none text-black">Từ chối Video</h2>
-                    <p className="text-xs font-black text-black uppercase tracking-[0.2em] mb-6">Video: {vid.title}</p>
-                    
-                    <textarea
-                      value={rejectReason}
-                      onChange={(e) => setRejectReason(e.target.value)}
-                      placeholder="Nhập lý do chi tiết để giảng viên sửa đổi..."
-                      className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 outline-none placeholder:text-black/50 min-h-[160px] mb-8 shadow-inner transition-colors text-black"
-                    />
-
-                    <div className="flex gap-6">
-                      <Button 
-                        onClick={() => handleReject(vid.id)}
-                        className="flex-1 bg-red-400 text-black py-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500"
-                      >
-                        Xác nhận loại bỏ
-                      </Button>
-                      <Button 
-                        onClick={() => { setActiveVideoId(null); setRejectReason(''); }}
-                        variant="outline"
-                        className="px-10 py-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100"
-                      >
-                        Hủy
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -349,6 +321,65 @@ export default function VideoModerationQueue() {
           totalPages={meta.totalPages}
           onPageChange={(p) => setPage(p)}
         />
+      )}
+
+      {/* Modals outside the list to prevent stacking context clipping */}
+      {reasonVideo && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-6">
+          <div className="bg-white border-4 border-black p-6 sm:p-8 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] w-full max-w-lg">
+            <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-3">
+              <h3 className="text-xl font-black uppercase tracking-tight">Lý do từ chối</h3>
+              <button
+                type="button"
+                onClick={() => setReasonViewerVideoId(null)}
+                className="text-xl font-black"
+                aria-label="Đóng"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-black/60 mb-2">
+              Video: {reasonVideo.title || `V-${reasonVideo.id}`}
+            </p>
+            <div className="bg-red-50 border-2 border-black p-4">
+              <p className="text-sm font-black text-black leading-relaxed">
+                {reasonVideo.rejectReason || 'Không có lý do cụ thể.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rejectVideo && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+          <div className="bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-xl w-full">
+            <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter leading-none text-black">Từ chối Video</h2>
+            <p className="text-xs font-black text-black uppercase tracking-[0.2em] mb-6">Video: {rejectVideo.title}</p>
+            
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Nhập lý do chi tiết để giảng viên sửa đổi..."
+              className="w-full border-4 border-black p-6 font-black text-lg bg-gray-50 focus:bg-yellow-50 outline-none placeholder:text-black/50 min-h-[160px] mb-8 shadow-inner transition-colors text-black"
+            />
+
+            <div className="flex gap-6">
+              <Button 
+                onClick={() => handleReject(rejectVideo.id)}
+                className="flex-1 bg-red-400 text-black py-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500"
+              >
+                Xác nhận loại bỏ
+              </Button>
+              <Button 
+                onClick={() => { setActiveVideoId(null); setRejectReason(''); }}
+                variant="outline"
+                className="px-10 py-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100"
+              >
+                Hủy
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

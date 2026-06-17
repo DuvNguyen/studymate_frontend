@@ -128,5 +128,20 @@ export function useAdminUsers() {
     }
   };
 
-  return { users, total, meta, loading, error, fetchUsers, updateStatus, updateRole };
+  const fetchUserById = useCallback(async (id: number) => {
+    if (!session) return null;
+    try {
+      const token = await session.getToken();
+      const res = await fetch(`${API_BASE}/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data as AdminUser;
+    } catch {
+      return null;
+    }
+  }, [session]);
+
+  return { users, total, meta, loading, error, fetchUsers, updateStatus, updateRole, fetchUserById };
 }

@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
 import Image from 'next/image';
 import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
+import AdminSearchBar from '@/components/admin/AdminSearchBar';
 
 interface InstructorDocument {
   id: number;
@@ -42,6 +43,7 @@ export default function AdminKycPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<KycStatusTab>('PENDING');
+  const [searchEmail, setSearchEmail] = useState('');
   const { session } = useClerk();
   const { user: appUser, loading: appLoading } = useCurrentUser();
   const labelMap: Record<KycStatusTab, string> = {
@@ -149,8 +151,19 @@ export default function AdminKycPage() {
             count: tabId === 'ALL' ? kycs.length : kycs.filter((u) => u.instructorProfile?.kycStatus === tabId).length,
           }))}
           value={activeTab}
-          onChange={(next) => setActiveTab(next as KycStatusTab)}
+          onChange={(next) => {
+            setActiveTab(next as KycStatusTab);
+            setSearchEmail(''); // Reset search when tab changes
+          }}
           compact
+        />
+
+        {/* Search Bar */}
+        <AdminSearchBar
+          value={searchEmail}
+          onChange={setSearchEmail}
+          placeholder="Tìm kiếm theo Email giảng viên..."
+          borderSize={2}
         />
         
         {loading ? (
@@ -160,7 +173,12 @@ export default function AdminKycPage() {
         ) : (
           <div className="grid grid-cols-1 gap-6">
             {(() => {
-              const filtered = kycs.filter(u => activeTab === 'ALL' || u.instructorProfile?.kycStatus === activeTab);
+              const filtered = kycs.filter(u => {
+                const matchesTab = activeTab === 'ALL' || u.instructorProfile?.kycStatus === activeTab;
+                if (!matchesTab) return false;
+                if (!searchEmail.trim()) return true;
+                return u.email?.toLowerCase().includes(searchEmail.toLowerCase().trim());
+              });
               
               if (filtered.length === 0) {
                 const labelMap: Record<string, string> = {

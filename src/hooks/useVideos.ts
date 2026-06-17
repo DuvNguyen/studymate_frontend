@@ -244,3 +244,49 @@ export function useDeleteVideo() {
 
   return { remove, deleting, error };
 }
+
+export interface PendingInstructor {
+  uploaderId: number;
+  email: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  pendingCount: number;
+}
+
+export function usePendingInstructors() {
+  const { session, isLoaded } = useSession();
+  const [instructors, setInstructors] = useState<PendingInstructor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchInstructors = useCallback(async () => {
+    if (!session) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const token = await session.getToken();
+      const res = await fetch(`${API_BASE}/videos/pending-instructors`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error('Lỗi lấy danh sách giảng viên chờ duyệt');
+      const json = await res.json();
+      setInstructors(json.data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (isLoaded && session) {
+      fetchInstructors();
+    } else if (isLoaded && !session) {
+      setLoading(false);
+    }
+  }, [isLoaded, session, fetchInstructors]);
+
+  return { instructors, loading, error, refetch: fetchInstructors };
+}
+

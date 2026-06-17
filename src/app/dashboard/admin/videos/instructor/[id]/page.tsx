@@ -1,10 +1,12 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import MainLayout from '@/components/MainLayout';
-import PendingInstructorsList from '@/components/admin/PendingInstructorsList';
+import VideoModerationQueue from '@/components/admin/VideoModerationQueue';
 
-export default function AdminVideosPage() {
+export default function AdminInstructorVideosPage() {
+  const { id } = useParams<{ id: string }>();
   const { user: appUser, loading } = useCurrentUser();
 
   if (loading) {
@@ -18,9 +20,11 @@ export default function AdminVideosPage() {
     );
   }
 
+  const instructorId = id ? Number(id) : undefined;
+
   return (
     <MainLayout role={appUser?.role} allowedRoles={['ADMIN', 'STAFF']}>
-      <PendingInstructorsList />
+      <VideoModerationQueue uploaderId={instructorId} />
     </MainLayout>
   );
 }
