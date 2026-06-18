@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import { toast } from 'react-hot-toast';
 import MainLayout from '@/components/MainLayout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import Image from 'next/image';
 
 export default function KycPage() {
   const { getToken } = useAuth();
@@ -421,12 +422,12 @@ export default function KycPage() {
                 )}
                 {previewUrls.idCard ? (
                   <div className="relative mt-2 inline-block self-start">
-                    <img src={previewUrls.idCard} alt="Preview" className="w-48 h-auto border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" />
+                    <Image src={previewUrls.idCard} alt="Preview" width={192} height={120} className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" unoptimized />
                     <button type="button" onClick={removeIdCardFile} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 flex items-center justify-center border-2 border-black font-black text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[1px] active:translate-y-0 transition-transform">X</button>
                   </div>
                 ) : (
                   kycData.idCardUrl && (
-                    <img src={kycData.idCardUrl} alt="ID Card Preview" className="w-48 h-auto border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mt-2" />
+                    <Image src={kycData.idCardUrl} alt="ID Card Preview" width={192} height={120} className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mt-2" unoptimized />
                   )
                 )}
               </div>
@@ -522,8 +523,8 @@ export default function KycPage() {
                     )}
                     {previewUrls.documents[index] ? (
                       <div className="relative inline-block self-start mt-1">
-                        <img src={previewUrls.documents[index]} alt="Preview" className="h-16 w-auto border-2 border-black object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" />
-                        <button type="button" onClick={() => removeDocumentFile(index)} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 flex items-center justify-center border-2 border-black font-black text-[10px] shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[1px] active:translate-y-0 transition-transform">X</button>
+                        <Image src={previewUrls.documents[index]} alt="Preview" width={64} height={64} className="border-2 border-black object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" unoptimized />
+                        <button type="button" onClick={() => removeDocumentFile(index)} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 flex items-center justify-center border-2 border-black font-black text-[10px] shadow-[1px_1px_0px_0px_rgba(1px,1px,0px,0px,rgba(0,0,0,1))] hover:-translate-y-[1px] active:translate-y-0 transition-transform">X</button>
                       </div>
                     ) : (
                       doc.fileUrl ? (

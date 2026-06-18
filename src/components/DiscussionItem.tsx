@@ -11,6 +11,7 @@ import {
 import { Discussion } from '@/hooks/useDiscussions';
 import { Button } from './Button';
 import type { MinimalUser } from '@/types';
+import Image from 'next/image';
 
 interface DiscussionItemProps {
   discussion: Discussion;
@@ -58,8 +59,7 @@ export function DiscussionItem({
         <div className="flex-shrink-0">
            <div className="w-10 h-10 bg-black border-2 border-black overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] relative">
               {discussion.user.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={discussion.user.avatarUrl} alt={discussion.user.fullName} className="w-full h-full object-cover" />
+                <Image src={discussion.user.avatarUrl} alt={discussion.user.fullName || 'User'} width={40} height={40} className="w-full h-full object-cover" unoptimized />
               ) : (
                 <div className="w-full h-full bg-yellow-400 flex items-center justify-center font-black text-[10px] italic">USER</div>
               )}

@@ -6,6 +6,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { useRefund, RefundRequest } from '@/hooks/useRefund';
 import { toast } from 'react-hot-toast';
 import { X, ArrowRightCircle } from 'lucide-react';
+import Image from 'next/image';
 
 import { Pagination } from '@/components/Pagination';
 import AdminSearchBar from '@/components/admin/AdminSearchBar';
@@ -140,10 +141,13 @@ function RefundDetailModal({
             <div className="flex flex-col items-center justify-center p-6 border-4 border-black bg-zinc-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-1">
               <p className="text-[10px] font-black uppercase bg-black text-white px-3 py-1 mb-4">Quét QR Chuyển nhanh</p>
               <div className="bg-white border-4 border-black p-2 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative">
-                <img
+                <Image
                   src={generateVietQR(request)}
                   alt="VietQR"
-                  className="w-48 h-48 object-contain"
+                  width={192}
+                  height={192}
+                  className="object-contain"
+                  unoptimized
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=QR+Error';
                   }}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePendingInstructors } from '@/hooks/useVideos';
 import { Button } from '@/components/Button';
 import AdminSearchBar from '@/components/admin/AdminSearchBar';
@@ -61,10 +62,13 @@ export default function PendingInstructorsList() {
               <div>
                 <div className="flex items-center gap-4 mb-4">
                   {ins.avatarUrl ? (
-                    <img 
+                    <Image 
                       src={ins.avatarUrl} 
                       alt={ins.fullName || ins.email} 
-                      className="w-12 h-12 border-2 border-black rounded-none object-cover"
+                      width={48}
+                      height={48}
+                      className="border-2 border-black rounded-none object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-12 h-12 border-2 border-black bg-yellow-100 flex items-center justify-center font-black text-lg">

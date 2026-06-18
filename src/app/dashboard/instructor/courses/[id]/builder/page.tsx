@@ -10,6 +10,7 @@ import VideoPickerModal from '@/components/instructor/VideoPickerModal';
 import QuestionBankManager from '@/components/instructor/QuestionBankManager';
 import QuizSettingsModal from '@/components/instructor/QuizSettingsModal';
 import { BookOpen, FileQuestion, Settings2, Plus } from 'lucide-react';
+import Image from 'next/image';
 import type { CourseDetail, CourseVideo, QuizSettings, CourseSection, CourseLesson } from '@/types';
 
 function CourseBuilderPageContent() {
@@ -365,10 +366,13 @@ function CourseBuilderPageContent() {
                     </div>
                     {(thumbnailPreview || editThumbnailUrl) && (
                       <div className="mt-2 relative inline-block">
-                        <img 
+                        <Image 
                           src={thumbnailPreview || editThumbnailUrl} 
                           alt="Thumbnail Preview" 
-                          className="h-24 w-auto object-cover border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" 
+                          width={170}
+                          height={96}
+                          className="object-cover border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" 
+                          unoptimized
                         />
                         {thumbnailPreview && (
                            <button 

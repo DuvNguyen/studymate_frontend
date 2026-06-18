@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePendingVideos, useReviewVideo } from '@/hooks/useVideos';
-import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { useAdminUsers, AdminUser } from '@/hooks/useAdminUsers';
 import { Button } from '@/components/Button';
 import { Pagination } from '@/components/Pagination';
 import AdminStatusTabs from '@/components/admin/AdminStatusTabs';
@@ -17,7 +17,7 @@ export default function VideoModerationQueue({ uploaderId }: VideoModerationQueu
   const { videos, meta, loading, refetch } = usePendingVideos();
   const { review, reviewing } = useReviewVideo();
   const { fetchUserById } = useAdminUsers();
-  const [instructorInfo, setInstructorInfo] = useState<any | null>(null);
+  const [instructorInfo, setInstructorInfo] = useState<AdminUser | null>(null);
 
   const [rejectReason, setRejectReason] = useState('');
   const [activeVideoId, setActiveVideoId] = useState<number | null>(null);
@@ -40,10 +40,6 @@ export default function VideoModerationQueue({ uploaderId }: VideoModerationQueu
       });
     }
   }, [uploaderId, fetchUserById]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [searchTitle]);
 
   useEffect(() => {
     refetch({
@@ -138,7 +134,10 @@ export default function VideoModerationQueue({ uploaderId }: VideoModerationQueu
       {/* Search Bar */}
       <AdminSearchBar
         value={searchTitle}
-        onChange={setSearchTitle}
+        onChange={(next) => {
+          setSearchTitle(next);
+          setPage(1);
+        }}
         placeholder="Tìm kiếm theo Tên hoặc Mã video..."
         borderSize={2}
       />
