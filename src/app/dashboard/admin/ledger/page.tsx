@@ -194,7 +194,7 @@ export default function AdminLedgerPage() {
                 className="w-full pl-12 pr-4 py-3 border-4 border-black font-black uppercase text-[11px] sm:text-xs outline-none focus:bg-white transition-colors bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black"
               />
            </div>
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full md:w-auto">
+           <div className="w-full md:w-auto">
               <select 
                 value={type} 
                 onChange={(e) => setType(e.target.value)}
@@ -206,17 +206,6 @@ export default function AdminLedgerPage() {
                 <option value="WITHDRAWAL">PAYOUT</option>
                 <option value="REFUND">REFUND</option>
                 <option value="PLATFORM_FEE">COMMISSION</option>
-              </select>
-              <select 
-                value={status} 
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full md:w-40 border-4 border-black p-3 font-black uppercase text-[11px] outline-none bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-              >
-                <option value="">TRẠNG THÁI</option>
-                <option value="LOCKED">LOCKED</option>
-                <option value="AVAILABLE">AVAILABLE</option>
-                <option value="COMPLETED">COMPLETED</option>
-                <option value="CANCELLED">CANCELLED</option>
               </select>
            </div>
         </div>
